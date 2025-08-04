@@ -392,6 +392,7 @@
 "Assets/Plugins/FMOD/platforms/win/src/PlatformWindows.cs"
 "Assets/Plugins/FMOD/src/AutomatableSlots.cs"
 "Assets/Plugins/FMOD/src/BankRefAttribute.cs"
+"Assets/Plugins/FMOD/src/Enum.cs"
 "Assets/Plugins/FMOD/src/EventHandler.cs"
 "Assets/Plugins/FMOD/src/EventRefAttribute.cs"
 "Assets/Plugins/FMOD/src/EventReference.cs"
