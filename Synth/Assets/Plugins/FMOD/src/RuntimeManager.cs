@@ -350,7 +350,7 @@ retry:
 
             if (true)
             {
-                result = coreSystem.setDSPBufferSize(64,2):
+                result = coreSystem.setDSPBufferSize(64, 2);
                 CheckInitResult(result, "FMOD.System.setDSPBufferSize");
             }
             
