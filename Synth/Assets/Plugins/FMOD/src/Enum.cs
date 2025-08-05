@@ -69,7 +69,7 @@ public enum KeySoundType
     Vocal1,     // 보컬 소리1
     Vocal2,     // 보컬 소리2
     Synth1,     // 신디사이저 소리 1
-    Stnth2,     // 신디사이저 소리 2
+    Synth2,     // 신디사이저 소리 2
     Bass,       // 베이스 소리
     Piano,      // 피아노 소리
     Guitar,     // 기타 소리
@@ -80,9 +80,9 @@ public enum KeySoundType
 
 public enum JudgmentMode
 {   
-    JudgemnetMode_Normal,       // 일반 게이머들 추천
-    JudgementMode_Hard,         // 심화 유저들 추천, 추후 랭크전 도입시 변별용
-    JudgementMode_Super,        // 현재 추가 계획 없음
+    JudgmentMode_Normal,       // 일반 게이머들 추천
+    JudgmentMode_Hard,         // 심화 유저들 추천, 추후 랭크전 도입시 변별용
+    JudgmentMode_Super,        // 현재 추가 계획 없음
 }
 // 판정 등급을 나타내는 열거형
 public enum JudgmentType
@@ -166,7 +166,7 @@ public class RhythmManger : MonoBehaviour
     // 현재 게임의 판정 모드 (Inspector 창에서 변경 가능)
     [Header("게임 난이도 설정")]
     [Tooltip("현재 적용할 판정 모드를 선택 하세요.")]
-    public JudgmentMode currentMode = JudgmentMode.JudgemnetMode_Normal;
+    public JudgmentMode currentMode = JudgmentMode. JudgmentMode_Normal;
     
     /// <summary>
     /// 시간 차이와 현재 모드를 기반으로 판정을 구함
@@ -199,7 +199,7 @@ public class RhythmManger : MonoBehaviour
        }
 
        // *Super 모드일 경우, Bad 판정을 건너뛰고 바로 Miss 처리*
-       if (currentMode == JudgmentMode.JudgementMode_Super)
+       if (currentMode == JudgmentMode. JudgmentMode_Super)
        {
             // Good 판정 범위를 벗어나면 무조건 Miss
             return JudgmentType.Miss;
