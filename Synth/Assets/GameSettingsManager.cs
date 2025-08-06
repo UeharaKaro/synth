@@ -6,7 +6,7 @@ public class GameSettingsManager : MonoBehaviour
     public static GameSettingsManager Instance { get; private set; }
 
     // 현재 선택된 판정 모드. 기본값은 Normal
-    // public JudgmentMode CurrentMode { get; set; } = JudgmentMode.JudgmentMode_Normal; (테스팅후 삭제예정)
+    public JudgmentMode CurrentMode { get; set; } = JudgmentMode.JudgmentMode_Normal; 
 
     private JudgmentMode currentMode; // 내부적으로 사용할 변수로 변경
     
