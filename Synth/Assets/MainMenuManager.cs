@@ -82,7 +82,7 @@ public class MainMenuManager : MonoBehaviour
     // 각 버튼에 연결될 함수들
     // 이 함수들은 Unity Editor에서 버튼의 OnClick 이벤트에 연결할 예정
 
-    public void OnNOrmalModeClicked()
+    public void OnNormalModeClicked()
     {
         Debug.Log("Normal 모드 선택됨");
         GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Normal;
