@@ -13,7 +13,7 @@ public class MainMenuManager : MonoBehaviour
 
     [Tooltip("기본 버튼 색상")] public Color normalColor = Color.white; // 기본 버튼 색상
 
-    private int currentSelectionIndex = 0; // 현재 선택된 버튼 인덱스
+    private int currentButtonIndex = 0; // 현재 선택된 버튼 인덱스
 
     void Start()
     {
@@ -28,27 +28,27 @@ public class MainMenuManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             // 다음 버튼으로 이동
-            currentSelectionIndex++;
+            currentButtonIndex++;
             // 만약 마지막 버튼을 넘어갔다면 첫 번째 버튼으로 순환
-            if (currentSelectionIndex >= menuButtons.Count)
+            if (currentButtonIndex >= menuButtons.Count)
             {
-                currentSelectionIndex = 0;
+                currentButtonIndex = 0;
             }
 
-            SelectButton(currentSelectionIndex);
+            SelectButton(currentButtonIndex);
         }
         // 위 방향키를 눌렀을 때
         else if (Input.GetKeyDown(KeyCode.UpArrow))
         {
             // 이전 버튼으로 이동
-            currentSelectionIndex--;
+            currentButtonIndex--;
             // 만약 첫 번째 버튼을 넘어갔다면 마지막 버튼으로 순환
-            if (currentSelectionIndex < 0)
+            if (currentButtonIndex < 0)
             {
-                currentSelectionIndex = menuButtons.Count - 1;
+                currentButtonIndex = menuButtons.Count - 1;
             }
 
-            SelectButton(currentSelectionIndex);
+            SelectButton(currentButtonIndex);
         }
 
         // 선택 및 실행 처리
@@ -56,14 +56,14 @@ public class MainMenuManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
         {
             // 현재 선택된 버튼의 기능을 실행
-            menuButtons[currentSelectionIndex].onClick.Invoke();
+            menuButtons[currentButtonIndex].onClick.Invoke();
         }
     }
 
     // 특정 인덱스의 버튼을 선택하고 시각적으로 표시하는 함수
     void SelectButton(int index)
     {
-        // 모든 버튼을 기본 색상으로 설정
+        // 1. 모든 버튼을 기본 색상으로 설정
         for (int i = 0; i < menuButtons.Count; i++)
         {
             // Selectable 컴포넌트를 통헤 색상 제어
@@ -72,9 +72,9 @@ public class MainMenuManager : MonoBehaviour
             menuButtons[i].colors = colors;
         }
 
-        // 선택된 버튼만 강조 색상으로 변경
-        var selectedButton = menuButtons[index].colors;
-        selectedButton.normalColor = selectedColor; // 선택된 색상으로 설정
+        // 2. 선택된 버튼만 강조 색상으로 변경
+        var selectedColors = menuButtons[index].colors;
+        selectedColors.normalColor = selectedColor; // 선택된 색상으로 설정
         menuButtons[index].colors = selectedColors;
 
         currentButtonIndex = index;
