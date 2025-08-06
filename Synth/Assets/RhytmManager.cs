@@ -6,29 +6,6 @@ using FMOD.Studio;
 using Debug = UnityEngine.Debug;
 
 
-// SFX(효과음)을 정의하는 enum(열거형), 숫자대신 의미있는 이름 사용가능
-public enum SFXType
-{
-    Metronome, // 메트로놈 소리(쉼표 유무는 선택)
-    Hit, // 일반적인 히트 사운드
-    Miss // 노트를 놓쳤을 때 나는 소리
-}
-// 키사운드 타입을 위한 enum (각 노트의 개별 키음)
-public enum KeySoundType
-{
-    Kick,       // 킥드럼 소리
-    Snare,      // 스네어 드럼 소리
-    Hihat,      // 하이햇 소리
-    Vocal1,     // 보컬 소리1
-    Vocal2,     // 보컬 소리2
-    Synth1,     // 신디사이저 소리 1
-    Synth2,     // 신디사이저 소리 2
-    Bass,       // 베이스 소리
-    Piano,      // 피아노 소리
-    Guitar,     // 기타 소리
-    None,       // 소리 없음
-}
-
 // 판정 모드를 나타내는 열거형 
 
 public enum JudgmentMode
