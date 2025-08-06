@@ -96,40 +96,6 @@ public enum JudgmentType
     Miss
 }   
 
-// 노말 판정 등급을 나타내는 열거형 
-
-public enum JudgmentMode_Normal // 프로토 타입 발표 때 공개
-{
-    Perfect,        // 41.66ms 
-    Great,          // 83.33ms 
-    Good,           // 120ms
-    Bad,            // 150ms
-    Miss,           // 놓침
-} 
-
-// 하드 판정 등급을 나타내는 열거형
-public enum JudgmentMode_Hard
-{  
-    S_Perfect,      // 16.67ms (1/60초), 이론치 개념, S_Perfect는 Normal 판정에 포함 x
-    Perfect,        // 31.25ms 전부 Perfect로 처리시 달성도(정확도) 100%
-    Great,          // 62.49ms
-    Good,           // 88.33ms
-    Bad,            // 120ms
-    Miss,           // 놓침
-}   
-
-// 슈퍼 판정 등급을 나타내는 열거형
-public enum JudgmentMode_Super // 초창기 출시 계획 없음
-{
-    S_Perfect,      // 4.17ms , 이론치 개념, S_Perfect는 Normal 판정에 포함 x
-    Perfect,        // 12.50ms , 전부 Perfect로 처리시 달성도(정확도) 100%
-    Great,          // 25.00ms
-    Good,           // 62.49ms
-    Bad,            // 0.00ms
-    Miss,           // 놓침
-}
-
-
 public class RhythmManger : MonoBehaviour
 {
     // 판정 기준 설정
@@ -255,4 +221,3 @@ public class RhythmManger : MonoBehaviour
             }
         }
     }
-}
