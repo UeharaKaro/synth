@@ -127,7 +127,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         LoadSFXs(); // 효과음 파일들을 로드
         LoadKeySounds(); // 키사운드 파일들을 로드
         
-        Debug.Log($"FMOD 초기화 완료 - 최대 채널: {maxChannels}");
+        UnityEngine.Debug.Log($"FMOD 초기화 완료 - 최대 채널: {maxChannels}");
     }
     // 효과음 파일들을 메모리에 미리 로드하는 함수
     void LoadSFXs()
@@ -147,11 +147,11 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             if (result == FMOD.RESULT.OK)
             {
                 sfxs[sfxType] = sound; // 성공적으로 로드되면 딕셔너리에 추가
-                Debug.Log($"효과음 로드 성공: {fileName}");
+                UnityEngine.Debug.Log($"효과음 로드 성공: {fileName}");
             }
             else
             {
-                Debug.LogWarning($"효과음 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
+                UnityEngine.Debug.Log.LogWarning($"효과음 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
             }
         }
     }
@@ -178,12 +178,12 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             if (result == FMOD.RESULT.OK)
             {
                 keySounds[keySoundType] = sound; // 성공적으로 로드되면 딕셔너리에 추가
-                Debug.Log($"키사운드 로드 성공: {fileName}");
+                UnityEngine.Debug.Log($"키사운드 로드 성공: {fileName}");
             }
             else
             {
                 // 파일 로드 실패 시 디버그 메세지 출력
-                Debug.LogWarning($"키사운드 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
+                UnityEngine.Debug.LogWarning($"키사운드 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
             }
             
         }
