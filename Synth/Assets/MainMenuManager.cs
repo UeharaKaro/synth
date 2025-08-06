@@ -75,7 +75,7 @@ public class MainMenuManager : MonoBehaviour
         // 선택된 버튼만 강조 색상으로 변경
         var selectedButton = menuButtons[index].colors;
         selectedButton.normalColor = selectedColor; // 선택된 색상으로 설정
-        menuButtons[index].colors = selectedColor;
+        menuButtons[index].colors = selectedColors;
 
         currentButtonIndex = index;
     }
