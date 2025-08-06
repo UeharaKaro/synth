@@ -218,19 +218,68 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         // 배경음악이 로드되어 있는지 확인
         if (bgmSound.hasHandle())
         {
-           // DSP 시간을 기록하여 정확한 곡 시작 지점 추적
-           dspSongTime = AudioSettings.dspTime;
-           isSongStarted = true; // 곡이 시작되었음을 표시
-           
-           // 배경음악 재생 시작
-           var result = system.playSound(bgmSound, bgmChannelGroup, false, out bgmChannel);
-           if (result == FMOD.RESULT.OK)
-           {    
+            // DSP 시간을 기록하여 정확한 곡 시작 지점 추적
+            dspSongTime = AudioSettings.dspTime;
+            isSongStarted = true; // 곡이 시작되었음을 표시
+
+            // 배경음악 재생 시작
+            var result = system.playSound(bgmSound, bgmChannelGroup, false, out bgmChannel);
+            if (result == FMOD.RESULT.OK)
+            {
                 bgmChannel.setVolume(bgmVolume); // 배경음악 볼륨 설정
                 UnityEngine.Debug.Log($"BGM 재생 시작 - DSP 시간: {dspSongTime}");
-           }
-           else
-           {
-               UnityEngine.Debug.LogError($"BGM 재생 실패: {result}");
-           }
+            }
+            else
+            {
+                UnityEngine.Debug.LogError($"BGM 재생 실패: {result}");
+            }
         }
+    }
+
+    // 배경음악을 정지하는 함수
+    public void StopBGM()
+    {
+        if (bgmChannel.hasHandle())
+        {
+            bgmChannel.stop();
+            isSongStarted = false; // 곡이 정지되었음을 표시
+            UnityEngine.Debug.Log("BGM 정지됨");
+        }
+    }
+    
+    // 효과음을 재생하는 함수
+    public void PlaySFX(SFXType sfxType)
+    {
+        // 해당 효과음이 로드되어 있는지 확인
+        if (sfxs.ContainsKey(sfxType))
+        {
+            // 새로운 채널에서 효과음 재생 (여러개 동시 재생가능)
+            FMOD.Channel channel;
+            var result = system.playSound(sfxs[sfxType], sfxChannelGroup, false, out channel);
+            if (result == FMOD.RESULT.OK)
+            {
+                channel.setVolume(sfxVolume); // 효과음 볼륨 설정
+                activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
+            }
+        }
+    }
+    
+    // 키사운드를 재생하는 함수 (노트를 정확히 칠 때 사용)
+    public void PlayKeySound(KeySoundType keySoundType)
+    {
+        // None 타입이거나 해당 키사운드가 로드되지 않은 경우 재생하지 않음
+        if (keySoundType == KeySoundType.None || !keySounds.ContainsKey(keySoundType))
+            return; // 소리 없음 또는 로드되지 않은 키사운드는 무시
+
+        // 새로운 채널에서 키사운드 재생 (여러 개 동시 재생가능)
+        FMOD.Channel channel;
+        // FMOD 오디오 엔진에서 특정 키사운드(keySounds[keySoundType])를 지정된 채널 그룹(keySoundChannelGroup)에서 재생하는 명령
+        var result = system.playSound(keySounds[keySoundType], keySoundChannelGroup, false, out channel);
+        if (result == FMOD.RESULT.OK)
+        {
+            channel.setVolume(keySoundVolume); // 키사운드 전용 볼륨 설정
+            activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
+        }
+    }
+    
+            
