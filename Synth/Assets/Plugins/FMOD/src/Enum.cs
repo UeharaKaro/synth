@@ -3,6 +3,7 @@ using System.Collections.Generic;       // Dictionary를 사용하기 위해 추
 using UnityEngine;
 using FMOD;
 using FMOD.Studio;
+using Debug = UnityEngine.Debug;
 
 /*
 public class RhythmGameManger : MonoBehaviour
@@ -126,7 +127,7 @@ public enum JudgmentMode_Super // 초창기 출시 계획 없음
     Good,           // 62.49ms
     Bad,            // 0.00ms
     Miss,           // 놓침
-}   
+}
 
 
 public class RhythmManger : MonoBehaviour
@@ -135,12 +136,12 @@ public class RhythmManger : MonoBehaviour
     // 각 판정 등급의 최대 허용 시간(ms)를 저장하는 구조체
     public struct JudgmentTimings
     {
-        public readonly float S_Perfect;        // S_Perfect 허용 시간
-        public readonly float Perfect;          // Perfect 허용 시간
-        public readonly float Great;            // Great 허용 시간
-        public readonly float Good;             // Good 허용 시간
-        public readonly float Bad;              // Bad 허용 시간, Miss 는 허용시간 x. 이후 공푸어(긴접미스) 추가 여부는 미지수
-        
+        public readonly float S_Perfect; // S_Perfect 허용 시간
+        public readonly float Perfect; // Perfect 허용 시간
+        public readonly float Great; // Great 허용 시간
+        public readonly float Good; // Good 허용 시간
+        public readonly float Bad; // Bad 허용 시간, Miss 는 허용시간 x. 이후 공푸어(긴접미스) 추가 여부는 미지수
+
         // 생성자: 각 모드별 판정 기준을 쉽게 초기화 하기 위함
         public JudgmentTimings(float s_Perfect, float perfect, float great, float good, float bad)
         {
@@ -151,23 +152,24 @@ public class RhythmManger : MonoBehaviour
             Bad = bad;
         }
     }
+
     // 각 판정 모드에 따른 시간 기준을 저장하는 Dictionary
     private Dictionary<JudgmentMode, JudgmentTimings> modeTimings = new Dictionary<JudgmentMode, JudgmentTimings>()
-    {   // Normal 모드: S_Perfect 없음(0으로 설정), Perfect 판정이 다른 모드 대비 가장 널널함, 곡 종료시 게이지 70%이상시 클리어
-        { JudgmentMode_Normal, new JudgmentTimings(0f, 41.66f, 83.33f, 120f, 150f) },
-        
+    {
+        // Normal 모드: S_Perfect 없음(0으로 설정), Perfect 판정이 다른 모드 대비 가장 널널함, 곡 종료시 게이지 70%이상시 클리어
+        { JudgmentMode.JudgmentMode_Normal, new JudgmentTimings(0f, 41.66f, 83.33f, 120f, 150f) },
+
         // Hard 모드: S_perfect 등장, 전체적인 허용 시간 범위 감소,게이지 감소량 증가
-        { JudgmentMode_Hard, new JudgmentTimings(16.67f, 31.25f, 62.49f, 88.33f, 120f) },
-        
+        { JudgmentMode.JudgmentMode_Hard, new JudgmentTimings(16.67f, 31.25f, 62.49f, 88.33f, 120f) },
+
         // Super 모드: S_Perfect 허용 시간 범위 대폭 감소,게이지 감소량 증가, Bad 판정 삭제
-        { JudgmentMode_Super, new JudgmentTimings(4.17f, 12.50f, 25.00f, 62.49f, 0f) }
+        { JudgmentMode.JudgmentMode_Super, new JudgmentTimings(4.17f, 12.50f, 25.00f, 62.49f, 0f) }
     };
-    
+
     // 현재 게임의 판정 모드 (Inspector 창에서 변경 가능)
-    [Header("게임 난이도 설정")]
-    [Tooltip("현재 적용할 판정 모드를 선택 하세요.")]
-    public JudgmentMode currentMode = JudgmentMode. JudgmentMode_Normal;
-    
+    [Header("게임 난이도 설정")] [Tooltip("현재 적용할 판정 모드를 선택 하세요.")]
+    public JudgmentMode currentMode = JudgmentMode.JudgmentMode_Normal;
+
     /// <summary>
     /// 시간 차이와 현재 모드를 기반으로 판정을 구함
     /// </summary>
@@ -175,41 +177,82 @@ public class RhythmManger : MonoBehaviour
     /// <returns> 계산된 판정 등급 <returns>
     public JudgmentType GetJudgment(float timeDifferenceMs)
     {
-       // 현재 모드에 맞는 판정 기준을 가져온다
-       JudgmentTimings timings = modeTimings[currentMode];
-       
-       float absTimeDiff = Mathf.Abs(timeDifferenceMs);
-       
-       // S_Perfect 판정 확인 (해당 모드에서 S_Perfect 기준이 0보다 클 떄만)
-       if (timings.S_Perfect > 0 && absTimeDiff <= timings.S_Perfect) // S_Perfect 부터 Good 까지 공통 판정 로직
-       {    
-            return JudgmentType.S_Perfect;
-       }
-       if (absTimeDiff <= timings.Perfect)
-       {
-            return JudgmentType.Perfect;
-       }
-       if (absTimeDiff <= timings.Great)
-       {
-            return JudgmentType.Great;
-       }
-       if (absTimeDiff  <= timings.Good)
-       {    
-            return JudgmentType.Good;
-       }
+        // 현재 모드에 맞는 판정 기준을 가져온다
+        JudgmentTimings timings = modeTimings[currentMode];
 
-       // *Super 모드일 경우, Bad 판정을 건너뛰고 바로 Miss 처리*
-       if (currentMode == JudgmentMode. JudgmentMode_Super)
-       {
+        float absTimeDiff = Mathf.Abs(timeDifferenceMs);
+
+        // S_Perfect 판정 확인 (해당 모드에서 S_Perfect 기준이 0보다 클 떄만)
+        if (timings.S_Perfect > 0 && absTimeDiff <= timings.S_Perfect) // S_Perfect 부터 Good 까지 공통 판정 로직
+        {
+            return JudgmentType.S_Perfect;
+        }
+
+        if (absTimeDiff <= timings.Perfect)
+        {
+            return JudgmentType.Perfect;
+        }
+
+        if (absTimeDiff <= timings.Great)
+        {
+            return JudgmentType.Great;
+        }
+
+        if (absTimeDiff <= timings.Good)
+        {
+            return JudgmentType.Good;
+        }
+
+        // *Super 모드일 경우, Bad 판정을 건너뛰고 바로 Miss 처리*
+        if (currentMode == JudgmentMode.JudgmentMode_Super)
+        {
             // Good 판정 범위를 벗어나면 무조건 Miss
             return JudgmentType.Miss;
-       }
-       
-       // Super 모드가 아닐 경우, 기존처럼 Bad 판정을 확인
-       if (absTimeDiff <= timings.Bad)
-       {
+        }
+
+        // Super 모드가 아닐 경우, 기존처럼 Bad 판정을 확인
+        if (absTimeDiff <= timings.Bad)
+        {
             return JudgmentType.Bad;
-       }
-       // 모든 판정 범위를 벗어나면 Miss
-       return JudgmentType.Miss;
-    } 
+        }
+
+        // 모든 판정 범위를 벗어나면 Miss
+        return JudgmentType.Miss;
+    }
+
+    // 예제 사용법(임시)
+    void Update()
+    {
+        // 판정 모드 실시간 변경 (키보드 1, 2, 3)
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            currentMode = JudgmentMode.JudgmentMode_Normal;
+            Debug.Log("<color=green>판정 모드가 Normal로 변경 되었습니다.</color>");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            currentMode = JudgmentMode.JudgmentMode_Hard;
+            Debug.Log("<color=orange>판정 모드가 Hard로 변경되었습니다.</color>");
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3))
+         {
+             currentMode = JudgmentMode.JudgmentMode_Super;
+             Debug.Log("<color=red>판정 모드가 Super로 변경되었습니다,</color>");
+         }               
+
+            // 현재 모드로 판정 테스트 진행
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                // 160ms 부터 160ms 사이의 랜덤한 시간 차이 생성
+                float randomTimeDifference = Random.Range(-160f, 160f);
+
+                // 생성된 시간 차이로 판정 함수 호출
+                JudgmentType currentJudgment = GetJudgment(randomTimeDifference);
+
+                // 결과를 Unity 콘솔에 출력
+                Debug.Log(
+                    $"모드: {currentMode} | 시간 오차: {randomTimeDifference:F2}ms -> 판정:<color=yellow>{currentJudgment}</color>");
+            }
+        }
+    }
+}
