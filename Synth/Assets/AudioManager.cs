@@ -151,7 +151,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             }
             else
             {
-                UnityEngine.Debug.Log.LogWarning($"효과음 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
+                UnityEngine.Debug.LogWarning($"효과음 파일을 찾을 수 없습니다: {filePath} (결과: {result})");
             }
         }
     }
@@ -188,3 +188,49 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             
         }
     }
+    // 배경음악 파일을 로드하는 함수
+    public void LoadBGM(string fileName)
+    {
+        // 기존 BGM이 있으면 해제
+        if (bgmSound.hasHandle())
+        {
+            bgmSound.release();
+        }
+        
+        // 배경음악 파일의 전체 경로 생성
+        string filePath = Application.streamingAssetsPath + "/Audio/BGM/" + fileName;
+        // FMOD에서 사운드 파일을 메모리에 로드
+        var result = system.createSound(filePath, FMOD.MODE.DEFAULT, out bgmSound);
+        
+        if (result == FMOD.RESULT.OK)
+        {
+            UnityEngine.Debug.Log($"BGM 로드 완료: {fileName}");
+        }
+        else
+        {
+            UnityEngine.Debug.LogError($"BGM 로드 실패: {filePath} (결과: {result})");
+        }
+    }
+    
+    // 배경음악을 재생하는 함수 (DSP 시간 기반으로 정확한 타이밍)
+    public void PlayBGM()
+    {
+        // 배경음악이 로드되어 있는지 확인
+        if (bgmSound.hasHandle())
+        {
+           // DSP 시간을 기록하여 정확한 곡 시작 지점 추적
+           dspSongTime = AudioSettings.dspTime;
+           isSongStarted = true; // 곡이 시작되었음을 표시
+           
+           // 배경음악 재생 시작
+           var result = system.playSound(bgmSound, bgmChannelGroup, false, out bgmChannel);
+           if (result == FMOD.RESULT.OK)
+           {    
+                bgmChannel.setVolume(bgmVolume); // 배경음악 볼륨 설정
+                UnityEngine.Debug.Log($"BGM 재생 시작 - DSP 시간: {dspSongTime}");
+           }
+           else
+           {
+               UnityEngine.Debug.LogError($"BGM 재생 실패: {result}");
+           }
+        }
