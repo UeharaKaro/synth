@@ -53,18 +53,18 @@ public class StartMenuUI : MonoBehaviour
     private void UpdateUI()
     {
         // 현재 선택된 모드를 가져옴
-        JudgmentMode selectableMode = selectableModes[currentModeIndex];
+        JudgmentMode selectedMode = selectableModes[currentModeIndex];
 
         // 1. UI 텍스트 업데이트
         if (modeDisplayText != null)
         {
-            modeDisplayText.text = selectableMode.ToString(); // "Normal" 또는 "Hard" 텍스트로 표시(Super 도입시 "Super"표시)
+            modeDisplayText.text = selectedMode.ToString(); // "Normal" 또는 "Hard" 텍스트로 표시(Super 도입시 "Super"표시)
         }
 
         // 2. GameSettingsManager에 지정된 모드저장
-        GameSettingsManager.Instance.CurrentMode = selectableMode;
+        GameSettingsManager.Instance.CurrentMode = selectedMode;
 
-        Debug.Log($"판정모드가 {selectedMode}로 설정 되었습니다.");
+        Debug.Log($"판정 모드가 {selectedMode}로 설정되었습니다.");
     }
 
     // 게임 시작 버튼에 연결할 함수 
