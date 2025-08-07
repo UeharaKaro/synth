@@ -197,7 +197,7 @@ public class Note : MonoBehaviour
     {
         if (isLongNoteActive)
         {
-            // 롱노트가 활성 상태일 때 트레일을 판정성까지 연장
+            // 롱노트가 활성 상태일 때 트레일을 판정선까지 연장
             longNoteTrail.SetPosition(0, startPosition); // 시작 위치
             longNoteTrail.SetPosition(1, new Vector3(transform.position.x, (float)targetY, transform.position.z)); // 판정선 위치
         }
@@ -207,3 +207,6 @@ public class Note : MonoBehaviour
             longNoteTrail.positionCount = 0; // 트레일을 비활성화
         }
     }
+    
+    // 노트가 정확히 쳐졌을때 호출되는 함수
+    public Judgment
