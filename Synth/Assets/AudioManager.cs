@@ -27,6 +27,73 @@ public enum KeySoundType
     None,       // 소리 없음
 }
 
+// 판정 설정을 저장하는 클래스
+[System.Serializable] // Unity에서 직렬화 가능하도록 설정
+public class JudgmentSettings
+{
+    public JudgmentType type;
+    public float S_PerfectRange; // S_Perfect 허용 범위 (ms)
+    public float PerfectRange; // Perfect 허용 범위 (ms)
+    public float GreatRange; // Great 허용 범위 (ms)
+    public float GoodRange; // Good 허용 범위 (ms)
+    public float BadRange; // Bad 허용 범위 (ms)
+    
+    public JudgmentSettings(JudgmentType type, float s_PerfectRange, float perfectRange, float greatRange, float goodRange, float badRange)
+    {
+        this.type = type;
+        this.S_PerfectRange = s_PerfectRange;
+        this.PerfectRange = perfectRange;
+        this.GreatRange = greatRange;
+        this.GoodRange = goodRange;
+        this.BadRange = badRange;
+    }
+    
+    // 미리 정의된 판정 모드별 설정
+    public static JudgmentSettings GetPreset(JudgmentType type)
+    {
+        switch (type)
+        {
+            case JudgmentMode.JudgmentMode_Normal:
+                return new JudgmentSettings(
+                    type,
+                    0f, // S_Perfect 없음
+                    41.66f, // Perfect 허용 범위
+                    83.33f, // Great 허용 범위
+                    120f, // Good 허용 범위
+                    150f // Bad 허용 범위
+                );
+            case JudgmentMode.JudgmentMode_Hard:
+                return new JudgmentSettings(
+                    type,
+                    16.67f, // S_Perfect 허용 범위
+                    31.25f, // Perfect 허용 범위
+                    62.49f, // Great 허용 범위
+                    88.33f, // Good 허용 범위
+                    120f // Bad 허용 범위
+                );
+            case JudgmentMode.JudgmentMode_Super:
+                return new JudgmentSettings(
+                    type,
+                    4.17f, // S_Perfect 허용 범위
+                    12.50f, // Perfect 허용 범위
+                    25.00f, // Great 허용 범위
+                    62.49f, // Good 허용 범위
+                    0f // Super 모드에서는 Bad 판정 없음
+                );
+            default:
+                // 기본값 설정 (예외 처리)
+                return new JudgmentSettings(
+                    JudgmentMode.JudgmentMode_Normal,
+                    0f, // S_Perfect 없음
+                    41.66f, // Perfect 허용 범위
+                    83.33f, // Great 허용 범위
+                    120f, // Good 허용 범위
+                    150f // Bad 허용 범위
+                );
+        }
+    }
+}
+
 public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 사용하여 오디오를 관리하는 역할을 함
 {
     [Header("FMOD 볼륨 설정")]
@@ -281,5 +348,30 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
         }
     }
-    
+    // 키사운드를 실제 플레이어 입력 타이밍에 맞춰 재생하는 함수 *important*
+    public void PlayKeySoundAtTIme(KeySoundType keySoundType, double actualInputTime, double expectedTime)
+    {
+        // None 타입이거나 해당 키사운드가 로드되지 않은 경우 재생하지 않음
+        if (keySoundType == KeySoundType.None || !keySounds.ContainsKey(keySoundType))
+            return; // 소리 없음 또는 로드되지 않은 키사운드는 무시
+
+        // 실제 입력 시간과 예상 시간의 차이를 계산 (초단위)
+        double timingDifference = actualInputTime - expectedTime;
+
+        // 새로운 채널에서 키사운드 재생 (여러 개 동시 재생가능)
+        FMOD.Channel channel;
+        var result = system.playSound(keySounds[keySoundType], keySoundChannelGroup, false, out channel);
+        if (result == FMOD.RESULT.OK)
+        {
+            channel.setVolume(keySoundVolume); // 키사운드 전용 볼륨 설정
             
+            // 타이밍 차이에 따른 피치(음정) 미세 조정 (선택)
+            // 일찍 누르면 약간 높은 음정, 늦게 누르면 약간 낮은 음정
+            float pitchShift = 1.0f + (float)(timingDifference * 0.01f); // 최대 +-10% 피치 조절 
+            // ex): 입력이 0.05초 빨랐다면 피치는 1.0f + 0.0005 = 1.005f
+            pitchShift = Mathf.Clamp(pitchShift, 0.8f, 1.2f); // 피치 범위 제한 (80% ~ 120%)
+            channel.setPitch(pitchShift); // 피치 설정
+            
+            // 타이밍이 많이 벗어난 경우 볼륨 살짝 감소 (선택)
+            double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
+            if (timingErrorMs > Great
