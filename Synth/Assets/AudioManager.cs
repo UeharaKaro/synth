@@ -442,7 +442,58 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
     }
     
     // 미래시점에 키사운드를 예약 재생하는 함수 (레이턴시 보정용)
-    public
+    public void ScheduleKeySound(KeySoundType keySoundType, double scheduledTime)
+    {
+        // None 타입이거나 해당 키사운드가 로드되지 않은 경우 재생하지 않음
+        if (keySoundType == KeySoundType.None || !keySounds.ContainsKey(keySoundType))
+            return; // 소리 없음 또는 로드되지 않은 키사운드는 무시
+
+        // 현재는 즉시 재생하지만, FMOD의 PlayScheeduled 기능을 활용할 수 있음
+        // 실제 구현시 FMOD Timeline이나 DSP 클럭 기반 스케줄링 활용
+        PlayKeySound(keySoundType);
+    }
+
+    // 키사운드 볼륨을 별도로 조절하는 함수 
+    public void SetKeySoundVolume(float volume)
+    {
+        keySoundVolume = Mathf.Clamp01(volume); // 전달받은 볼륨 값을 0~1 사이로 제한하여 keySoundVolume에 저장
+        keySoundChannelGroup.setVolume(keySoundVolume); // 키사운드 채널 그룹의 볼륨 설정
+    }
     
+    // 배경음악(보정 BGM)의 볼륨을 조절하는 함수
+    // 키사운드가 재생될 때 BGM을 줄이고, 놓쳤을 때 BGM을 원래대로 하는 용도
+    public void SetBGMVolume(float volume)
+    {
+        bgmVolume = Mathf.Clamp01(volume); // 전달받은 볼륨 값을 0~1 사이로 제한하여 bgmVolume에 저장
+        if (bgmChannel.hasHandle())
+        {
+            bgmChannel.setVolume(bgmVolume); // 배경음악 채널의 볼륨 설정
+        }
+        bgmChannelGroup.setVolume(bgmVolume); // 배경음악 채널 그룹의 볼륨 설정
+    }
+
+    // 마스터 볼륨을 조절하는 함수
+    public void SetMasterVolume(float volume)
+    {
+        mastervolume = Mathf.Clamp01(volume); // 전달받은 볼륨 값을 0~1 사이로 제한하여 mastervolume에 저장
+        masterChannelGroup.setVolume(mastervolume); // 마스터 채널 그룹의 볼륨 설정
+    }
     
+    // 현재 배경음악이 얼마나 재생되었는지 DSP 시간 기준으로 반환 (초 단위)
+    // 정확한 타이밍을 맞추기 위해 꼭 필요
+    public double GetSongPositionInSeconds()
+    {
+        if (!isSongStarted) return 0.0; // 곡이 시작되지 않았다면 0초 반환
         
+        // DSP 시간 기반으로 정확한 곡 재생 위치 계산
+        return AudioSettings.dspTime - dspSongTime; // 현재 DSP 시간에서 곡 시작 시간을 빼서 경과 시간 계산
+    }
+    
+    // BPM을 기준으로 현재 곡의 위치를 박자 단위로 반환
+    public double GetSongPositionInBeats(double bpm)
+    {
+        double songPositionInSeconds = GetSongPositionInSeconds(); // 현재 곡 위치 (초 단위)
+        // 1분 = 60초, BPM = 분당 박자 수이므로 초당 박자 수 = BPM/60
+        return songPositionInSeconds * (bpm / 60.0); // 초 단위 곡 위치를 박자 단위로 변환
+    }
+    
