@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -97,17 +98,14 @@ public class JudgmentSettings
 
 public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 사용하여 오디오를 관리하는 역할을 함
 {
-    [Header("FMOD 볼륨 설정")] 
-    public float mastervolume = 1.0f; // 전체 볼륨 (0~ 1.0f 범위, 1.0f가 최대 볼륨)
+    [Header("FMOD 볼륨 설정")] public float mastervolume = 1.0f; // 전체 볼륨 (0~ 1.0f 범위, 1.0f가 최대 볼륨)
     public float sfxVolume = 1.0f; // 효과음 볼륨
     public float bgmVolume = 1.0f; // 배경음악 볼륨
     public float keySoundVolume = 1.0f; // 키사운드 볼륨
 
-    [Header("오디오 파일 경로")]
-    public string audiopath = "Assets/Audio/"; // 오디오 파일이 저장된 경로
+    [Header("오디오 파일 경로")] public string audiopath = "Assets/Audio/"; // 오디오 파일이 저장된 경로
 
-    [Header("채널 설정")]
-    public int maxChannels = 512; // 최대 채널 수, FMOD에서 동시에 재생할 수 있는 오디오 채널의 수
+    [Header("채널 설정")] public int maxChannels = 512; // 최대 채널 수, FMOD에서 동시에 재생할 수 있는 오디오 채널의 수
 
     // FMOD에서 사용하는 핵심 구성요소들
     private FMOD.System system; // FMOD 전체 시스템 (오디오 엔진의 뇌 역할)
@@ -137,6 +135,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
     // 싱글톤 패턴 구현 - 게임 전체에서 AudioManager는 하나만 존재
     // 어디서든 AudioManager.Instance로 접근 가능
     private static AudioManager instance;
+
     public static AudioManager Instance
     {
         get
@@ -197,6 +196,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
         UnityEngine.Debug.Log($"FMOD 초기화 완료 - 최대 채널: {maxChannels}");
     }
+
     // 효과음 파일들을 메모리에 미리 로드하는 함수
     void LoadSFXs()
     {
@@ -256,6 +256,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
         }
     }
+
     // 배경음악 파일을 로드하는 함수
     public void LoadBGM(string fileName)
     {
@@ -349,6 +350,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
         }
     }
+
     // 키사운드를 실제 플레이어 입력 타이밍에 맞춰 재생하는 함수 *important*
     public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime)
     {
@@ -375,10 +377,10 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
             //  현재 판정 모드의 Great 범위를 기준으로 볼륨 감소 적용
             double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
-            if (timingErrorMs > judgmentSettings.greatRange)
+            if (timingErrorMs > 41.66f) // 예시로 41.66ms를 Great 범위로 설정 (Normal 모드 기준)
             {
-                float volumeRedutuion = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
-                float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeRedutuion, 0.1f, 0.3f)); // 최대 30% 감소
+                float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
+                float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0.3f)); // 최대 30% 감소
                 channel.setVolume(adjustedVolume);
             }
 
@@ -421,7 +423,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
                 if (timingErrorMs > judgmentSettings.GreatRange) // Great 범위를 벗어난 경우
                 {
                     float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
-                    float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0f, maxVolume));
+                    float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction * 0.1f, 0f, maxVolume));
                     channel.setVolume(adjustedVolume);
 
                     UnityEngine.Debug.Log(
@@ -440,7 +442,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             activeChannels.Add(channel);
         }
     }
-    
+
     // 미래시점에 키사운드를 예약 재생하는 함수 (레이턴시 보정용)
     public void ScheduleKeySound(KeySoundType keySoundType, double scheduledTime)
     {
@@ -459,7 +461,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         keySoundVolume = Mathf.Clamp01(volume); // 전달받은 볼륨 값을 0~1 사이로 제한하여 keySoundVolume에 저장
         keySoundChannelGroup.setVolume(keySoundVolume); // 키사운드 채널 그룹의 볼륨 설정
     }
-    
+
     // 배경음악(보정 BGM)의 볼륨을 조절하는 함수
     // 키사운드가 재생될 때 BGM을 줄이고, 놓쳤을 때 BGM을 원래대로 하는 용도
     public void SetBGMVolume(float volume)
@@ -469,6 +471,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         {
             bgmChannel.setVolume(bgmVolume); // 배경음악 채널의 볼륨 설정
         }
+
         bgmChannelGroup.setVolume(bgmVolume); // 배경음악 채널 그룹의 볼륨 설정
     }
 
@@ -478,17 +481,17 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         mastervolume = Mathf.Clamp01(volume); // 전달받은 볼륨 값을 0~1 사이로 제한하여 mastervolume에 저장
         masterChannelGroup.setVolume(mastervolume); // 마스터 채널 그룹의 볼륨 설정
     }
-    
+
     // 현재 배경음악이 얼마나 재생되었는지 DSP 시간 기준으로 반환 (초 단위)
     // 정확한 타이밍을 맞추기 위해 꼭 필요
     public double GetSongPositionInSeconds()
     {
         if (!isSongStarted) return 0.0; // 곡이 시작되지 않았다면 0초 반환
-        
+
         // DSP 시간 기반으로 정확한 곡 재생 위치 계산
         return AudioSettings.dspTime - dspSongTime; // 현재 DSP 시간에서 곡 시작 시간을 빼서 경과 시간 계산
     }
-    
+
     // BPM을 기준으로 현재 곡의 위치를 박자 단위로 반환
     public double GetSongPositionInBeats(double bpm)
     {
@@ -496,4 +499,90 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         // 1분 = 60초, BPM = 분당 박자 수이므로 초당 박자 수 = BPM/60
         return songPositionInSeconds * (bpm / 60.0); // 초 단위 곡 위치를 박자 단위로 변환
     }
-    
+
+    // 배경음악이 현재 재생 중인지 확인하는 함수
+    public bool IsBGMPlaying()
+    {
+        // 배경음악 채널이 유효한지 확인
+        if (bgmChannel.hasHandle())
+        {
+            bool isPlaying; // 재생 상태를 저장할 변수
+            bgmChannel.isPlaying(out isPlaying); // 재생 중인지 확인
+            return isPlaying;
+        }
+
+        return false; // 배경음악 채널이 없으면 재생중이 아님
+    }
+
+    // 사용하지 않는 채널들을 정리하는 함수 (메모리 누수 방지)
+    void CleanupInactiveChannels()
+    {
+        // 활성화된 채널 리스트에서 유효하지 않은 채널 제거
+        for (int i = activeChannels.Count - 1; i >= 0; i--)
+        {
+            bool isPlaying;
+            var result = activeChannels[i].isPlaying(out isPlaying);
+
+            // 채널이 유효하지 않거나 재생 중이지 않으면 리스트에서 제거
+            if (result != FMOD.RESULT.OK || !isPlaying)
+            {
+                activeChannels.RemoveAt(i);
+            }
+        }
+    }
+
+    // 매 프레임마다 실행되는 함수
+    void Update()
+    {
+        // FMOD 시스템 업데이트 (오디오 엔진 상태 갱신) - 오디오 처리를 위해 필수
+        system.update();
+
+        // 1초마다 비활성 채널 정리 (성능 최적화)
+        if (Time.frameCount % 60 == 0) // 매 60프레임마다 (약 1초 간격)
+        {
+            CleanupInactiveChannels(); // 사용하지 않는 채널 정리 -> 프레임 속도가 높아질수록 정리 주기가 더 짧아짐
+
+        }
+    }
+
+    // 게임 오브젝트가 파괴될 때 실행되는 함수 (메모리 정리)
+    private void OnDestroy()
+    {
+        // 모든 효과음 파일을 메모리에서 해제
+        foreach (var sound in sfxs.Values)
+        {
+            sound.release(); // FMOD에서 사운드 객체를 메모리에서 해제
+        }
+
+        // 모든 키사운드 파일을 메모리에서 해제
+        foreach (var sound in keySounds.Values)
+        {
+            sound.release();
+        }
+
+        // 배경음악 파일을 메모리에서 해제
+        if (bgmSound.hasHandle())
+            bgmSound.release();
+        // 모든 활성 채널 정지 및 정리   
+        foreach (var channel in activeChannels)
+        {
+            if (channel.hasHandle())
+            {
+                channel.stop();
+            }
+        }
+
+        activeChannels.Clear();
+
+        // 채널 그룹들을 메모리에서 해제
+        sfxChannelGroup.release();
+        bgmChannelGroup.release();
+        keySoundChannelGroup.release();
+
+        // FMOD 시스템 종료 및 메모리 해제
+        system.close(); // FMOD 시스템 종료
+        system.release(); // FMOD 시스템 메모리 해제
+
+        UnityEngine.Debug.Log("FMOD 시스템 정리 완료");
+    }
+}
