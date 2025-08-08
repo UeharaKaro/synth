@@ -42,36 +42,32 @@ public class NoteData
 // 개별 오브젝트를 제어하는 클래스 
 public class Note : MonoBehaviour
 {
-    [Header("노트 설정")]
-    public KeySoundType keySoundType = KeySoundType.None; // 이 노트에 할당된 키사운드 타입을 저장, 기본값은 None
+    [Header("노트 설정")] public KeySoundType keySoundType = KeySoundType.None; // 이 노트에 할당된 키사운드 타입을 저장, 기본값은 None
     public int track = 0; // 노트가 속한 트랙(라인) 번호, 기본값은 0
     public double timing = 0.0; // 노트가 등장해야 하는 시간 (초 단위, DSP 기준)
     public bool isLongNote = false; // 롱노트 여부 
 
-    [Header("시각적 설정")]
-    public SpriteRenderer noteRenderer; // 노트 스프라이트 렌더러
+    [Header("시각적 설정")] public SpriteRenderer noteRenderer; // 노트 스프라이트 렌더러
     public Color evenTrackColor = Color.white; // 짝수 트랙 노트 색상 (0,2,4,6 번 트랙 등)
     public Color oddTrackColor = Color.cyan; // 홀수 트랙 노트 색상 (1,3,5,7 번 트랙 등)
 
-    [Header("판정 설정")]
-    public JudgmentMode JudgmentMode = JudgmentMode.JudgmentMode_Normal; // 기본 판정 모드
+    [Header("판정 설정")] public JudgmentMode JudgmentMode = JudgmentMode.JudgmentMode_Normal; // 기본 판정 모드
 
     [Header("Normal 모드 판정 임계값/기준(ms)")]
-    public float normalSperfectThreshold = 0f;   // Normal 모드 S_Perfect 판정 기준 (없음, 0으로 설정) 
+    public float normalSperfectThreshold = 0f; // Normal 모드 S_Perfect 판정 기준 (없음, 0으로 설정) 
+
     public float normalPerfectThreshold = 41.66f; // Normal 모드 Perfect 판정 기준 (ms)
     public float normalGreatThreshold = 83.33f; // Normal 모드 Great 판정 기준 (ms)
     public float normalGoodThreshold = 120f; // Normal 모드 Good 판정 기준 (ms)
     public float normalBadThreshold = 150f; // Normal 모드 Bad 판정 기준 (ms)
 
-    [Header("Hard 모드 판정 임계값/기준(ms)")] 
-    public float hardSPerfectThreshold = 16.67f; // Hard 모드 S_Perfect 판정 기준 (ms)
+    [Header("Hard 모드 판정 임계값/기준(ms)")] public float hardSPerfectThreshold = 16.67f; // Hard 모드 S_Perfect 판정 기준 (ms)
     public float hardPerfectThreshold = 32.25f; // Hard 모드 Perfect 판정 기준 (ms)
     public float hardGreatThreshold = 62.49f; // Hard 모드 Great 판정 기준 (ms)
     public float hardGoodThreshold = 88.33f; // Hard 모드 Good 판정 기준 (ms)
     public float hardBadThreshold = 120f; // Hard 모드 Bad 판정 기준 (ms) 
 
-    [Header("Super 모드 판정 임계값/기준(ms)")] 
-    public float superSPerfectThreshold = 4.17f; // Super 모드 S_Perfect 판정 기준 (ms)
+    [Header("Super 모드 판정 임계값/기준(ms)")] public float superSPerfectThreshold = 4.17f; // Super 모드 S_Perfect 판정 기준 (ms)
     public float superPerfectThreshold = 12.50f; // Super 모드 Perfect 판정 기준 (ms)
     public float superGreatThreshold = 25.00f; // Super 모드 Great 판정 기준 (ms)
     public float superGoodThreshold = 62.49f; // Super 모드 Good 판정 기준 (ms)
@@ -180,7 +176,7 @@ public class Note : MonoBehaviour
         transform.position = currentPos; // 현재 위치 업데이트
 
         // 롱노트 트레일 업데이트
-        if (isLongNote && longNoteTrail !=  null)
+        if (isLongNote && longNoteTrail != null)
         {
             UpdateLongNoteTrail();
         }
@@ -202,7 +198,7 @@ public class Note : MonoBehaviour
         {
             // 롱노트가 활성 상태일 때 트레일을 판정선까지 연장
             longNoteTrail.SetPosition(0, startPosition); // 시작 위치
-            longNoteTrail.SetPosition(1, 
+            longNoteTrail.SetPosition(1,
                 new Vector3(transform.position.x, (float)targetY, transform.position.z)); // 판정선 위치
         }
         else
@@ -237,6 +233,7 @@ public class Note : MonoBehaviour
             {
                 longNoteTrail.positionCount = 2;
             }
+
             return judgment; // 롱노트는 여기서 바로 반환하지 않고 홀드 상태 유지
         }
 
@@ -330,4 +327,60 @@ public class Note : MonoBehaviour
         // 실제로는 AudioManager.Instance.PlayKeySound(soundType) 사용
         Debug.Log($"키사운드 재생: {soundType}");
     }
-} // 코드 추가할때 삭제할 중괄호
+
+    // 노트를 놓쳤을 때 호출되는 함수
+    public void OnNoteMiss()
+    {
+        if (isHit) return; // 이미 쳐진 노트는 무시
+
+        // Miss 효과음 재생 (실제로는 AudioManager 사용)
+        Debug.Log("Miss!");
+
+        gameObject.SetActive(false);
+    }
+
+    // 이 노트를 제거해야 하는지 판단하는 함수
+    public bool ShouldDestroy()
+    {
+        double currentTime = GetCurrentSongTime();
+
+        // 현재 판정 모드에 따른 최대 판정 범위 계산
+        float maxThreshold = GetMaxThresholdForCurrentMode();
+
+        // 판정 시간을 최대 판정 한계를 지나면 자동으로 Miss 처리
+        if (currentTime > timing + (maxThreshold / 1000.0) && !isHit)
+        {
+            OnNoteMiss();
+            return true;
+        }
+
+        // 화면 완전히 벗어나면 제거
+        return transform.position.y < targetY - 3f;
+    }
+
+    // 판정 범위 내에 있는지 확인하는 함수
+    public bool IsInJudgmentRange()
+    {
+        double currentTime = GetCurrentSongTime();
+        double timeDifference = System.Math.Abs(currentTime - timing);
+
+        float maxThreshold = GetMaxThresholdForCurrentMode();
+        return timeDifference <= (maxThreshold / 1000.0);
+    }
+
+    // 현재 판정 모드에 따른 최대 임계값 반환
+    float GetMaxThresholdForCurrentMode()
+    {
+        switch (JudgmentMode)
+        {
+            case JudgmentMode.JudgmentMode_Normal:
+                return normalBadThreshold; // Normal 모드는 S_Perfect 없음
+            case JudgmentMode.JudgmentMode_Hard:
+                return hardBadThreshold;
+            case JudgmentMode.JudgmentMode_Super:
+                return superGoodThreshold; // Super 모드는 Good이 최대
+            default:
+                return normalBadThreshold;
+        }
+    }
+}
