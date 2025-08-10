@@ -51,7 +51,7 @@ public class Note : MonoBehaviour
     public Color evenTrackColor = Color.white; // 짝수 트랙 노트 색상 (0,2,4,6 번 트랙 등)
     public Color oddTrackColor = Color.cyan; // 홀수 트랙 노트 색상 (1,3,5,7 번 트랙 등)
 
-    [Header("판정 설정")] public JudgmentMode JudgmentMode = JudgmentMode.JudgmentMode_Normal; // 기본 판정 모드
+    [Header("판정 설정")] public JudgmentMode judgmentMode = JudgmentMode.JudgmentMode_Normal; // 기본 판정 모드
 
     [Header("Normal 모드 판정 임계값/기준(ms)")]
     public float normalSperfectThreshold = 0f; // Normal 모드 S_Perfect 판정 기준 (없음, 0으로 설정) 
@@ -274,7 +274,7 @@ public class Note : MonoBehaviour
     // 타이밍 차이를 기반으로 판정 등급 계산
     JudgmentType CalculateJudgment(double timeDifferenceMs)
     {
-        switch (JudgmentMode)
+        switch (judgmentMode)
         {
             case JudgmentMode.JudgmentMode_Normal:
                 return CalculateNormalJudgment(timeDifferenceMs);
@@ -371,7 +371,7 @@ public class Note : MonoBehaviour
     // 현재 판정 모드에 따른 최대 임계값 반환
     float GetMaxThresholdForCurrentMode()
     {
-        switch (JudgmentMode)
+        switch (judgmentMode)
         {
             case JudgmentMode.JudgmentMode_Normal:
                 return normalBadThreshold; // Normal 모드는 S_Perfect 없음
@@ -383,9 +383,78 @@ public class Note : MonoBehaviour
                 return normalBadThreshold;
         }
     }
-    
+
     // 롱노트가 현재 홀드 중인지 학인
     public bool IsLongNoteHeld()
     {
         return isLongNote && isLongNoteHeld; // 롱노트가 활성화되어 있고 홀드 중인지 확인
     }
+
+    // 판정 임계값을 설정하는 함수들 (외부에서 호출 가능)
+    public void SetJudgmentMode(JudgmentMode mode)
+    {
+        judgmentMode = mode;
+    }
+
+    public void SetNormalThresholds(float perfect, float great, float good, float bad)
+    {
+        normalPerfectThreshold = perfect;
+        normalGreatThreshold = great;
+        normalGoodThreshold = good;
+        normalBadThreshold = bad;
+    }
+
+    public void SetHardThresholds(float sPerfect, float perfect, float great, float good, float bad)
+    {
+        hardSPerfectThreshold = sPerfect;
+        hardPerfectThreshold = perfect;
+        hardGreatThreshold = great;
+        hardGoodThreshold = good;
+        hardBadThreshold = bad;
+    }
+
+    public void SetSuperThresholds(float sPerfect, float perfect, float great, float good) //
+    {
+        superSPerfectThreshold = sPerfect;
+        superPerfectThreshold = perfect;
+        superGreatThreshold = great;
+        superGoodThreshold = good;
+    }
+
+    // 트랙별 색상 설정 함수들 (외부에서 호출 가능)
+    public void SetTrackColors(Color evenColor, Color oddColor)
+    {
+        evenTrackColor = evenColor;
+        oddTrackColor = oddColor;
+
+        // 색상 변경 후 즉시 외형 업데이트
+        SetNoteAppearance();
+
+        // 롱노트 트레일 색상도 업데이트
+        if (isLongNote && longNoteTrail != null)
+        {
+            Color trailColor = (track % 2 == 0) ? evenTrackColor : oddTrackColor;
+            longNoteTrail.startColor = trailColor;
+            longNoteTrail.endColor = trailColor; // 시작과 끝 색상 동일
+        }
+    }
+
+    // 현재 노트의 색상 반환 
+    public Color GetNoteColor()
+    {
+        return (track % 2 == 0) ? evenTrackColor : oddTrackColor;
+
+    }
+
+    // 트랙이 짝수인지 홀수인지 확인
+    public bool IsEvenTrack()
+    {
+        return track % 2 == 0; // 짝수 트랙이면 true, 홀수 트랙이면 false 반환
+    }
+
+    // 노트의 현재 상태를 가져오는 함수들
+    public double GetTiming() => timing; // 노트의 등장 시간 반환
+    public double GetLongNoteEndTiming() => longNoteEndTiming; // 롱노트의 종료 시간 반환 
+    public int GetTrack() => track; // 노트의 트랙 번호 반환
+    public bool IsHit() => isHit; // 노트가 쳐졌는지 여부 반환
+}
