@@ -83,7 +83,7 @@ public class Note : MonoBehaviour
 
     // 롱노트 관련 변수들
     private double longNoteEndTiming; // 롱노트가 끝나는 시간
-    private bool isLongNoteActive = false; // 롱노트가 활성화되었는지 여부
+    private bool isLongNoteHeld = false; // 롱노트가 활성화되었는지 여부
     private LineRenderer longNoteTrail; // 롱노트 시각적 표현용
 
     // 노트를 초기화 하는 함수
@@ -99,7 +99,7 @@ public class Note : MonoBehaviour
         spwanTime = currentTime; // 현재 DSP 시간 저장
         initialized = true; // 초기화 완료 플래그 설정
         isHit = false; // 노트가 쳐지지 않은 상태로 초기화
-        isLongNoteActive = false; // 롱노트 활성화 상태 초기화
+        isLongNoteHeld = false; // 롱노트 활성화 상태 초기화
 
         startPosition = transform.position; // 노트의 시작 위치 저장
         targetPosition = new Vector3(startPosition.x, (float)targetY, startPosition.z);
@@ -194,7 +194,7 @@ public class Note : MonoBehaviour
     // 롱노트 트레일 업데이트 함수
     private void UpdateLongNoteTrail()
     {
-        if (isLongNoteActive)
+        if (isLongNoteHeld)
         {
             // 롱노트가 활성 상태일 때 트레일을 판정선까지 연장
             longNoteTrail.SetPosition(0, startPosition); // 시작 위치
@@ -227,7 +227,7 @@ public class Note : MonoBehaviour
         // 롱노트인 경우 홀드 상태로 전환
         if (isLongNote)
         {
-            isLongNoteActive = true;
+            isLongNoteHeld = true;
             // 롱노트 시각적 효과 시작
             if (longNoteTrail != null)
             {
@@ -246,9 +246,9 @@ public class Note : MonoBehaviour
     // 롱노트 릴리즈 처리
     public JudgmentType OnLongNoteRelease(double releaseTime)
     {
-        if (!isLongNote || !isLongNoteActive) return JudgmentType.Miss;
+        if (!isLongNote || !isLongNoteHeld) return JudgmentType.Miss;
 
-        isLongNoteActive = false;
+        isLongNoteHeld = false;
 
         // 릴리즈 타이밍 판정
         double timeDifference = System.Math.Abs(releaseTime - longNoteEndTiming) * 1000.0;
@@ -383,4 +383,9 @@ public class Note : MonoBehaviour
                 return normalBadThreshold;
         }
     }
-}
+    
+    // 롱노트가 현재 홀드 중인지 학인
+    public bool IsLongNoteHeld()
+    {
+        return isLongNote && isLongNoteHeld; // 롱노트가 활성화되어 있고 홀드 중인지 확인
+    }
