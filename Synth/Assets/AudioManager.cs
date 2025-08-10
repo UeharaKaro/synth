@@ -352,7 +352,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
     }
 
     // 키사운드를 실제 플레이어 입력 타이밍에 맞춰 재생하는 함수 *important*
-    public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime)
+    public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime, bool enableEffects, float maxPitch, float maxVolume )
     {
         // None 타입이거나 해당 키사운드가 로드되지 않은 경우 재생하지 않음
         if (keySoundType == KeySoundType.None || !keySounds.ContainsKey(keySoundType))
