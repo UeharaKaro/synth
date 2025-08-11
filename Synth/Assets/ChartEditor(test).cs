@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic; // List를 사용하기 위해 필요
 using System.IO;
 using UnityEngine.Networking;
-
+/*
 [System.Serializable]
 public class ChartData
 {
@@ -53,7 +53,7 @@ void Update()
 */ // 임시 저장용 주석, 편집시 해제할것
 
 // --- UI 상호작용 함수 ---
-
+/*
 // "오디오 파일 불러오기" 버튼 클릭 시 호출
 public void OnLoadAudioButtonClicked()
 {
@@ -175,7 +175,7 @@ string FormatTime(float time)
     return string.Format("{0:00}:{1:00}", minutes, seconds);
 }
 
-
+*/
 // ----- GEMINI가 생성한 코드 시작 (참고 및 병합용) -----
 /*
 // using UnityEngine;
