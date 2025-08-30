@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: b0fb832e401d1514a9611735d8d340b1
 timeCreated: 1453178387
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -61,4 +61,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/TransportOpen.png
-  uploadId: 764408
+  uploadId: 778161

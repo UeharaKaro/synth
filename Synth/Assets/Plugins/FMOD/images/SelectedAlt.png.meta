@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 8ce9b717b1bc7564cbe35664f2f178a7
 timeCreated: 1455161898
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -61,4 +61,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/SelectedAlt.png
-  uploadId: 764408
+  uploadId: 778161

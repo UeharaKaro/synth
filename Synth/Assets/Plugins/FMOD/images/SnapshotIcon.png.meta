@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: cf2bba5fb8be7e64ca39979f18eb372a
 timeCreated: 1434600422
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -59,4 +59,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/SnapshotIcon.png
-  uploadId: 764408
+  uploadId: 778161

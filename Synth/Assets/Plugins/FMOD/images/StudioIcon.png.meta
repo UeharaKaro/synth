@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: a4edfa5854cdec34b98b1c55f0562bdd
 timeCreated: 1434601223
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -59,4 +59,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/StudioIcon.png
-  uploadId: 764408
+  uploadId: 778161

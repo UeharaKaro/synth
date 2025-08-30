@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 6e164dcb85fc8ad4b9ab2f1e883862d2
 timeCreated: 1455688729
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -61,4 +61,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/CopyIcon.png
-  uploadId: 764408
+  uploadId: 778161
