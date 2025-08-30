@@ -61,8 +61,66 @@ public class SongSelectionManager : MonoBehaviour
 
 	// 키 개수 변경 함수
 	private void ChangeKeyCount(int delta)
-    {
-		// Special 난이도가 아닌 경우에만 키 개수 변경 허용
-		
+	{
+		// Special 난이도가 아닌 경우에만 키 개수 변경 허용 (Special 모드에서는 고정 4키/ 임시)
+		if (difficulties[currentDifficultyIndex] != "Sepcial")
+		{
+			// 현재 키 개수의 인덱스 찾기
+			int currentIndex = System.Array.IndexOf(availableKeyCounts, currentKeyCount);
 
+			// 인덱스 변경
+			currentIndex = (currentIndex + delta + availableKeyCounts.Length) % availableKeyCounts.Length;
+
+			// 새로운 키 개수 설정
+			currentKeyCount = availableKeyCounts[currentIndex];
+		}
+
+		UpdateUI();
+	}
+	
+	// 난이도 변경 함수
+	private void ChangeDifficulty(int delta)
+	{
+		// 인덱스 변경
+		currentDifficultyIndex = (currentDifficultyIndex + delta + difficulties.Length) % difficulties.Length; 
+		
+		// 난이도가 Special로 변경되면 키 개수를 4키로 강제
+		if (difficulties[currentDifficultyIndex] == "Sepcial")
+		{
+			currentKeyCount = 4; // Special 모드에서는 고정 4키 (임시)
+		}
+		
+		UpdateUI();
+	}
+	
+	// UI 업데이트 함수
+	private void UpdateUI()
+	{
+		if (keyCountText != null)
+		{
+			keyCountText.text = "Key Count: " + currentKeyCount.ToString(); // 현재 키 개수 표시
+		}
+
+		if (difficultyText != null)
+		{
+			difficultyText.text = "Difficulty: " + difficulties[currentDifficultyIndex]; // 현재 난이도 표시
+		}
+	}
+	
+	// 곡 선택 시 호출되는 함수
+	private void OnSelectSong()
+	{
+		// Special 난이도 시 키 개수 4로 고정(이미 UI에서 처리되었지만 확인)
+		if (difficulties[currentDifficultyIndex] == "Special")
+		{
+			currentKeyCount = 4; // Special 모드에서는 고정 4키 (임시)
+		}
+		
+		// PlayerPrefes를 사용해 keyCount와 difficulty 전달 (게임 씬에서 불러 올 수 았음)
+		PlayerPrefs.SetInt("SelectedKeyCount", currentKeyCount);
+		PlayerPrefs.SetString("SelectedDifficulty", difficulties[currentDifficultyIndex]);
+		
+		// 게임 씬 로드  (GameScene으로 가정, 실제로는 변경 필요)
+		SceneManager.LoadScene("GameScene");
+	}
 }
