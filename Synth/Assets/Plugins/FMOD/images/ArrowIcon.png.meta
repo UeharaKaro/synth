@@ -1,7 +1,7 @@
 fileFormatVersion: 2
 guid: 01c0101f357b9da4ba78b8f58c290f86
 timeCreated: 1455161898
-licenseType: Free
+licenseType: Store
 TextureImporter:
   fileIDToRecycleName: {}
   serializedVersion: 2
@@ -61,4 +61,4 @@ AssetOrigin:
   packageName: FMOD for Unity (2.03)
   packageVersion: 2.03.08
   assetPath: Assets/Plugins/FMOD/images/ArrowIcon.png
-  uploadId: 764408
+  uploadId: 778161
