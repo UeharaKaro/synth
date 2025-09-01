@@ -350,7 +350,9 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
         }
     }
-
+    // AudioManager 클래스에 판정 설정 변수 추가
+    [Header("판정 설정")]
+    public JudgmentSettings currentJudgmentSettings= JudgmentSettings.GetPreset(JudgmentMode.JudgmentMode_Normal); // 기본 판정 설정 (Normal 모드)
     // 키사운드를 실제 플레이어 입력 타이밍에 맞춰 재생하는 함수 *important*
     public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime, bool enableEffects, float maxPitch, float maxVolume )
     {
@@ -375,20 +377,46 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             pitchShift = Mathf.Clamp(pitchShift, 0.8f, 1.2f); // 피치 범위 제한 (80% ~ 120%)
             channel.setPitch(pitchShift); // 피치 설정
 
-            //  현재 판정 모드의 Great 범위를 기준으로 볼륨 감소 적용
-            double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
-            if (timingErrorMs > 41.66f) // 예시로 41.66ms를 Great 범위로 설정 (Normal 모드 기준)
-            {
-                float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
-                float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0.3f)); // 최대 30% 감소
-                channel.setVolume(adjustedVolume);
-            }
+            // 현재 판정 모드의 Perfect 범위를 기준으로 볼륨 감소 적용
+                double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
+                
+                // 판정 모드에 따른 Perfect 범위 설정
+                float perfectThreshold;
+                switch (currentJudgmentSettings.mode) 
+                {
+                    case JudgmentMode.JudgmentMode_Normal:
+                        perfectThreshold = 41.66f; // Normal 모드 Perfect 범위
+                        break;
+                    case JudgmentMode.JudgmentMode_Hard:
+                        perfectThreshold = 31.25f; // Hard 모드 Perfect 범위
+                        break;
+                    case JudgmentMode.JudgmentMode_Super:
+                        perfectThreshold = 12.50f; // Super 모드 Perfect 범위
+                        break;
+                    default:
+                        perfectThreshold = 41.66f; // 기본값 (Normal 모드)
+                        break;
+                }
+                
+                if (timingErrorMs > perfectThreshold)
+                {
+                    float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
+                    float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0.3f)); // 최대 30% 감소
+                    channel.setVolume(adjustedVolume);
+                }
 
             // 활성화된 채널 리스트에 추가 (메모리 관리용)
             activeChannels.Add(channel);
 
             UnityEngine.Debug.Log($"키사운드 재생 - 타이밍 차이: {timingDifference * 1000:F1}ms, 피치: {pitchShift:F3}");
         }
+    }
+    
+    // 판정 모드를 변경하는 함수
+    public void SetJudgmentMode(JudgmentMode mode) // MainMenuManager에서 Play 모드 선택후 특정키(F1,F2..)를 누르면 호출
+    {
+        currentJudgmentSettings = JudgmentSettings.GetPreset(mode);
+        UnityEngine.Debug.Log($"판정 모드 변경: {mode}");
     }
 
     // 키사운드를 실제 플레이어 입력에 맞춰 재생하는 함수 (RhythmManager에서 호출)
