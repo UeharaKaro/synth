@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using FMOD.Studio;
-using FMOD; // FMOD 라이브러리를 사용하기 위해 필요
+using FMOD;// FMOD 라이브러리를 사용하기 위해 필요
+using Debug = UnityEngine.Debug; 
 
 // SFX(효과음)을 정의하는 enum(열거형), 숫자대신 의미있는 이름 사용가능
 public enum SFXType
@@ -106,6 +107,14 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
     [Header("오디오 파일 경로")] public string audiopath = "Assets/Audio/"; // 오디오 파일이 저장된 경로
 
     [Header("채널 설정")] public int maxChannels = 512; // 최대 채널 수, FMOD에서 동시에 재생할 수 있는 오디오 채널의 수
+
+    [Header("오디오 소스")] [SerializeField] private AudioSource musicSource; // 배경음악 재생용 오디오 소스 (Unity 기본 오디오 소스)
+    [SerializeField] private AudioSource sfxSource; // 효과음 재생용 오디오 소스 (Unity 기본 오디오 소스)
+
+    [Header("오디오 설정")] [SerializeField] private bool applyBufferSettings = true; // 버퍼 설정 적용 여부
+
+    private float originalMusicTime = 0f; // 원본 음악의 재생 시간 
+    private bool isPlaying = false; // 음악 재생 중인지 여부
 
     // FMOD에서 사용하는 핵심 구성요소들
     private FMOD.System system; // FMOD 전체 시스템 (오디오 엔진의 뇌 역할)
@@ -350,11 +359,15 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             activeChannels.Add(channel); // 활성화된 채널 리스트에 추가 (메모리 관리용)
         }
     }
+
     // AudioManager 클래스에 판정 설정 변수 추가
     [Header("판정 설정")]
-    public JudgmentSettings currentJudgmentSettings= JudgmentSettings.GetPreset(JudgmentMode.JudgmentMode_Normal); // 기본 판정 설정 (Normal 모드)
+    public JudgmentSettings
+        currentJudgmentSettings = JudgmentSettings.GetPreset(JudgmentMode.JudgmentMode_Normal); // 기본 판정 설정 (Normal 모드)
+
     // 키사운드를 실제 플레이어 입력 타이밍에 맞춰 재생하는 함수 *important*
-    public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime, bool enableEffects, float maxPitch, float maxVolume )
+    public void PlayKeySoundAtInputTime(KeySoundType keySoundType, double actualInputTime, double expectedTime,
+        bool enableEffects, float maxPitch, float maxVolume)
     {
         // None 타입이거나 해당 키사운드가 로드되지 않은 경우 재생하지 않음
         if (keySoundType == KeySoundType.None || !keySounds.ContainsKey(keySoundType))
@@ -378,32 +391,32 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             channel.setPitch(pitchShift); // 피치 설정
 
             // 현재 판정 모드의 Perfect 범위를 기준으로 볼륨 감소 적용
-                double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
-                
-                // 판정 모드에 따른 Perfect 범위 설정
-                float perfectThreshold;
-                switch (currentJudgmentSettings.mode) 
-                {
-                    case JudgmentMode.JudgmentMode_Normal:
-                        perfectThreshold = 41.66f; // Normal 모드 Perfect 범위
-                        break;
-                    case JudgmentMode.JudgmentMode_Hard:
-                        perfectThreshold = 31.25f; // Hard 모드 Perfect 범위
-                        break;
-                    case JudgmentMode.JudgmentMode_Super:
-                        perfectThreshold = 12.50f; // Super 모드 Perfect 범위
-                        break;
-                    default:
-                        perfectThreshold = 41.66f; // 기본값 (Normal 모드)
-                        break;
-                }
-                
-                if (timingErrorMs > perfectThreshold)
-                {
-                    float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
-                    float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0.3f)); // 최대 30% 감소
-                    channel.setVolume(adjustedVolume);
-                }
+            double timingErrorMs = System.Math.Abs(timingDifference * 1000.0); // ms 단위로 변환
+
+            // 판정 모드에 따른 Perfect 범위 설정
+            float perfectThreshold;
+            switch (currentJudgmentSettings.mode)
+            {
+                case JudgmentMode.JudgmentMode_Normal:
+                    perfectThreshold = 41.66f; // Normal 모드 Perfect 범위
+                    break;
+                case JudgmentMode.JudgmentMode_Hard:
+                    perfectThreshold = 31.25f; // Hard 모드 Perfect 범위
+                    break;
+                case JudgmentMode.JudgmentMode_Super:
+                    perfectThreshold = 12.50f; // Super 모드 Perfect 범위
+                    break;
+                default:
+                    perfectThreshold = 41.66f; // 기본값 (Normal 모드)
+                    break;
+            }
+
+            if (timingErrorMs > perfectThreshold)
+            {
+                float volumeReduction = (float)(timingErrorMs / 100.0f); // 100ms당 볼륨 10% 감소
+                float adjustedVolume = keySoundVolume * (1.0f - Mathf.Clamp(volumeReduction, 0.1f, 0.3f)); // 최대 30% 감소
+                channel.setVolume(adjustedVolume);
+            }
 
             // 활성화된 채널 리스트에 추가 (메모리 관리용)
             activeChannels.Add(channel);
@@ -411,7 +424,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             UnityEngine.Debug.Log($"키사운드 재생 - 타이밍 차이: {timingDifference * 1000:F1}ms, 피치: {pitchShift:F3}");
         }
     }
-    
+
     // 판정 모드를 변경하는 함수
     public void SetJudgmentMode(JudgmentMode mode) // MainMenuManager에서 Play 모드 선택후 특정키(F1,F2..)를 누르면 호출
     {
@@ -574,7 +587,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
     }
 
     // 게임 오브젝트가 파괴될 때 실행되는 함수 (메모리 정리)
-    private void OnDestroy()
+    private void OnDestroy() 
     {
         // 모든 효과음 파일을 메모리에서 해제
         foreach (var sound in sfxs.Values)
@@ -606,6 +619,13 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         sfxChannelGroup.release();
         bgmChannelGroup.release();
         keySoundChannelGroup.release();
+        
+        // 이벤트 구독 해제
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged -= ApplyAudioSettings; 
+        }
+        
 
         // FMOD 시스템 종료 및 메모리 해제
         system.close(); // FMOD 시스템 종료
@@ -613,4 +633,165 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
         UnityEngine.Debug.Log("FMOD 시스템 정리 완료");
     }
+
+    private void Start()
+    {
+        // 설정 변경 이벤트 구독
+        if (SettingsManager.Instance != null)
+        {
+            SettingsManager.Instance.OnSettingsChanged += ApplyAudioSettings; 
+            ApplyAudioSettings();
+        }
+
+        // AudioSource 초기화
+        if (musicSource == null)
+            musicSource = GetComponent<AudioSource>(); // 현재 게임 오브젝트에서 AudioSource 컴포넌트 가져오기
+
+        if (sfxSource == null && musicSource != null) // sfxSource,musicSource가 없으면 sfx 새로 생성
+        {
+            GameObject sfxGO = new GameObject("SFX AudioSource");
+            sfxGO.transform.SetParent(transform);
+            sfxSource = sfxGO.AddComponent<AudioSource>();
+        }
+    }
+    
+    private void ApplyAudioSettings() // 설정 매니저에서 설정값을 가져와 오디오 설정에 반영
+    {
+        if (SettingsManager.Instance == null) return;
+
+        var settings = SettingsManager.Instance.Settings;
+
+        // 음악 볼륨 적용
+        if (musicSource != null)
+        {
+            musicSource.volume = settings.musicVolume;
+        }
+
+        // SFX 볼륨도 음악 볼륨과 연동 (필요에 따라 별도 설정 추가 가능)
+        if (sfxSource != null)
+        {
+            sfxSource.volume = settings.musicVolume * 0.8f; // SFX는 약간 낮게
+        }
+
+        // 오디오 버퍼 설정
+        if (applyBufferSettings)
+        {
+            ApplyAudioBufferSettings(settings.audioBuffer);
+        }
+
+        Debug.Log($"오디오 설정 적용됨 - 볼륨: {settings.musicVolume:F2}, Buffer: {settings.audioBuffer}");
+    }
+
+    private void ApplyAudioBufferSettings(int bufferSize) // 오디오 버퍼 크기 설정 함수
+    {
+        try
+        {
+            AudioConfiguration config = AudioSettings.GetConfiguration(); // 현재 오디오 설정 가져오기
+            // 버퍼 크기 설정 (256, 512, 1024 등)
+            config.dspBufferSize = bufferSize;
+
+            if (AudioSettings.Reset(config)) // 설정 적용
+            {
+                Debug.Log($"오디오 버퍼 크기 설정됨: {bufferSize}");
+            }
+            else
+            {
+                Debug.LogWarning("오디오 버퍼 설정 적용에 실패하였습니다.");
+            }
+        }
+        catch (System.Exception e) // 예외 처리
+        {
+            Debug.LogError($"오디오 버퍼 설정 적용 중 오류 발생: {e.Message}");
+        }
+    }
+
+    public void PlayMusic(AudioClip clip) // Unity AudioSource로 음악 재생 (FMOD BGM과 별개)
+    {
+        if (musicSource == null || clip == null) return;
+
+        var settings = SettingsManager.Instance?.Settings;
+
+        musicSource.clip = clip;
+
+        // 볼륨 오프셋 적용
+        if (settings != null)
+        {
+            float offsetSeconds = settings.volumeOffset / 1000f; // ms to seconds
+            musicSource.time = Mathf.Max(0f, offsetSeconds);
+        }
+
+        musicSource.Play();
+        isPlaying = true;
+        originalMusicTime = Time.time;
+
+        Debug.Log($"음악이 오프셋과 함께 시작됨: {settings?.volumeOffset ?? 0f}ms");
+    }
+
+    public void StopMusic()
+    {
+        if (musicSource != null)
+        {
+            musicSource.Stop();
+            isPlaying = false;
+        }
+    }
+
+    public void PauseMusic()
+    {
+        if (musicSource != null && isPlaying)
+        {
+            musicSource.Pause();
+        }
+    }
+
+    public void ResumeMusic()
+    {
+        if (musicSource != null && !musicSource.isPlaying && isPlaying)
+        {
+            musicSource.UnPause();
+        }
+    }
+
+    public void PlaySFX(AudioClip clip, float volumeMultiplier = 1f)
+    {
+        if (sfxSource != null && clip != null)
+        {
+            sfxSource.PlayOneShot(clip, volumeMultiplier);
+        }
+    }
+
+    // 현재 음악 재생 시간 (오프셋 적용된)
+    public float GetMusicTime()
+    {
+        if (musicSource == null || !isPlaying) return 0f;
+
+        var settings = SettingsManager.Instance?.Settings;
+        float currentTime = musicSource.time;
+
+        if (settings != null)
+        {
+            currentTime += settings.volumeOffset / 1000f;
+        }
+
+        return currentTime;
+    }
+
+    // DSP 타임 기반 정밀한 시간
+    public double GetPreciseMusicTime()
+    {
+        if (musicSource == null || !isPlaying) return 0.0;
+
+        var settings = SettingsManager.Instance?.Settings;
+        double dspTime = AudioSettings.dspTime;
+        double timeSinceStart = dspTime - (originalMusicTime + Time.realtimeSinceStartup);
+
+        if (settings != null)
+        {
+            timeSinceStart += settings.volumeOffset / 1000.0;
+        }
+
+        return timeSinceStart;
+    }
+
+    public bool IsPlaying => isPlaying && musicSource != null && musicSource.isPlaying;
 }
