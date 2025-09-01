@@ -1,8 +1,8 @@
 using UnityEngine;
 using System; 
-public class SettingManager : MonoBehaviour // 인게임 내 설정 메뉴
+public class SettingsManager : MonoBehaviour // 인게임 내 설정 메뉴
 {
-    public static SettingManager Instance { get; private set; }
+    public static SettingsManager Instance { get; private set; }
 
     [SerializeField] private GameSettings gameSettings = new GameSettings();
     private const string SETTINGS_KEY = "RhythmGameSettings";
