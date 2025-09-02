@@ -109,6 +109,7 @@ public class ChartEditorBeta : MonoBehaviour
     private List<GameObject> gridLines = new List<GameObject>();
     private Camera editorCamera;
     private AudioManagerBeta audioManagerBeta;
+    private ChartEditorBetaPreview previewSystem;
     
     // Input handling
     private bool isDragging = false;
@@ -136,6 +137,14 @@ public class ChartEditorBeta : MonoBehaviour
             GameObject audioGO = new GameObject("AudioManagerBeta");
             audioManagerBeta = audioGO.AddComponent<AudioManagerBeta>();
         }
+        
+        // Initialize preview system
+        GameObject previewGO = new GameObject("PreviewSystem");
+        previewGO.transform.SetParent(transform);
+        previewSystem = previewGO.AddComponent<ChartEditorBetaPreview>();
+        previewSystem.Initialize(this);
+        previewSystem.SetScrollSpeed(scrollSpeed);
+        previewSystem.SetJudgeLinePosition(judgeLineY);
         
         InitializeUI();
         SetupTracks();
@@ -827,16 +836,33 @@ public class ChartEditorBeta : MonoBehaviour
         
         if (isPreviewMode)
         {
+            if (previewSystem != null)
+            {
+                previewSystem.StartPreview(currentChart.notes);
+            }
             PlayAudio();
+        }
+        else
+        {
+            if (previewSystem != null)
+            {
+                previewSystem.StopPreview();
+            }
+            StopAudio();
+            RefreshNoteDisplay(); // Show editor notes again
         }
     }
 
     void UpdatePreviewMode()
     {
-        if (!isPlaying) return;
+        if (!isPlaying || previewSystem == null) return;
         
-        // Update note positions based on scroll speed and current time
-        RefreshNoteDisplay();
+        // Update preview system scroll speed if it changed
+        if (previewSystem != null)
+        {
+            previewSystem.SetScrollSpeed(scrollSpeed);
+            previewSystem.SetJudgeLinePosition(judgeLineY);
+        }
     }
     #endregion
 
@@ -977,46 +1003,61 @@ public class ChartEditorBeta : MonoBehaviour
     #region Save/Load System
     void SaveChart()
     {
-        string chartJson = JsonUtility.ToJson(currentChart, true);
-        string savePath = Application.persistentDataPath + "/chart_beta.json";
+        string savePath = ChartEditorBetaFileUtils.GetDefaultChartPath("chart_beta");
         
-        try
+        // Create backup first
+        ChartEditorBetaFileUtils.CreateBackup(currentChart, savePath);
+        
+        // Save chart
+        if (ChartEditorBetaFileUtils.SaveChart(currentChart, savePath))
         {
-            File.WriteAllText(savePath, chartJson);
-            Debug.Log($"Chart saved to: {savePath}");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Failed to save chart: {e.Message}");
+            Debug.Log($"Chart saved successfully to: {savePath}");
         }
     }
 
     void LoadChart()
     {
-        string loadPath = Application.persistentDataPath + "/chart_beta.json";
+        string loadPath = ChartEditorBetaFileUtils.GetDefaultChartPath("chart_beta");
         
-        if (!File.Exists(loadPath))
+        ChartDataBeta loadedChart = ChartEditorBetaFileUtils.LoadChart(loadPath);
+        if (loadedChart != null)
         {
-            Debug.LogWarning("No chart file found to load");
-            return;
-        }
-        
-        try
-        {
-            string chartJson = File.ReadAllText(loadPath);
-            currentChart = JsonUtility.FromJson<ChartDataBeta>(chartJson);
+            currentChart = loadedChart;
             
             // Apply loaded settings
             UpdateBPM(currentChart.bpm);
             UpdateLaneCount(currentChart.laneCount);
             UpdateBeatDivision(currentChart.beatDivision);
+            scrollSpeed = currentChart.scrollSpeed;
             
             RefreshNoteDisplay();
-            Debug.Log($"Chart loaded from: {loadPath}");
+            Debug.Log($"Chart loaded successfully from: {loadPath}");
         }
-        catch (System.Exception e)
+    }
+
+    public void SaveChartAs(string filePath, string title = "", string artist = "", string charter = "")
+    {
+        if (ChartEditorBetaFileUtils.ExportChart(currentChart, filePath, title, artist, charter))
         {
-            Debug.LogError($"Failed to load chart: {e.Message}");
+            Debug.Log($"Chart exported successfully to: {filePath}");
+        }
+    }
+
+    public void LoadChartFrom(string filePath)
+    {
+        ChartDataBeta loadedChart = ChartEditorBetaFileUtils.LoadChart(filePath);
+        if (loadedChart != null)
+        {
+            currentChart = loadedChart;
+            
+            // Apply loaded settings
+            UpdateBPM(currentChart.bpm);
+            UpdateLaneCount(currentChart.laneCount);
+            UpdateBeatDivision(currentChart.beatDivision);
+            scrollSpeed = currentChart.scrollSpeed;
+            
+            RefreshNoteDisplay();
+            Debug.Log($"Chart loaded successfully from: {filePath}");
         }
     }
     #endregion
