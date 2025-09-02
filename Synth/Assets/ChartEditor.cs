@@ -959,6 +959,22 @@ public class ChartEditor : MonoBehaviour
         }
     }
     
+    public void LoadChart(ChartData chartData)
+    {
+        if (chartData != null && chartData.ValidateChart())
+        {
+            currentChart = chartData;
+            currentLaneCount = chartData.laneCount;
+            beatDivision = chartData.beatDivision;
+            SetupLanes();
+            Debug.Log("차트 데이터 로드 완료");
+        }
+        else
+        {
+            Debug.LogError("유효하지 않은 차트 데이터입니다");
+        }
+    }
+    
     // 선택 관련 메서드들
     public bool IsPreviewMode()
     {
