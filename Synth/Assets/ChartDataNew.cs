@@ -1,14 +1,14 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace Beta
+namespace ChartSystem
 {
     /// <summary>
-    /// Beta version of ChartData - completely self-contained and independent
+    /// Self-contained ChartData - completely independent
     /// Stores all data related to a rhythm game chart including notes and metadata
     /// </summary>
     [System.Serializable]
-    public class ChartDataBeta
+    public class ChartDataNew
     {
         [Header("Chart Metadata")]
         public string songName = "";
@@ -18,24 +18,24 @@ namespace Beta
         public float chartDifficulty = 1.0f;
         
         [Header("Chart Notes")]
-        public List<NoteDataBeta> notes = new List<NoteDataBeta>();
+        public List<NoteData> notes = new List<NoteData>();
         
         // Constructor
-        public ChartDataBeta()
+        public ChartDataNew()
         {
-            notes = new List<NoteDataBeta>();
+            notes = new List<NoteData>();
         }
         
-        public ChartDataBeta(string songName, string artistName, float bpm)
+        public ChartDataNew(string songName, string artistName, float bpm)
         {
             this.songName = songName;
             this.artistName = artistName;
             this.bpm = bpm;
-            this.notes = new List<NoteDataBeta>();
+            this.notes = new List<NoteData>();
         }
         
         // Utility methods
-        public void AddNote(NoteDataBeta note)
+        public void AddNote(NoteData note)
         {
             if (note != null)
             {
@@ -44,7 +44,7 @@ namespace Beta
             }
         }
         
-        public void RemoveNote(NoteDataBeta note)
+        public void RemoveNote(NoteData note)
         {
             notes.Remove(note);
         }
@@ -85,11 +85,11 @@ namespace Beta
     }
 
     /// <summary>
-    /// Beta version of NoteData - completely self-contained
+    /// Self-contained NoteData class
     /// Contains all information about a single note
     /// </summary>
     [System.Serializable]
-    public class NoteDataBeta
+    public class NoteData
     {
         [Header("Note Timing")]
         public float timing = 0f;              // When the note should be hit (in seconds)
@@ -101,21 +101,21 @@ namespace Beta
         public float longNoteEndTiming = 0f;   // When the long note should end (in seconds)
         
         [Header("Note Type")]
-        public KeySoundTypeBeta keySoundType = KeySoundTypeBeta.None;
+        public KeySoundType keySoundType = KeySoundType.None;
         public string noteType = "normal";     // Additional note type descriptor
         
         // Constructors
-        public NoteDataBeta()
+        public NoteData()
         {
         }
         
-        public NoteDataBeta(float timing, int track)
+        public NoteData(float timing, int track)
         {
             this.timing = timing;
             this.track = track;
         }
         
-        public NoteDataBeta(float timing, int track, KeySoundTypeBeta keySoundType, bool isLongNote = false, float endTiming = 0f)
+        public NoteData(float timing, int track, KeySoundType keySoundType, bool isLongNote = false, float endTiming = 0f)
         {
             this.timing = timing;
             this.track = track;
@@ -142,10 +142,10 @@ namespace Beta
     }
 
     /// <summary>
-    /// Beta version of KeySoundType enum - self-contained
+    /// Self-contained KeySoundType enum
     /// Defines different types of sounds that can be triggered by notes
     /// </summary>
-    public enum KeySoundTypeBeta
+    public enum KeySoundType
     {
         None,       // No sound
         Kick,       // Kick drum sound
@@ -161,9 +161,9 @@ namespace Beta
     }
 
     /// <summary>
-    /// Beta version of SFX types for sound effects
+    /// SFX types for sound effects
     /// </summary>
-    public enum SFXTypeBeta
+    public enum SFXType
     {
         Metronome,  // Metronome sound
         Hit,        // Hit sound effect

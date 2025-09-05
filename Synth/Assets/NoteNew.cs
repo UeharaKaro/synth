@@ -1,12 +1,12 @@
 using UnityEngine;
 
-namespace Beta
+namespace ChartSystem
 {
     /// <summary>
-    /// Beta version of Note class - completely self-contained and independent
+    /// Self-contained Note class - completely independent
     /// Handles individual note behavior, movement, and judgment
     /// </summary>
-    public class NoteBeta : MonoBehaviour
+    public class NoteNew : MonoBehaviour
     {
         [Header("Note Visual Settings")]
         public SpriteRenderer noteRenderer;
@@ -14,14 +14,14 @@ namespace Beta
         public Color oddTrackColor = Color.cyan;
         
         [Header("Note Properties")]
-        public KeySoundTypeBeta keySoundType = KeySoundTypeBeta.None;
+        public KeySoundType keySoundType = KeySoundType.None;
         public int track = 0;
         public float timing = 0.0f;
         public bool isLongNote = false;
         public float longNoteEndTiming = 0.0f;
         
         [Header("Judgment Settings")]
-        public JudgmentModeBeta judgmentMode = JudgmentModeBeta.Normal;
+        public JudgmentMode judgmentMode = JudgmentMode.Normal;
         
         [Header("Normal Mode Thresholds (ms)")]
         public float normalPerfectThreshold = 41.66f;
@@ -66,7 +66,7 @@ namespace Beta
         /// <summary>
         /// Initialize the note with the given parameters
         /// </summary>
-        public void Initialize(float speed, float target, NoteDataBeta noteData, float currentTime)
+        public void Initialize(float speed, float target, NoteData noteData, float currentTime)
         {
             moveSpeed = speed;
             targetY = target;
@@ -172,17 +172,17 @@ namespace Beta
         /// <summary>
         /// Handle note hit and return judgment result
         /// </summary>
-        public JudgmentTypeBeta OnNoteHit(float hitTime)
+        public JudgmentType OnNoteHit(float hitTime)
         {
-            if (isHit) return JudgmentTypeBeta.Miss;
+            if (isHit) return JudgmentType.Miss;
             
             isHit = true;
             
             float timeDifference = Mathf.Abs(hitTime - timing) * 1000.0f; // Convert to ms
-            JudgmentTypeBeta judgment = CalculateJudgment(timeDifference);
+            JudgmentType judgment = CalculateJudgment(timeDifference);
             
-            // Play key sound (simplified - just log for beta version)
-            if (keySoundType != KeySoundTypeBeta.None)
+            // Play key sound (simplified - just log for now)
+            if (keySoundType != KeySoundType.None)
             {
                 PlayKeySound(keySoundType);
             }
@@ -204,16 +204,16 @@ namespace Beta
         /// <summary>
         /// Handle long note release
         /// </summary>
-        public JudgmentTypeBeta OnLongNoteRelease(float releaseTime)
+        public JudgmentType OnLongNoteRelease(float releaseTime)
         {
-            if (!isLongNote || !isLongNoteHeld) return JudgmentTypeBeta.Miss;
+            if (!isLongNote || !isLongNoteHeld) return JudgmentType.Miss;
             
             isLongNoteHeld = false;
             
             float timeDifference = Mathf.Abs(releaseTime - longNoteEndTiming) * 1000.0f;
-            JudgmentTypeBeta judgment = CalculateJudgment(timeDifference);
+            JudgmentType judgment = CalculateJudgment(timeDifference);
             
-            if (keySoundType != KeySoundTypeBeta.None)
+            if (keySoundType != KeySoundType.None)
             {
                 PlayKeySound(keySoundType);
             }
@@ -227,52 +227,52 @@ namespace Beta
             return judgment;
         }
         
-        JudgmentTypeBeta CalculateJudgment(float timeDifferenceMs)
+        JudgmentType CalculateJudgment(float timeDifferenceMs)
         {
             switch (judgmentMode)
             {
-                case JudgmentModeBeta.Normal:
+                case JudgmentMode.Normal:
                     return CalculateNormalJudgment(timeDifferenceMs);
-                case JudgmentModeBeta.Hard:
+                case JudgmentMode.Hard:
                     return CalculateHardJudgment(timeDifferenceMs);
-                case JudgmentModeBeta.Super:
+                case JudgmentMode.Super:
                     return CalculateSuperJudgment(timeDifferenceMs);
                 default:
                     return CalculateNormalJudgment(timeDifferenceMs);
             }
         }
         
-        JudgmentTypeBeta CalculateNormalJudgment(float timeDifferenceMs)
+        JudgmentType CalculateNormalJudgment(float timeDifferenceMs)
         {
-            if (timeDifferenceMs <= normalPerfectThreshold) return JudgmentTypeBeta.Perfect;
-            else if (timeDifferenceMs <= normalGreatThreshold) return JudgmentTypeBeta.Great;
-            else if (timeDifferenceMs <= normalGoodThreshold) return JudgmentTypeBeta.Good;
-            else if (timeDifferenceMs <= normalBadThreshold) return JudgmentTypeBeta.Bad;
-            else return JudgmentTypeBeta.Miss;
+            if (timeDifferenceMs <= normalPerfectThreshold) return JudgmentType.Perfect;
+            else if (timeDifferenceMs <= normalGreatThreshold) return JudgmentType.Great;
+            else if (timeDifferenceMs <= normalGoodThreshold) return JudgmentType.Good;
+            else if (timeDifferenceMs <= normalBadThreshold) return JudgmentType.Bad;
+            else return JudgmentType.Miss;
         }
         
-        JudgmentTypeBeta CalculateHardJudgment(float timeDifferenceMs)
+        JudgmentType CalculateHardJudgment(float timeDifferenceMs)
         {
-            if (timeDifferenceMs <= hardSPerfectThreshold) return JudgmentTypeBeta.S_Perfect;
-            else if (timeDifferenceMs <= hardPerfectThreshold) return JudgmentTypeBeta.Perfect;
-            else if (timeDifferenceMs <= hardGreatThreshold) return JudgmentTypeBeta.Great;
-            else if (timeDifferenceMs <= hardGoodThreshold) return JudgmentTypeBeta.Good;
-            else if (timeDifferenceMs <= hardBadThreshold) return JudgmentTypeBeta.Bad;
-            else return JudgmentTypeBeta.Miss;
+            if (timeDifferenceMs <= hardSPerfectThreshold) return JudgmentType.S_Perfect;
+            else if (timeDifferenceMs <= hardPerfectThreshold) return JudgmentType.Perfect;
+            else if (timeDifferenceMs <= hardGreatThreshold) return JudgmentType.Great;
+            else if (timeDifferenceMs <= hardGoodThreshold) return JudgmentType.Good;
+            else if (timeDifferenceMs <= hardBadThreshold) return JudgmentType.Bad;
+            else return JudgmentType.Miss;
         }
         
-        JudgmentTypeBeta CalculateSuperJudgment(float timeDifferenceMs)
+        JudgmentType CalculateSuperJudgment(float timeDifferenceMs)
         {
-            if (timeDifferenceMs <= superSPerfectThreshold) return JudgmentTypeBeta.S_Perfect;
-            else if (timeDifferenceMs <= superPerfectThreshold) return JudgmentTypeBeta.Perfect;
-            else if (timeDifferenceMs <= superGreatThreshold) return JudgmentTypeBeta.Great;
-            else if (timeDifferenceMs <= superGoodThreshold) return JudgmentTypeBeta.Good;
-            else return JudgmentTypeBeta.Miss; // No Bad judgment in Super mode
+            if (timeDifferenceMs <= superSPerfectThreshold) return JudgmentType.S_Perfect;
+            else if (timeDifferenceMs <= superPerfectThreshold) return JudgmentType.Perfect;
+            else if (timeDifferenceMs <= superGreatThreshold) return JudgmentType.Great;
+            else if (timeDifferenceMs <= superGoodThreshold) return JudgmentType.Good;
+            else return JudgmentType.Miss; // No Bad judgment in Super mode
         }
         
-        void PlayKeySound(KeySoundTypeBeta soundType)
+        void PlayKeySound(KeySoundType soundType)
         {
-            // Beta implementation - just log the sound
+            // Simple implementation - just log the sound
             Debug.Log($"Playing key sound: {soundType}");
         }
         
@@ -304,11 +304,11 @@ namespace Beta
         {
             switch (judgmentMode)
             {
-                case JudgmentModeBeta.Normal:
+                case JudgmentMode.Normal:
                     return normalBadThreshold;
-                case JudgmentModeBeta.Hard:
+                case JudgmentMode.Hard:
                     return hardBadThreshold;
-                case JudgmentModeBeta.Super:
+                case JudgmentMode.Super:
                     return superGoodThreshold;
                 default:
                     return normalBadThreshold;
@@ -329,16 +329,16 @@ namespace Beta
             return isLongNote && isLongNoteHeld;
         }
         
-        public void SetJudgmentMode(JudgmentModeBeta mode)
+        public void SetJudgmentMode(JudgmentMode mode)
         {
             judgmentMode = mode;
         }
     }
 
     /// <summary>
-    /// Beta version of JudgmentMode enum - self-contained
+    /// Self-contained JudgmentMode enum
     /// </summary>
-    public enum JudgmentModeBeta
+    public enum JudgmentMode
     {
         Normal,    // Normal difficulty - recommended for casual players
         Hard,      // Hard difficulty - recommended for experienced players
@@ -346,9 +346,9 @@ namespace Beta
     }
 
     /// <summary>
-    /// Beta version of JudgmentType enum - self-contained
+    /// Self-contained JudgmentType enum
     /// </summary>
-    public enum JudgmentTypeBeta
+    public enum JudgmentType
     {
         S_Perfect, // Highest accuracy judgment
         Perfect,   // High accuracy judgment

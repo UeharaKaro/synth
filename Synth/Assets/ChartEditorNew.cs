@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Networking;
 
-namespace Beta
+namespace ChartSystem
 {
     /// <summary>
-    /// Beta version of ChartEditor - completely self-contained and independent
+    /// Self-contained ChartEditor - completely independent
     /// Provides basic chart editing functionality without external dependencies
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
-    public class ChartEditorBeta : MonoBehaviour
+    public class ChartEditorNew : MonoBehaviour
     {
         [Header("UI Elements")]
         public InputField audioPathInputField;
@@ -37,20 +37,20 @@ namespace Beta
         public GameObject notePrefab;
         
         [Header("Judgment Settings")]
-        public JudgmentModeBeta currentJudgmentMode = JudgmentModeBeta.Normal;
+        public JudgmentMode currentJudgmentMode = JudgmentMode.Normal;
         
         // Private variables
         private AudioSource audioSource;
-        private ChartDataBeta currentChart;
+        private ChartDataNew currentChart;
         private string audioFilePath;
-        private List<NoteBeta> activeNotes = new List<NoteBeta>();
+        private List<NoteNew> activeNotes = new List<NoteNew>();
         private bool isPlaying = false;
         private bool isRecording = false;
         
         // Chart editing state
         private float lastNoteTime = 0f;
         private int selectedTrack = 0;
-        private KeySoundTypeBeta selectedKeySoundType = KeySoundTypeBeta.None;
+        private KeySoundType selectedKeySoundType = KeySoundType.None;
         
         void Start()
         {
@@ -65,7 +65,7 @@ namespace Beta
                 audioSource = gameObject.AddComponent<AudioSource>();
                 
             // Initialize chart data
-            currentChart = new ChartDataBeta();
+            currentChart = new ChartDataNew();
             
             // Setup UI events
             SetupUIEvents();
@@ -76,7 +76,7 @@ namespace Beta
                 notePrefab = CreateDefaultNotePrefab();
             }
             
-            Debug.Log("ChartEditorBeta initialized successfully");
+            Debug.Log("ChartEditorNew initialized successfully");
         }
         
         void SetupUIEvents()
@@ -108,9 +108,9 @@ namespace Beta
         
         GameObject CreateDefaultNotePrefab()
         {
-            GameObject prefab = new GameObject("NoteBeta");
+            GameObject prefab = new GameObject("Note");
             prefab.AddComponent<SpriteRenderer>();
-            prefab.AddComponent<NoteBeta>();
+            prefab.AddComponent<NoteNew>();
             
             // Create a simple white sprite
             SpriteRenderer sr = prefab.GetComponent<SpriteRenderer>();
@@ -168,17 +168,17 @@ namespace Beta
         {
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
-                currentJudgmentMode = JudgmentModeBeta.Normal;
+                currentJudgmentMode = JudgmentMode.Normal;
                 Debug.Log("Judgment mode changed to Normal");
             }
             else if (Input.GetKeyDown(KeyCode.Alpha2))
             {
-                currentJudgmentMode = JudgmentModeBeta.Hard;
+                currentJudgmentMode = JudgmentMode.Hard;
                 Debug.Log("Judgment mode changed to Hard");
             }
             else if (Input.GetKeyDown(KeyCode.Alpha3))
             {
-                currentJudgmentMode = JudgmentModeBeta.Super;
+                currentJudgmentMode = JudgmentMode.Super;
                 Debug.Log("Judgment mode changed to Super");
             }
         }
@@ -192,7 +192,7 @@ namespace Beta
             // Prevent adding notes too close together
             if (currentTime - lastNoteTime < 0.1f) return;
             
-            NoteDataBeta noteData = new NoteDataBeta(currentTime, track, selectedKeySoundType);
+            NoteData noteData = new NoteData(currentTime, track, selectedKeySoundType);
             noteData.CalculateBeatTiming(bpm);
             
             currentChart.AddNote(noteData);
@@ -327,7 +327,7 @@ namespace Beta
             try
             {
                 string json = JsonUtility.ToJson(currentChart, true);
-                string path = Path.Combine(Application.persistentDataPath, "chart_beta.json");
+                string path = Path.Combine(Application.persistentDataPath, "chart.json");
                 File.WriteAllText(path, json);
                 
                 Debug.Log($"Chart saved successfully to: {path}");
@@ -343,7 +343,7 @@ namespace Beta
         {
             try
             {
-                string path = Path.Combine(Application.persistentDataPath, "chart_beta.json");
+                string path = Path.Combine(Application.persistentDataPath, "chart.json");
                 
                 if (!File.Exists(path))
                 {
@@ -352,7 +352,7 @@ namespace Beta
                 }
                 
                 string json = File.ReadAllText(path);
-                currentChart = JsonUtility.FromJson<ChartDataBeta>(json);
+                currentChart = JsonUtility.FromJson<ChartDataNew>(json);
                 
                 // Update editor settings
                 songName = currentChart.songName;
@@ -375,7 +375,7 @@ namespace Beta
             catch (System.Exception e)
             {
                 Debug.LogError($"Failed to load chart: {e.Message}");
-                currentChart = new ChartDataBeta(); // Reset to empty chart
+                currentChart = new ChartDataNew(); // Reset to empty chart
             }
         }
         
@@ -388,12 +388,12 @@ namespace Beta
         }
         
         // Public methods for external access
-        public ChartDataBeta GetCurrentChart()
+        public ChartDataNew GetCurrentChart()
         {
             return currentChart;
         }
         
-        public void SetChart(ChartDataBeta chart)
+        public void SetChart(ChartDataNew chart)
         {
             if (chart != null)
             {
@@ -426,7 +426,7 @@ namespace Beta
             }
         }
         
-        public void SetSelectedKeySoundType(KeySoundTypeBeta keySoundType)
+        public void SetSelectedKeySoundType(KeySoundType keySoundType)
         {
             selectedKeySoundType = keySoundType;
         }
@@ -478,7 +478,7 @@ namespace Beta
                 float time = i * 0.5f; // Note every 0.5 seconds
                 int track = i % trackKeys.Length;
                 
-                NoteDataBeta noteData = new NoteDataBeta(time, track, KeySoundTypeBeta.Kick);
+                NoteData noteData = new NoteData(time, track, KeySoundType.Kick);
                 noteData.CalculateBeatTiming(bpm);
                 currentChart.AddNote(noteData);
             }

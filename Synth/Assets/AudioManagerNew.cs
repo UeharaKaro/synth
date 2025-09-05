@@ -2,14 +2,14 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 
-namespace Beta
+namespace ChartSystem
 {
     /// <summary>
-    /// Beta version of AudioManager - completely self-contained and independent
+    /// Self-contained AudioManager - completely independent
     /// Simplified audio management using Unity's built-in AudioSource components
     /// No external dependencies on FMOD or SettingsManager
     /// </summary>
-    public class AudioManagerBeta : MonoBehaviour
+    public class AudioManagerNew : MonoBehaviour
     {
         [Header("Audio Sources")]
         [SerializeField] private AudioSource musicSource;
@@ -31,20 +31,20 @@ namespace Beta
         public AudioClip[] keySoundClips = new AudioClip[10]; // Various key sounds
         
         // Private variables
-        private Dictionary<SFXTypeBeta, AudioClip> sfxLibrary;
-        private Dictionary<KeySoundTypeBeta, AudioClip> keySoundLibrary;
+        private Dictionary<SFXType, AudioClip> sfxLibrary;
+        private Dictionary<KeySoundType, AudioClip> keySoundLibrary;
         private bool isInitialized = false;
         private float songStartTime = 0f;
         private bool isSongPlaying = false;
         
         // Singleton pattern
-        private static AudioManagerBeta instance;
-        public static AudioManagerBeta Instance
+        private static AudioManagerNew instance;
+        public static AudioManagerNew Instance
         {
             get
             {
                 if (instance == null)
-                    instance = FindObjectOfType<AudioManagerBeta>();
+                    instance = FindObjectOfType<AudioManagerNew>();
                 return instance;
             }
         }
@@ -95,32 +95,32 @@ namespace Beta
             ApplyVolumeSettings();
             
             isInitialized = true;
-            Debug.Log("AudioManagerBeta initialized successfully");
+            Debug.Log("AudioManagerNew initialized successfully");
         }
         
         void InitializeAudioLibraries()
         {
             // Initialize SFX library
-            sfxLibrary = new Dictionary<SFXTypeBeta, AudioClip>();
+            sfxLibrary = new Dictionary<SFXType, AudioClip>();
             
             // Map SFX clips (if available)
             if (sfxClips.Length >= 3)
             {
-                sfxLibrary[SFXTypeBeta.Metronome] = sfxClips[0];
-                sfxLibrary[SFXTypeBeta.Hit] = sfxClips[1];
-                sfxLibrary[SFXTypeBeta.Miss] = sfxClips[2];
+                sfxLibrary[SFXType.Metronome] = sfxClips[0];
+                sfxLibrary[SFXType.Hit] = sfxClips[1];
+                sfxLibrary[SFXType.Miss] = sfxClips[2];
             }
             
             // Initialize KeySound library
-            keySoundLibrary = new Dictionary<KeySoundTypeBeta, AudioClip>();
+            keySoundLibrary = new Dictionary<KeySoundType, AudioClip>();
             
             // Map keysound clips (if available)
-            var keySoundTypes = System.Enum.GetValues(typeof(KeySoundTypeBeta));
+            var keySoundTypes = System.Enum.GetValues(typeof(KeySoundType));
             for (int i = 0; i < keySoundClips.Length && i < keySoundTypes.Length - 1; i++) // -1 to skip 'None'
             {
                 if (keySoundClips[i] != null)
                 {
-                    KeySoundTypeBeta soundType = (KeySoundTypeBeta)(i + 1); // +1 to skip 'None'
+                    KeySoundType soundType = (KeySoundType)(i + 1); // +1 to skip 'None'
                     keySoundLibrary[soundType] = keySoundClips[i];
                 }
             }
@@ -194,7 +194,7 @@ namespace Beta
         /// <summary>
         /// Play sound effect
         /// </summary>
-        public void PlaySFX(SFXTypeBeta sfxType)
+        public void PlaySFX(SFXType sfxType)
         {
             if (!isInitialized || sfxSource == null) return;
             
@@ -211,9 +211,9 @@ namespace Beta
         /// <summary>
         /// Play key sound
         /// </summary>
-        public void PlayKeySound(KeySoundTypeBeta keySoundType)
+        public void PlayKeySound(KeySoundType keySoundType)
         {
-            if (!isInitialized || keySoundSource == null || keySoundType == KeySoundTypeBeta.None) return;
+            if (!isInitialized || keySoundSource == null || keySoundType == KeySoundType.None) return;
             
             if (keySoundLibrary.ContainsKey(keySoundType) && keySoundLibrary[keySoundType] != null)
             {
@@ -228,9 +228,9 @@ namespace Beta
         /// <summary>
         /// Play key sound with timing adjustments
         /// </summary>
-        public void PlayKeySoundAtInputTime(KeySoundTypeBeta keySoundType, float actualInputTime, float expectedTime)
+        public void PlayKeySoundAtInputTime(KeySoundType keySoundType, float actualInputTime, float expectedTime)
         {
-            if (!isInitialized || keySoundSource == null || keySoundType == KeySoundTypeBeta.None) return;
+            if (!isInitialized || keySoundSource == null || keySoundType == KeySoundType.None) return;
             
             if (keySoundLibrary.ContainsKey(keySoundType) && keySoundLibrary[keySoundType] != null)
             {
@@ -341,9 +341,9 @@ namespace Beta
         /// <summary>
         /// Schedule key sound to play at a specific time (simplified implementation)
         /// </summary>
-        public void ScheduleKeySound(KeySoundTypeBeta keySoundType, float scheduledTime)
+        public void ScheduleKeySound(KeySoundType keySoundType, float scheduledTime)
         {
-            if (keySoundType == KeySoundTypeBeta.None) return;
+            if (keySoundType == KeySoundType.None) return;
             
             float delay = scheduledTime - GetSongPositionInSeconds();
             if (delay > 0)
@@ -356,7 +356,7 @@ namespace Beta
             }
         }
         
-        IEnumerator PlayKeySoundAfterDelay(KeySoundTypeBeta keySoundType, float delay)
+        IEnumerator PlayKeySoundAfterDelay(KeySoundType keySoundType, float delay)
         {
             yield return new WaitForSeconds(delay);
             PlayKeySound(keySoundType);
