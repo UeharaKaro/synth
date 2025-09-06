@@ -8,13 +8,13 @@ using UnityEngine.Networking;
 namespace ChartSystem
 {
     /// <summary>
-    /// 독립적인 차트 에디터 - 완전히 자율적
+    /// 차트 에디터
     /// 외부 의존성 없이 기본적인 차트 편집 기능을 제공
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class ChartEditorNew : MonoBehaviour
     {
-        [Header("UI 요소들")]
+        [Header("UI Sources")]  
         public InputField audioPathInputField;
         public Slider timelineSlider;
         public Text currentTimeText;
@@ -27,7 +27,7 @@ namespace ChartSystem
         public Button stopButton;
         
         [Header("차트 설정")]
-        public float bpm = 120f;
+        public float bpm = 120f; // 임의 설정가능
         public string songName = "";
         public string artistName = "";
         
