@@ -30,7 +30,7 @@ public class ChartEditor : MonoBehaviour
     private string audioFilePath;
 } // 임시 저장용 중괄호 , 편집시 해제할것
 
-/*
+
 void Start()
 {
     audioSource = GetComponent<AudioSource>();
@@ -49,8 +49,8 @@ void Update()
         currentTimeText.text = FormatTime(audioSource.time);
     }
 }
-}
-*/ // 임시 저장용 주석, 편집시 해제할것
+} */
+ // 임시 저장용 주석, 편집시 해제할것
 
 // --- UI 상호작용 함수 ---
 /*
