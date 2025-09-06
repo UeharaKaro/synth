@@ -3,46 +3,46 @@ using UnityEngine;
 namespace ChartSystem
 {
     /// <summary>
-    /// Self-contained Note class - completely independent
-    /// Handles individual note behavior, movement, and judgment
+    /// 독립적인 노트 클래스 - 완전히 자율적
+    /// 개별 노트의 동작, 움직임, 판정을 처리
     /// </summary>
     public class NoteNew : MonoBehaviour
     {
-        [Header("Note Visual Settings")]
+        [Header("노트 시각 설정")]
         public SpriteRenderer noteRenderer;
         public Color evenTrackColor = Color.white;
         public Color oddTrackColor = Color.cyan;
         
-        [Header("Note Properties")]
+        [Header("노트 속성")]
         public KeySoundType keySoundType = KeySoundType.None;
         public int track = 0;
         public float timing = 0.0f;
         public bool isLongNote = false;
         public float longNoteEndTiming = 0.0f;
         
-        [Header("Judgment Settings")]
+        [Header("판정 설정")]
         public JudgmentMode judgmentMode = JudgmentMode.Normal;
         
-        [Header("Normal Mode Thresholds (ms)")]
+        [Header("일반 모드 임계값 (ms)")]
         public float normalPerfectThreshold = 41.66f;
         public float normalGreatThreshold = 83.33f;
         public float normalGoodThreshold = 120f;
         public float normalBadThreshold = 150f;
         
-        [Header("Hard Mode Thresholds (ms)")]
+        [Header("하드 모드 임계값 (ms)")]
         public float hardSPerfectThreshold = 16.67f;
         public float hardPerfectThreshold = 32.25f;
         public float hardGreatThreshold = 62.49f;
         public float hardGoodThreshold = 88.33f;
         public float hardBadThreshold = 120f;
         
-        [Header("Super Mode Thresholds (ms)")]
+        [Header("슈퍼 모드 임계값 (ms)")]
         public float superSPerfectThreshold = 4.17f;
         public float superPerfectThreshold = 12.50f;
         public float superGreatThreshold = 25.00f;
         public float superGoodThreshold = 62.49f;
         
-        // Private variables
+        // 개인 변수들
         private float moveSpeed = 5f;
         private float targetY = 0f;
         private bool initialized = false;
@@ -51,7 +51,7 @@ namespace ChartSystem
         private Vector3 startPosition;
         private Vector3 targetPosition;
         
-        // Long note variables
+        // 롱노트 변수들
         private bool isLongNoteHeld = false;
         private LineRenderer longNoteTrail;
         
@@ -64,7 +64,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Initialize the note with the given parameters
+        /// 주어진 매개변수로 노트를 초기화
         /// </summary>
         public void Initialize(float speed, float target, NoteData noteData, float currentTime)
         {
@@ -165,12 +165,12 @@ namespace ChartSystem
         
         float GetCurrentTime()
         {
-            // Simple time implementation - can be replaced with more accurate timing
+            // 간단한 시간 구현 - 더 정확한 타이밍으로 대체 가능
             return Time.time;
         }
         
         /// <summary>
-        /// Handle note hit and return judgment result
+        /// 노트 히트를 처리하고 판정 결과 반환
         /// </summary>
         public JudgmentType OnNoteHit(float hitTime)
         {
@@ -178,10 +178,10 @@ namespace ChartSystem
             
             isHit = true;
             
-            float timeDifference = Mathf.Abs(hitTime - timing) * 1000.0f; // Convert to ms
+            float timeDifference = Mathf.Abs(hitTime - timing) * 1000.0f; // ms로 변환
             JudgmentType judgment = CalculateJudgment(timeDifference);
             
-            // Play key sound (simplified - just log for now)
+            // 키 사운드 재생 (간단히 구현 - 일단 로그만)
             if (keySoundType != KeySoundType.None)
             {
                 PlayKeySound(keySoundType);
@@ -202,7 +202,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Handle long note release
+        /// 롱노트 릴리스 처리
         /// </summary>
         public JudgmentType OnLongNoteRelease(float releaseTime)
         {
@@ -267,17 +267,17 @@ namespace ChartSystem
             else if (timeDifferenceMs <= superPerfectThreshold) return JudgmentType.Perfect;
             else if (timeDifferenceMs <= superGreatThreshold) return JudgmentType.Great;
             else if (timeDifferenceMs <= superGoodThreshold) return JudgmentType.Good;
-            else return JudgmentType.Miss; // No Bad judgment in Super mode
+            else return JudgmentType.Miss; // 슈퍼 모드에서는 Bad 판정 없음
         }
         
         void PlayKeySound(KeySoundType soundType)
         {
-            // Simple implementation - just log the sound
-            Debug.Log($"Playing key sound: {soundType}");
+            // 간단한 구현 - 사운드만 로그
+            Debug.Log($"키 사운드 재생: {soundType}");
         }
         
         /// <summary>
-        /// Check if note should be destroyed (missed)
+        /// 노트가 제거되어야 하는지 확인 (놓침)
         /// </summary>
         public bool ShouldDestroy()
         {
@@ -296,7 +296,7 @@ namespace ChartSystem
         public void OnNoteMiss()
         {
             if (isHit) return;
-            Debug.Log("Note missed!");
+            Debug.Log("노트 놓침!");
             gameObject.SetActive(false);
         }
         
@@ -315,7 +315,7 @@ namespace ChartSystem
             }
         }
         
-        // Utility methods
+        // 유틸리티 메서드들
         public bool IsInJudgmentRange()
         {
             float currentTime = GetCurrentTime();
@@ -336,25 +336,25 @@ namespace ChartSystem
     }
 
     /// <summary>
-    /// Self-contained JudgmentMode enum
+    /// 독립적인 판정 모드 열거형
     /// </summary>
     public enum JudgmentMode
     {
-        Normal,    // Normal difficulty - recommended for casual players
-        Hard,      // Hard difficulty - recommended for experienced players
-        Super      // Super difficulty - for expert players
+        Normal,    // 일반 난이도 - 캐주얼 플레이어용 권장
+        Hard,      // 하드 난이도 - 숙련된 플레이어용 권장
+        Super      // 슈퍼 난이도 - 전문가용
     }
 
     /// <summary>
-    /// Self-contained JudgmentType enum
+    /// 독립적인 판정 타입 열거형
     /// </summary>
     public enum JudgmentType
     {
-        S_Perfect, // Highest accuracy judgment
-        Perfect,   // High accuracy judgment
-        Great,     // Good accuracy judgment
-        Good,      // Acceptable accuracy judgment
-        Bad,       // Poor accuracy judgment (breaks combo)
-        Miss       // Complete miss
+        S_Perfect, // 최고 정확도 판정
+        Perfect,   // 높은 정확도 판정
+        Great,     // 좋은 정확도 판정
+        Good,      // 허용 가능한 정확도 판정
+        Bad,       // 낮은 정확도 판정 (콤보 끊김)
+        Miss       // 완전한 놓침
     }
 }

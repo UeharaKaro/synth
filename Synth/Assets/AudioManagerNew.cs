@@ -5,18 +5,18 @@ using System.Collections;
 namespace ChartSystem
 {
     /// <summary>
-    /// Self-contained AudioManager - completely independent
-    /// Simplified audio management using Unity's built-in AudioSource components
-    /// No external dependencies on FMOD or SettingsManager
+    /// 독립적인 오디오 매니저 - 완전히 자율적
+    /// Unity의 내장 AudioSource 컴포넌트를 사용한 간소화된 오디오 관리
+    /// FMOD나 SettingsManager에 대한 외부 의존성 없음
     /// </summary>
     public class AudioManagerNew : MonoBehaviour
     {
-        [Header("Audio Sources")]
+        [Header("오디오 소스들")]
         [SerializeField] private AudioSource musicSource;
         [SerializeField] private AudioSource sfxSource;
         [SerializeField] private AudioSource keySoundSource;
         
-        [Header("Volume Settings")]
+        [Header("볼륨 설정")]
         [Range(0f, 1f)]
         public float masterVolume = 1.0f;
         [Range(0f, 1f)]
@@ -26,18 +26,18 @@ namespace ChartSystem
         [Range(0f, 1f)]
         public float keySoundVolume = 0.8f;
         
-        [Header("Audio Files")]
-        public AudioClip[] sfxClips = new AudioClip[3]; // Metronome, Hit, Miss
-        public AudioClip[] keySoundClips = new AudioClip[10]; // Various key sounds
+        [Header("오디오 파일들")]
+        public AudioClip[] sfxClips = new AudioClip[3]; // 메트로놈, 히트, 미스
+        public AudioClip[] keySoundClips = new AudioClip[10]; // 다양한 키 사운드들
         
-        // Private variables
+        // 개인 변수들
         private Dictionary<SFXType, AudioClip> sfxLibrary;
         private Dictionary<KeySoundType, AudioClip> keySoundLibrary;
         private bool isInitialized = false;
         private float songStartTime = 0f;
         private bool isSongPlaying = false;
         
-        // Singleton pattern
+        // 싱글톤 패턴
         private static AudioManagerNew instance;
         public static AudioManagerNew Instance
         {
@@ -51,7 +51,7 @@ namespace ChartSystem
         
         void Awake()
         {
-            // Singleton implementation
+            // 싱글톤 구현
             if (instance == null)
             {
                 instance = this;
@@ -66,7 +66,7 @@ namespace ChartSystem
         
         void InitializeAudioManager()
         {
-            // Create audio sources if they don't exist
+            // 존재하지 않는 경우 오디오 소스 생성
             if (musicSource == null)
             {
                 GameObject musicGO = new GameObject("Music AudioSource");
@@ -88,22 +88,22 @@ namespace ChartSystem
                 keySoundSource = keySoundGO.AddComponent<AudioSource>();
             }
             
-            // Initialize audio clip libraries
+            // 오디오 클립 라이브러리 초기화
             InitializeAudioLibraries();
             
-            // Apply initial volume settings
+            // 초기 볼륨 설정 적용
             ApplyVolumeSettings();
             
             isInitialized = true;
-            Debug.Log("AudioManagerNew initialized successfully");
+            Debug.Log("AudioManagerNew 성공적으로 초기화됨");
         }
         
         void InitializeAudioLibraries()
         {
-            // Initialize SFX library
+            // SFX 라이브러리 초기화
             sfxLibrary = new Dictionary<SFXType, AudioClip>();
             
-            // Map SFX clips (if available)
+            // SFX 클립 매핑 (가능한 경우)
             if (sfxClips.Length >= 3)
             {
                 sfxLibrary[SFXType.Metronome] = sfxClips[0];
@@ -111,16 +111,16 @@ namespace ChartSystem
                 sfxLibrary[SFXType.Miss] = sfxClips[2];
             }
             
-            // Initialize KeySound library
+            // 키사운드 라이브러리 초기화
             keySoundLibrary = new Dictionary<KeySoundType, AudioClip>();
             
-            // Map keysound clips (if available)
+            // 키사운드 클립 매핑 (가능한 경우)
             var keySoundTypes = System.Enum.GetValues(typeof(KeySoundType));
-            for (int i = 0; i < keySoundClips.Length && i < keySoundTypes.Length - 1; i++) // -1 to skip 'None'
+            for (int i = 0; i < keySoundClips.Length && i < keySoundTypes.Length - 1; i++) // -1로 'None' 스킵
             {
                 if (keySoundClips[i] != null)
                 {
-                    KeySoundType soundType = (KeySoundType)(i + 1); // +1 to skip 'None'
+                    KeySoundType soundType = (KeySoundType)(i + 1); // +1로 'None' 스킵
                     keySoundLibrary[soundType] = keySoundClips[i];
                 }
             }
@@ -139,7 +139,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Play background music
+        /// 배경 음악 재생
         /// </summary>
         public void PlayMusic(AudioClip musicClip)
         {
@@ -151,11 +151,11 @@ namespace ChartSystem
             songStartTime = Time.time;
             isSongPlaying = true;
             
-            Debug.Log($"Playing music: {musicClip.name}");
+            Debug.Log($"음악 재생: {musicClip.name}");
         }
         
         /// <summary>
-        /// Stop background music
+        /// 배경 음악 정지
         /// </summary>
         public void StopMusic()
         {
@@ -163,36 +163,36 @@ namespace ChartSystem
             {
                 musicSource.Stop();
                 isSongPlaying = false;
-                Debug.Log("Music stopped");
+                Debug.Log("음악 정지됨");
             }
         }
         
         /// <summary>
-        /// Pause background music
+        /// 배경 음악 일시정지
         /// </summary>
         public void PauseMusic()
         {
             if (musicSource != null && musicSource.isPlaying)
             {
                 musicSource.Pause();
-                Debug.Log("Music paused");
+                Debug.Log("음악 일시정지됨");
             }
         }
         
         /// <summary>
-        /// Resume background music
+        /// 배경 음악 재개
         /// </summary>
         public void ResumeMusic()
         {
             if (musicSource != null && !musicSource.isPlaying && musicSource.clip != null)
             {
                 musicSource.UnPause();
-                Debug.Log("Music resumed");
+                Debug.Log("음악 재개됨");
             }
         }
         
         /// <summary>
-        /// Play sound effect
+        /// 효과음 재생
         /// </summary>
         public void PlaySFX(SFXType sfxType)
         {
@@ -204,12 +204,12 @@ namespace ChartSystem
             }
             else
             {
-                Debug.LogWarning($"SFX not found: {sfxType}");
+                Debug.LogWarning($"SFX를 찾을 수 없음: {sfxType}");
             }
         }
         
         /// <summary>
-        /// Play key sound
+        /// 키 사운드 재생
         /// </summary>
         public void PlayKeySound(KeySoundType keySoundType)
         {
@@ -221,12 +221,12 @@ namespace ChartSystem
             }
             else
             {
-                Debug.LogWarning($"Key sound not found: {keySoundType}");
+                Debug.LogWarning($"키 사운드를 찾을 수 없음: {keySoundType}");
             }
         }
         
         /// <summary>
-        /// Play key sound with timing adjustments
+        /// 타이밍 조정과 함께 키 사운드 재생
         /// </summary>
         public void PlayKeySoundAtInputTime(KeySoundType keySoundType, float actualInputTime, float expectedTime)
         {
@@ -234,20 +234,20 @@ namespace ChartSystem
             
             if (keySoundLibrary.ContainsKey(keySoundType) && keySoundLibrary[keySoundType] != null)
             {
-                // Calculate timing difference for potential pitch adjustment
+                // 잠재적 피치 조정을 위한 타이밍 차이 계산
                 float timingDifference = actualInputTime - expectedTime;
                 
-                // Apply slight pitch variation based on timing accuracy
+                // 타이밍 정확도에 따른 약간의 피치 변화 적용
                 float pitchAdjustment = 1.0f + (timingDifference * 0.1f);
                 pitchAdjustment = Mathf.Clamp(pitchAdjustment, 0.8f, 1.2f);
                 
                 keySoundSource.pitch = pitchAdjustment;
                 keySoundSource.PlayOneShot(keySoundLibrary[keySoundType]);
                 
-                // Reset pitch after playing
+                // 재생 후 피치 초기화
                 StartCoroutine(ResetPitchAfterDelay(0.1f));
                 
-                Debug.Log($"Playing key sound: {keySoundType} with pitch: {pitchAdjustment:F2}");
+                Debug.Log($"키 사운드 재생: {keySoundType} 피치: {pitchAdjustment:F2}");
             }
         }
         
@@ -259,7 +259,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Get current song position in seconds
+        /// 현재 곡 위치를 초 단위로 가져오기
         /// </summary>
         public float GetSongPositionInSeconds()
         {
@@ -270,7 +270,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Get song position in beats based on BPM
+        /// BPM 기반 박자로 곡 위치 가져오기
         /// </summary>
         public float GetSongPositionInBeats(float bpm)
         {
@@ -279,7 +279,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Check if music is currently playing
+        /// 음악이 현재 재생 중인지 확인
         /// </summary>
         public bool IsMusicPlaying()
         {
@@ -287,7 +287,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Set master volume
+        /// 마스터 볼륨 설정
         /// </summary>
         public void SetMasterVolume(float volume)
         {
@@ -296,7 +296,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Set music volume
+        /// 음악 볼륨 설정
         /// </summary>
         public void SetMusicVolume(float volume)
         {
@@ -306,7 +306,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Set SFX volume
+        /// SFX 볼륨 설정
         /// </summary>
         public void SetSFXVolume(float volume)
         {
@@ -316,7 +316,7 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Set key sound volume
+        /// 키 사운드 볼륨 설정
         /// </summary>
         public void SetKeySoundVolume(float volume)
         {
@@ -326,20 +326,20 @@ namespace ChartSystem
         }
         
         /// <summary>
-        /// Load audio clip from Resources folder
+        /// Resources 폴더에서 오디오 클립 로드
         /// </summary>
         public AudioClip LoadAudioClip(string clipName)
         {
             AudioClip clip = Resources.Load<AudioClip>(clipName);
             if (clip == null)
             {
-                Debug.LogWarning($"Audio clip not found: {clipName}");
+                Debug.LogWarning($"오디오 클립을 찾을 수 없음: {clipName}");
             }
             return clip;
         }
         
         /// <summary>
-        /// Schedule key sound to play at a specific time (simplified implementation)
+        /// 특정 시간에 키 사운드 재생 예약 (간소화된 구현)
         /// </summary>
         public void ScheduleKeySound(KeySoundType keySoundType, float scheduledTime)
         {
@@ -364,7 +364,7 @@ namespace ChartSystem
         
         void Update()
         {
-            // Update volume settings if they've changed in inspector
+            // 인스펙터에서 볼륨 설정이 변경된 경우 업데이트
             ApplyVolumeSettings();
         }
         

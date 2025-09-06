@@ -8,13 +8,13 @@ using UnityEngine.Networking;
 namespace ChartSystem
 {
     /// <summary>
-    /// Self-contained ChartEditor - completely independent
-    /// Provides basic chart editing functionality without external dependencies
+    /// 독립적인 차트 에디터 - 완전히 자율적
+    /// 외부 의존성 없이 기본적인 차트 편집 기능을 제공
     /// </summary>
     [RequireComponent(typeof(AudioSource))]
     public class ChartEditorNew : MonoBehaviour
     {
-        [Header("UI Elements")]
+        [Header("UI 요소들")]
         public InputField audioPathInputField;
         public Slider timelineSlider;
         public Text currentTimeText;
@@ -26,20 +26,20 @@ namespace ChartSystem
         public Button pauseButton;
         public Button stopButton;
         
-        [Header("Chart Settings")]
+        [Header("차트 설정")]
         public float bpm = 120f;
         public string songName = "";
         public string artistName = "";
         
-        [Header("Note Input Settings")]
+        [Header("노트 입력 설정")]
         public KeyCode[] trackKeys = { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F };
         public Transform[] noteSpawnPoints;
         public GameObject notePrefab;
         
-        [Header("Judgment Settings")]
+        [Header("판정 설정")]
         public JudgmentMode currentJudgmentMode = JudgmentMode.Normal;
         
-        // Private variables
+        // 개인 변수들
         private AudioSource audioSource;
         private ChartDataNew currentChart;
         private string audioFilePath;
@@ -47,7 +47,7 @@ namespace ChartSystem
         private bool isPlaying = false;
         private bool isRecording = false;
         
-        // Chart editing state
+        // 차트 편집 상태
         private float lastNoteTime = 0f;
         private int selectedTrack = 0;
         private KeySoundType selectedKeySoundType = KeySoundType.None;
@@ -59,29 +59,29 @@ namespace ChartSystem
         
         void InitializeEditor()
         {
-            // Initialize audio source
+            // 오디오 소스 초기화
             audioSource = GetComponent<AudioSource>();
             if (audioSource == null)
                 audioSource = gameObject.AddComponent<AudioSource>();
                 
-            // Initialize chart data
+            // 차트 데이터 초기화
             currentChart = new ChartDataNew();
             
-            // Setup UI events
+            // UI 이벤트 설정
             SetupUIEvents();
             
-            // Initialize note prefab if not assigned
+            // 노트 프리팹이 할당되지 않은 경우 초기화
             if (notePrefab == null)
             {
                 notePrefab = CreateDefaultNotePrefab();
             }
             
-            Debug.Log("ChartEditorNew initialized successfully");
+            Debug.Log("ChartEditorNew 성공적으로 초기화됨");
         }
         
         void SetupUIEvents()
         {
-            // Audio control buttons
+            // 오디오 컨트롤 버튼들
             if (loadAudioButton != null)
                 loadAudioButton.onClick.AddListener(OnLoadAudioButtonClicked);
                 
@@ -94,14 +94,14 @@ namespace ChartSystem
             if (stopButton != null)
                 stopButton.onClick.AddListener(OnStopButtonClicked);
             
-            // Chart control buttons    
+            // 차트 컨트롤 버튼들    
             if (saveChartButton != null)
                 saveChartButton.onClick.AddListener(OnSaveChartButtonClicked);
                 
             if (loadChartButton != null)
                 loadChartButton.onClick.AddListener(OnLoadChartButtonClicked);
             
-            // Timeline slider
+            // 타임라인 슬라이더
             if (timelineSlider != null)
                 timelineSlider.onValueChanged.AddListener(SeekAudio);
         }
@@ -112,7 +112,7 @@ namespace ChartSystem
             prefab.AddComponent<SpriteRenderer>();
             prefab.AddComponent<NoteNew>();
             
-            // Create a simple white sprite
+            // 간단한 흰색 스프라이트 생성
             SpriteRenderer sr = prefab.GetComponent<SpriteRenderer>();
             sr.sprite = CreateSimpleSprite();
             sr.color = Color.white;
@@ -122,7 +122,7 @@ namespace ChartSystem
         
         Sprite CreateSimpleSprite()
         {
-            // Create a simple 1x1 white texture
+            // 간단한 1x1 흰색 텍스처 생성
             Texture2D texture = new Texture2D(32, 32);
             Color[] pixels = new Color[32 * 32];
             for (int i = 0; i < pixels.Length; i++)
@@ -135,7 +135,7 @@ namespace ChartSystem
         
         void Update()
         {
-            // Update timeline UI
+            // 타임라인 UI 업데이트
             if (audioSource.isPlaying && timelineSlider != null)
             {
                 timelineSlider.value = audioSource.time;
@@ -143,13 +143,13 @@ namespace ChartSystem
                     currentTimeText.text = FormatTime(audioSource.time);
             }
             
-            // Handle note input during recording
+            // 녹음 중 노트 입력 처리
             if (isRecording && audioSource.isPlaying)
             {
                 HandleNoteInput();
             }
             
-            // Update judgment mode with number keys
+            // 숫자 키로 판정 모드 업데이트
             HandleJudgmentModeInput();
         }
         
@@ -169,17 +169,17 @@ namespace ChartSystem
             if (Input.GetKeyDown(KeyCode.Alpha1))
             {
                 currentJudgmentMode = JudgmentMode.Normal;
-                Debug.Log("Judgment mode changed to Normal");
+                Debug.Log("판정 모드가 일반으로 변경됨");
             }
             else if (Input.GetKeyDown(KeyCode.Alpha2))
             {
                 currentJudgmentMode = JudgmentMode.Hard;
-                Debug.Log("Judgment mode changed to Hard");
+                Debug.Log("판정 모드가 하드로 변경됨");
             }
             else if (Input.GetKeyDown(KeyCode.Alpha3))
             {
                 currentJudgmentMode = JudgmentMode.Super;
-                Debug.Log("Judgment mode changed to Super");
+                Debug.Log("판정 모드가 슈퍼로 변경됨");
             }
         }
         
@@ -189,7 +189,7 @@ namespace ChartSystem
             
             float currentTime = audioSource.time;
             
-            // Prevent adding notes too close together
+            // 너무 가까운 노트 추가 방지
             if (currentTime - lastNoteTime < 0.1f) return;
             
             NoteData noteData = new NoteData(currentTime, track, selectedKeySoundType);
@@ -198,16 +198,16 @@ namespace ChartSystem
             currentChart.AddNote(noteData);
             lastNoteTime = currentTime;
             
-            Debug.Log($"Added note at time: {currentTime:F2}s, track: {track}");
+            Debug.Log($"노트 추가됨 - 시간: {currentTime:F2}초, 트랙: {track}");
         }
         
-        // UI Button Event Handlers
+        // UI 버튼 이벤트 핸들러들
         public void OnLoadAudioButtonClicked()
         {
             string path = audioPathInputField != null ? audioPathInputField.text : "";
             if (string.IsNullOrEmpty(path))
             {
-                path = "C:/Users/Default/Music/test.mp3"; // Default path
+                path = "C:/Users/Default/Music/test.mp3"; // 기본 경로
             }
             StartCoroutine(LoadAudio(path));
         }
@@ -218,8 +218,8 @@ namespace ChartSystem
             {
                 audioSource.Play();
                 isPlaying = true;
-                isRecording = true; // Enable note recording when playing
-                Debug.Log("Audio playback started - Recording mode enabled");
+                isRecording = true; // 재생 시 노트 녹음 활성화
+                Debug.Log("오디오 재생 시작 - 녹음 모드 활성화");
             }
         }
         
@@ -229,13 +229,13 @@ namespace ChartSystem
             {
                 audioSource.Pause();
                 isRecording = false;
-                Debug.Log("Audio paused - Recording mode disabled");
+                Debug.Log("오디오 일시정지 - 녹음 모드 비활성화");
             }
             else if (audioSource.clip != null)
             {
                 audioSource.UnPause();
                 isRecording = true;
-                Debug.Log("Audio resumed - Recording mode enabled");
+                Debug.Log("오디오 재개 - 녹음 모드 활성화");
             }
         }
         
@@ -249,7 +249,7 @@ namespace ChartSystem
             if (timelineSlider != null)
                 timelineSlider.value = 0f;
                 
-            Debug.Log("Audio stopped - Recording mode disabled");
+            Debug.Log("오디오 정지 - 녹음 모드 비활성화");
         }
         
         public void OnSaveChartButtonClicked()
@@ -262,12 +262,12 @@ namespace ChartSystem
             LoadChart();
         }
         
-        // Core functionality methods
+        // 핵심 기능 메서드들
         IEnumerator LoadAudio(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
-                Debug.LogError("Audio path is empty");
+                Debug.LogError("오디오 경로가 비어있습니다");
                 yield break;
             }
             
@@ -279,14 +279,14 @@ namespace ChartSystem
                 
                 if (www.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogError($"Failed to load audio: {www.error}");
+                    Debug.LogError($"오디오 로드 실패: {www.error}");
                 }
                 else
                 {
                     AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
                     audioSource.clip = clip;
                     
-                    // Update UI
+                    // UI 업데이트
                     if (timelineSlider != null)
                     {
                         timelineSlider.maxValue = clip.length;
@@ -302,7 +302,7 @@ namespace ChartSystem
                     audioFilePath = path;
                     currentChart.audioFileName = Path.GetFileName(path);
                     
-                    Debug.Log($"Audio loaded successfully: {clip.name} ({clip.length:F2}s)");
+                    Debug.Log($"오디오 성공적으로 로드됨: {clip.name} ({clip.length:F2}초)");
                 }
             }
         }
@@ -319,7 +319,7 @@ namespace ChartSystem
         
         void SaveChart()
         {
-            // Update chart metadata
+            // 차트 메타데이터 업데이트
             currentChart.songName = songName;
             currentChart.artistName = artistName;
             currentChart.bpm = bpm;
@@ -330,12 +330,12 @@ namespace ChartSystem
                 string path = Path.Combine(Application.persistentDataPath, "chart.json");
                 File.WriteAllText(path, json);
                 
-                Debug.Log($"Chart saved successfully to: {path}");
-                Debug.Log($"Total notes saved: {currentChart.GetNoteCount()}");
+                Debug.Log($"차트가 성공적으로 저장됨: {path}");
+                Debug.Log($"저장된 노트 총 개수: {currentChart.GetNoteCount()}");
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Failed to save chart: {e.Message}");
+                Debug.LogError($"차트 저장 실패: {e.Message}");
             }
         }
         
@@ -347,22 +347,22 @@ namespace ChartSystem
                 
                 if (!File.Exists(path))
                 {
-                    Debug.LogWarning("Chart file not found!");
+                    Debug.LogWarning("차트 파일을 찾을 수 없습니다!");
                     return;
                 }
                 
                 string json = File.ReadAllText(path);
                 currentChart = JsonUtility.FromJson<ChartDataNew>(json);
                 
-                // Update editor settings
+                // 에디터 설정 업데이트
                 songName = currentChart.songName;
                 artistName = currentChart.artistName;
                 bpm = currentChart.bpm;
                 
-                Debug.Log($"Chart loaded successfully from: {path}");
-                Debug.Log($"Total notes loaded: {currentChart.GetNoteCount()}");
+                Debug.Log($"차트가 성공적으로 로드됨: {path}");
+                Debug.Log($"로드된 노트 총 개수: {currentChart.GetNoteCount()}");
                 
-                // Try to load associated audio file
+                // 연관된 오디오 파일 로드 시도
                 if (!string.IsNullOrEmpty(currentChart.audioFileName))
                 {
                     string audioPath = Path.Combine(Path.GetDirectoryName(audioFilePath), currentChart.audioFileName);
@@ -374,8 +374,8 @@ namespace ChartSystem
             }
             catch (System.Exception e)
             {
-                Debug.LogError($"Failed to load chart: {e.Message}");
-                currentChart = new ChartDataNew(); // Reset to empty chart
+                Debug.LogError($"차트 로드 실패: {e.Message}");
+                currentChart = new ChartDataNew(); // 빈 차트로 재설정
             }
         }
         
@@ -387,7 +387,7 @@ namespace ChartSystem
             return string.Format("{0:00}:{1:00}.{2:00}", minutes, seconds, milliseconds);
         }
         
-        // Public methods for external access
+        // 외부 접근을 위한 공개 메서드들
         public ChartDataNew GetCurrentChart()
         {
             return currentChart;
@@ -419,7 +419,7 @@ namespace ChartSystem
             bpm = Mathf.Max(60f, newBPM);
             currentChart.bpm = bpm;
             
-            // Recalculate beat timings for existing notes
+            // 기존 노트들의 비트 타이밍 재계산
             foreach (var note in currentChart.notes)
             {
                 note.CalculateBeatTiming(bpm);
@@ -434,14 +434,14 @@ namespace ChartSystem
         public void ClearChart()
         {
             currentChart.Clear();
-            Debug.Log("Chart cleared");
+            Debug.Log("차트가 초기화됨");
         }
         
-        // Utility methods
+        // 유틸리티 메서드들
         public void RemoveNotesInTimeRange(float startTime, float endTime)
         {
             currentChart.notes.RemoveAll(note => note.timing >= startTime && note.timing <= endTime);
-            Debug.Log($"Removed notes between {startTime:F2}s and {endTime:F2}s");
+            Debug.Log($"{startTime:F2}초와 {endTime:F2}초 사이의 노트들이 제거됨");
         }
         
         public void QuantizeNotes(float beatDivision = 16f)
@@ -457,42 +457,42 @@ namespace ChartSystem
             }
             
             currentChart.SortNotesByTime();
-            Debug.Log($"Notes quantized to 1/{beatDivision} beat");
+            Debug.Log($"노트들이 1/{beatDivision} 박자로 양자화됨");
         }
         
         void OnDestroy()
         {
-            // Cleanup
+            // 정리
             if (audioSource != null && audioSource.isPlaying)
             {
                 audioSource.Stop();
             }
         }
         
-        // Debug and testing methods
-        [ContextMenu("Add Test Notes")]
+        // 디버그 및 테스트 메서드들
+        [ContextMenu("테스트 노트 추가")]
         void AddTestNotes()
         {
             for (int i = 0; i < 10; i++)
             {
-                float time = i * 0.5f; // Note every 0.5 seconds
+                float time = i * 0.5f; // 0.5초마다 노트
                 int track = i % trackKeys.Length;
                 
                 NoteData noteData = new NoteData(time, track, KeySoundType.Kick);
                 noteData.CalculateBeatTiming(bpm);
                 currentChart.AddNote(noteData);
             }
-            Debug.Log("Added 10 test notes");
+            Debug.Log("10개의 테스트 노트가 추가됨");
         }
         
-        [ContextMenu("Print Chart Info")]
+        [ContextMenu("차트 정보 출력")]
         void PrintChartInfo()
         {
-            Debug.Log($"Chart Info:");
-            Debug.Log($"Song: {currentChart.songName} by {currentChart.artistName}");
+            Debug.Log($"차트 정보:");
+            Debug.Log($"곡: {currentChart.songName} by {currentChart.artistName}");
             Debug.Log($"BPM: {currentChart.bpm}");
-            Debug.Log($"Notes: {currentChart.GetNoteCount()}");
-            Debug.Log($"Duration: {currentChart.GetChartDuration():F2}s");
+            Debug.Log($"노트: {currentChart.GetNoteCount()}");
+            Debug.Log($"길이: {currentChart.GetChartDuration():F2}초");
         }
     }
 }

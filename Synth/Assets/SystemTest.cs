@@ -3,17 +3,17 @@ using UnityEngine;
 namespace ChartSystem
 {
     /// <summary>
-    /// Test script to verify that all components work together independently
-    /// This demonstrates that the system is completely self-contained
+    /// 모든 컴포넌트들이 독립적으로 함께 작동하는지 확인하는 테스트 스크립트
+    /// 시스템이 완전히 자체 포함되어 있다는 것을 증명
     /// </summary>
     public class SystemTest : MonoBehaviour
     {
-        [Header("Test Components")]
+        [Header("테스트 컴포넌트들")]
         public ChartEditorNew chartEditor;
         public AudioManagerNew audioManager;
         public GameObject noteTestPrefab;
         
-        [Header("Test Settings")]
+        [Header("테스트 설정")]
         public bool runAutomaticTests = true;
         
         void Start()
@@ -26,41 +26,41 @@ namespace ChartSystem
         
         System.Collections.IEnumerator RunTests()
         {
-            Debug.Log("=== Starting System Tests ===");
+            Debug.Log("=== 시스템 테스트 시작 ===");
             
             yield return new WaitForSeconds(1f);
             
-            // Test 1: ChartDataNew functionality
+            // 테스트 1: ChartDataNew 기능
             TestChartData();
             yield return new WaitForSeconds(0.5f);
             
-            // Test 2: NoteData functionality  
+            // 테스트 2: NoteData 기능  
             TestNoteData();
             yield return new WaitForSeconds(0.5f);
             
-            // Test 3: AudioManagerNew functionality
+            // 테스트 3: AudioManagerNew 기능
             TestAudioManager();
             yield return new WaitForSeconds(0.5f);
             
-            // Test 4: NoteNew component functionality
+            // 테스트 4: NoteNew 컴포넌트 기능
             TestNote();
             yield return new WaitForSeconds(0.5f);
             
-            // Test 5: ChartEditorNew functionality
+            // 테스트 5: ChartEditorNew 기능
             TestChartEditor();
             yield return new WaitForSeconds(0.5f);
             
-            Debug.Log("=== System Tests Completed ===");
+            Debug.Log("=== 시스템 테스트 완료 ===");
         }
         
         void TestChartData()
         {
-            Debug.Log("Testing ChartDataNew...");
+            Debug.Log("ChartDataNew 테스트 중...");
             
-            // Create new chart
-            ChartDataNew chart = new ChartDataNew("Test Song", "Test Artist", 120f);
+            // 새 차트 생성
+            ChartDataNew chart = new ChartDataNew("테스트 곡", "테스트 아티스트", 120f);
             
-            // Add some notes
+            // 노트들 추가
             NoteData note1 = new NoteData(1.0f, 0, KeySoundType.Kick);
             NoteData note2 = new NoteData(2.0f, 1, KeySoundType.Snare);
             NoteData longNote = new NoteData(3.0f, 2, KeySoundType.Hihat, true, 4.0f);
@@ -69,56 +69,56 @@ namespace ChartSystem
             chart.AddNote(note2);
             chart.AddNote(longNote);
             
-            Debug.Log($"Chart created with {chart.GetNoteCount()} notes");
-            Debug.Log($"Chart duration: {chart.GetChartDuration():F2}s");
-            Debug.Log($"Long note valid: {longNote.IsValidLongNote()}");
+            Debug.Log($"{chart.GetNoteCount()}개의 노트로 차트 생성됨");
+            Debug.Log($"차트 길이: {chart.GetChartDuration():F2}초");
+            Debug.Log($"롱노트 유효성: {longNote.IsValidLongNote()}");
             
-            Debug.Log("✓ ChartDataNew test passed");
+            Debug.Log("✓ ChartDataNew 테스트 통과");
         }
         
         void TestNoteData()
         {
-            Debug.Log("Testing NoteData...");
+            Debug.Log("NoteData 테스트 중...");
             
             NoteData note = new NoteData(2.5f, 1, KeySoundType.Piano);
             note.CalculateBeatTiming(120f);
             
-            Debug.Log($"Note timing: {note.timing}s, beat timing: {note.beatTiming}");
-            Debug.Log($"Note track: {note.track}, sound type: {note.keySoundType}");
+            Debug.Log($"노트 타이밍: {note.timing}초, 비트 타이밍: {note.beatTiming}");
+            Debug.Log($"노트 트랙: {note.track}, 사운드 타입: {note.keySoundType}");
             
-            Debug.Log("✓ NoteData test passed");
+            Debug.Log("✓ NoteData 테스트 통과");
         }
         
         void TestAudioManager()
         {
-            Debug.Log("Testing AudioManagerNew...");
+            Debug.Log("AudioManagerNew 테스트 중...");
             
             if (AudioManagerNew.Instance != null)
             {
-                // Test volume settings
+                // 볼륨 설정 테스트
                 AudioManagerNew.Instance.SetMasterVolume(0.8f);
                 AudioManagerNew.Instance.SetMusicVolume(0.7f);
                 AudioManagerNew.Instance.SetSFXVolume(0.6f);
                 AudioManagerNew.Instance.SetKeySoundVolume(0.5f);
                 
-                // Test sound playback (will warn if no clips assigned, which is expected)
+                // 사운드 재생 테스트 (클립이 할당되지 않은 경우 경고 표시됨, 이는 예상됨)
                 AudioManagerNew.Instance.PlaySFX(SFXType.Hit);
                 AudioManagerNew.Instance.PlayKeySound(KeySoundType.Kick);
                 
-                Debug.Log($"Music playing: {AudioManagerNew.Instance.IsMusicPlaying()}");
-                Debug.Log($"Song position: {AudioManagerNew.Instance.GetSongPositionInSeconds():F2}s");
+                Debug.Log($"음악 재생 중: {AudioManagerNew.Instance.IsMusicPlaying()}");
+                Debug.Log($"곡 위치: {AudioManagerNew.Instance.GetSongPositionInSeconds():F2}초");
                 
-                Debug.Log("✓ AudioManagerNew test passed");
+                Debug.Log("✓ AudioManagerNew 테스트 통과");
             }
             else
             {
-                Debug.LogWarning("AudioManagerNew instance not found");
+                Debug.LogWarning("AudioManagerNew 인스턴스를 찾을 수 없음");
             }
         }
         
         void TestNote()
         {
-            Debug.Log("Testing NoteNew component...");
+            Debug.Log("NoteNew 컴포넌트 테스트 중...");
             
             if (noteTestPrefab != null)
             {
@@ -128,110 +128,110 @@ namespace ChartSystem
                 if (noteNew == null)
                     noteNew = noteObj.AddComponent<NoteNew>();
                 
-                // Create test note data
+                // 테스트 노트 데이터 생성
                 NoteData noteData = new NoteData(1.0f, 0, KeySoundType.Synth1);
                 
-                // Initialize the note
+                // 노트 초기화
                 noteNew.Initialize(5f, -2f, noteData, Time.time);
                 
-                // Test judgment calculation
+                // 판정 계산 테스트
                 JudgmentType judgment = noteNew.OnNoteHit(Time.time + 1.0f);
-                Debug.Log($"Note judgment: {judgment}");
+                Debug.Log($"노트 판정: {judgment}");
                 
-                // Test judgment mode changes
+                // 판정 모드 변경 테스트
                 noteNew.SetJudgmentMode(JudgmentMode.Hard);
-                Debug.Log($"Judgment mode set to: {JudgmentMode.Hard}");
+                Debug.Log($"판정 모드 설정: {JudgmentMode.Hard}");
                 
-                // Clean up
+                // 정리
                 Destroy(noteObj, 1f);
                 
-                Debug.Log("✓ NoteNew test passed");
+                Debug.Log("✓ NoteNew 테스트 통과");
             }
             else
             {
-                Debug.LogWarning("Note test prefab not assigned");
+                Debug.LogWarning("노트 테스트 프리팹이 할당되지 않음");
             }
         }
         
         void TestChartEditor()
         {
-            Debug.Log("Testing ChartEditorNew...");
+            Debug.Log("ChartEditorNew 테스트 중...");
             
             if (chartEditor != null)
             {
-                // Test chart creation
+                // 차트 생성 테스트
                 chartEditor.ClearChart();
                 chartEditor.SetBPM(140f);
                 
                 ChartDataNew chart = chartEditor.GetCurrentChart();
-                Debug.Log($"Chart BPM: {chart.bpm}");
-                Debug.Log($"Chart notes: {chart.GetNoteCount()}");
+                Debug.Log($"차트 BPM: {chart.bpm}");
+                Debug.Log($"차트 노트: {chart.GetNoteCount()}");
                 
-                // Test key sound type selection
+                // 키 사운드 타입 선택 테스트
                 chartEditor.SetSelectedKeySoundType(KeySoundType.Guitar);
                 
-                Debug.Log($"Recording mode: {chartEditor.IsRecording()}");
-                Debug.Log($"Current time: {chartEditor.GetCurrentTime():F2}s");
+                Debug.Log($"녹음 모드: {chartEditor.IsRecording()}");
+                Debug.Log($"현재 시간: {chartEditor.GetCurrentTime():F2}초");
                 
-                Debug.Log("✓ ChartEditorNew test passed");
+                Debug.Log("✓ ChartEditorNew 테스트 통과");
             }
             else
             {
-                Debug.LogWarning("ChartEditorNew component not assigned");
+                Debug.LogWarning("ChartEditorNew 컴포넌트가 할당되지 않음");
             }
         }
         
-        [ContextMenu("Run Manual Tests")]
+        [ContextMenu("수동 테스트 실행")]
         public void RunManualTests()
         {
             StartCoroutine(RunTests());
         }
         
-        [ContextMenu("Test Enum Values")]
+        [ContextMenu("열거형 값 테스트")]
         public void TestEnumValues()
         {
-            Debug.Log("=== Testing Enums ===");
+            Debug.Log("=== 열거형 테스트 ===");
             
-            // Test KeySoundType
+            // KeySoundType 테스트
             foreach (KeySoundType soundType in System.Enum.GetValues(typeof(KeySoundType)))
             {
                 Debug.Log($"KeySoundType: {soundType}");
             }
             
-            // Test SFXType
+            // SFXType 테스트
             foreach (SFXType sfxType in System.Enum.GetValues(typeof(SFXType)))
             {
                 Debug.Log($"SFXType: {sfxType}");
             }
             
-            // Test JudgmentMode
+            // JudgmentMode 테스트
             foreach (JudgmentMode judgeMode in System.Enum.GetValues(typeof(JudgmentMode)))
             {
                 Debug.Log($"JudgmentMode: {judgeMode}");
             }
             
-            // Test JudgmentType
+            // JudgmentType 테스트
             foreach (JudgmentType judgeType in System.Enum.GetValues(typeof(JudgmentType)))
             {
                 Debug.Log($"JudgmentType: {judgeType}");
             }
         }
         
-        [ContextMenu("Test Independence")]
+        [ContextMenu("독립성 테스트")]
         public void TestIndependence()
         {
-            Debug.Log("=== Testing System Independence ===");
+            Debug.Log("=== 시스템 독립성 테스트 ===");
             
-            // Verify that classes don't reference original classes
-            Debug.Log("✓ All classes are in 'ChartSystem' namespace");
-            Debug.Log("✓ No references to original SettingsManager");
-            Debug.Log("✓ No references to original GameSettingsManager");
-            Debug.Log("✓ No references to FMOD dependencies");
-            Debug.Log("✓ Uses Unity AudioSource instead of FMOD");
-            Debug.Log("✓ All enums are self-contained in namespace");
-            Debug.Log("✓ Chart data structures are independent");
+            // 클래스들이 원본 클래스를 참조하지 않는지 확인
+            Debug.Log("✓ 모든 클래스가 'ChartSystem' 네임스페이스에 있음");
+            Debug.Log("✓ 원본 SettingsManager에 대한 참조 없음");
+            Debug.Log("✓ 원본 GameSettingsManager에 대한 참조 없음");
+            Debug.Log("✓ FMOD 의존성에 대한 참조 없음");
+            Debug.Log("✓ FMOD 대신 Unity AudioSource 사용");
+            Debug.Log("✓ 모든 열거형이 네임스페이스에 독립적으로 포함됨");
+            Debug.Log("✓ 차트 데이터 구조가 독립적임");
             
-            Debug.Log("=== System is completely independent! ===");
+            Debug.Log("=== 시스템이 완전히 독립적입니다! ===");
         }
     }
 }
