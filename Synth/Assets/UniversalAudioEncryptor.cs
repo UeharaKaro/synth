@@ -11,7 +11,7 @@ using UnityEngine.Networking; // Unity의 네트워킹(웹 요청) 기능을 위
 /// Unity 에디터 내에서 에셋(주로 오디오 파일) 암호화 기능 제공 클래스
 /// 이 클래스의 코드는 Unity 에디터에서만 실행되며, 최종 게임 빌드에는 포함되지 않음
 /// </summary>
-public class AssetEncryptor
+public class UniversalAudioEncryptor
 {
     // [중요] 암호화 및 복호화에 사용될 비밀 키
     private const string EncryptionKey = "YourSecretKey";

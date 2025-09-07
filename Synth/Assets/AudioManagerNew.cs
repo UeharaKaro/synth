@@ -5,7 +5,7 @@ using System.Collections;
 namespace ChartSystem
 {
     /// <summary>
-    /// 독립적인 오디오 매니저 - 완전히 자율적
+    /// 오디오 매니저
     /// Unity의 내장 AudioSource 컴포넌트를 사용한 간소화된 오디오 관리
     /// FMOD나 SettingsManager에 대한 외부 의존성 없음
     /// </summary>
@@ -25,6 +25,10 @@ namespace ChartSystem
         public float sfxVolume = 0.8f;
         [Range(0f, 1f)]
         public float keySoundVolume = 0.8f;
+        [Range(0.1f, 2f)]
+        public float playbackSpeed = 1f;
+        [Range(-200f, 200f)]
+        public float audioOffset = 0f; // milliseconds
         
         [Header("오디오 파일들")]
         public AudioClip[] sfxClips = new AudioClip[3]; // 메트로놈, 히트, 미스
