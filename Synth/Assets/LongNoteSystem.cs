@@ -292,7 +292,7 @@ public class LongNoteSystem : MonoBehaviour
     void ProcessTick(LongNoteData longNote)
     {
         // 틱 판정 (항상 S_Perfect)
-        comboJudgmentDisplay.ShowJudgment(JudgmentType.SPerfect);
+        comboJudgmentDisplay.ShowJudgment(JudgmentType.S_Perfect);
         
         // 콤보 증가
         currentCombo++;
@@ -411,7 +411,7 @@ public class LongNoteSystem : MonoBehaviour
     {
         float absOffset = Mathf.Abs(offsetMs);
         
-        if (absOffset <= 15f) return JudgmentType.SPerfect;
+        if (absOffset <= 15f) return JudgmentType.S_Perfect;
         if (absOffset <= 30f) return JudgmentType.Perfect;
         if (absOffset <= 50f) return JudgmentType.Great;
         if (absOffset <= 80f) return JudgmentType.Good;
@@ -424,7 +424,7 @@ public class LongNoteSystem : MonoBehaviour
     {
         switch (judgment)
         {
-            case JudgmentType.SPerfect: return 1000;
+            case JudgmentType.S_Perfect: return 1000;
             case JudgmentType.Perfect: return 800;
             case JudgmentType.Great: return 500;
             case JudgmentType.Good: return 300;
