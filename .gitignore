@@ -116,3 +116,25 @@ InitTestScene*.unity*
 # If the source bank files are kept outside of the StreamingAssets folder then these can be ignored.
 # Log files can be ignored.
 fmod_editor.log
+
+# macOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# JetBrains Rider
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Backup files
+*~
+*.bak
+*.orig
