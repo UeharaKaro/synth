@@ -1,0 +1,1 @@
+using UnityEngine; using TMPro;  /// <summary> /// UI for displaying judgment results like PERFECT, GREAT, GOOD, and MISS with animations. /// </summary> public class JudgementUI : MonoBehaviour {     // Your implementation here }
