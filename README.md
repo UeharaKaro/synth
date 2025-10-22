@@ -249,6 +249,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Project Link: [https://github.com/UeharaKaro/synth](https://github.com/UeharaKaro/synth)
 
+## 🌐 Other Languages
+
+- [한국어](README.ko.md) - Korean
+
 ---
 
 <div align="center">
