@@ -120,7 +120,7 @@ public class SongSelectionManager : MonoBehaviour
 		PlayerPrefs.SetInt("SelectedKeyCount", currentKeyCount);
 		PlayerPrefs.SetString("SelectedDifficulty", difficulties[currentDifficultyIndex]);
 		
-		// 게임 씬 로드  (GameScene으로 가정, 실제로는 변경 필요)
-		SceneManager.LoadScene("GameScene");
+		// 게임 씬 로드
+		SceneManager.LoadScene(SceneNames.GAME);
 	}
 }

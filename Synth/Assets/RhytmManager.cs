@@ -152,7 +152,7 @@ public class RhythmManager : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha3))
          {
              currentMode = JudgmentMode.JudgmentMode_Super;
-             Debug.Log("<color=red>판정 모드가 Super로 변경되었습니다,</color>");
+             Debug.Log("<color=red>판정 모드가 Super로 변경되었습니다.</color>");
          }               
 
             // 현재 모드로 판정 테스트 진행

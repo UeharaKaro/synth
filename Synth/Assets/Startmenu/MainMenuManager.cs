@@ -86,32 +86,32 @@ public class MainMenuManager : MonoBehaviour
     {
         Debug.Log("Normal 모드 선택됨");
         GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Normal;
-        SceneManager.LoadScene("SongSelectionScene"); // 곡선택 씬으로 전환
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡선택 씬으로 전환
     }
 
     public void OnHardModeClicked()
     {
         Debug.Log("Hard 모드 선택됨");
         GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Hard;
-        SceneManager.LoadScene("SongSelectionScene"); // 곡 선택 씬으로 전환
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡 선택 씬으로 전환
     }
 
     /* public void OnSuperModeClicked()
     {
         Debug.Log("Super 모드 선택됨");
         GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Super;
-        SceneManager.LoadScene("SongSelectionScene"); // 곡 선택 씬으로 전환
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡 선택 씬으로 전환
     } */ // 추후에 Super 모드 출시시 활성화
     public void OnCourseModeClicked()
     {
         Debug.Log("Course 모드 선택됨");
         // GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Course; // Course 모드가 추가되면  Course 전용 판정 추가예쩡
-        SceneManager.LoadScene("SongSelectionScene"); // 코스 모드 씬으로 전환
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 코스 모드 씬으로 전환
     }
 
     public void OnOptionsClicked()
     {
         Debug.Log("Options 메뉴 선택됨");
-        SceneManager.LoadScene("OptionsScene"); // 옵션 씬으로 전환
+        SceneManager.LoadScene(SceneNames.OPTIONS); // 옵션 씬으로 전환
     }
 }

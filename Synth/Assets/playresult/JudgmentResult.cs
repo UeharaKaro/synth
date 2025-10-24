@@ -4,19 +4,6 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 판정 타입 열거형
-
-//public enum JudgmentType
-//{
-  //  S_Perfect,
-    //Perfect,
-    //Gr//eat,
-    //Good,
-    //Bad,
-    //Miss
-// 내용 중복 
-
-
 // 타이밍 정확도 열거형
 public enum TimingAccuracy
 {
