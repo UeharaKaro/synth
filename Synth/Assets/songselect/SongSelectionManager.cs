@@ -18,7 +18,7 @@ public class SongSelectionManager : MonoBehaviour
 	private int[] availableKeyCounts = { 4, 5, 6, 7, 8, 10 }; // 지원하는 키 개수 목록
 	
 	// 난이도 목록 (예: Easy, Normal, Hard, Expert, Master) (추후 변경 가능)
-    private string[] difficulties = { "Easy", "Normal", "Hard", "Expert", "Master", "Sepcial" };
+    private string[] difficulties = { "Easy", "Normal", "Hard", "Expert", "Master", "Special" };
     private int currentDifficultyIndex = 0; // 기본 난이도는 Easy
 
 	void Start()
@@ -63,7 +63,7 @@ public class SongSelectionManager : MonoBehaviour
 	private void ChangeKeyCount(int delta)
 	{
 		// Special 난이도가 아닌 경우에만 키 개수 변경 허용 (Special 모드에서는 고정 4키/ 임시)
-		if (difficulties[currentDifficultyIndex] != "Sepcial")
+		if (difficulties[currentDifficultyIndex] != "Special")
 		{
 			// 현재 키 개수의 인덱스 찾기
 			int currentIndex = System.Array.IndexOf(availableKeyCounts, currentKeyCount);
@@ -85,7 +85,7 @@ public class SongSelectionManager : MonoBehaviour
 		currentDifficultyIndex = (currentDifficultyIndex + delta + difficulties.Length) % difficulties.Length; 
 		
 		// 난이도가 Special로 변경되면 키 개수를 4키로 강제
-		if (difficulties[currentDifficultyIndex] == "Sepcial")
+		if (difficulties[currentDifficultyIndex] == "Special")
 		{
 			currentKeyCount = 4; // Special 모드에서는 고정 4키 (임시)
 		}
