@@ -66,7 +66,6 @@ namespace ChartSystem
         #endregion
 
         #region Grid Settings
-        [Header("그리드 설정")]
         public enum BeatDivision
         {
             Quarter = 4,    // 1/4 박자
@@ -74,6 +73,8 @@ namespace ChartSystem
             Sixteenth = 16, // 1/16 박자
             ThirtySecond = 32 // 1/32 박자
         }
+
+        [Header("그리드 설정")]
         private BeatDivision currentBeatDivision = BeatDivision.Sixteenth;
         private bool gridSnapEnabled = true;
         #endregion
