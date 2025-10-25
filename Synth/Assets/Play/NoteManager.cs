@@ -440,4 +440,67 @@ public class NoteManager : MonoBehaviour
         note.isActive = false;
         notePool.Enqueue(note);
     }
+
+    /// <summary>
+    /// ChartData로부터 노트 로드 (차트 로딩 시스템 통합)
+    /// </summary>
+    public void LoadFromChartData(ChartData chartData)
+    {
+        if (chartData == null)
+        {
+            Debug.LogError("NoteManager: ChartData가 null입니다!");
+            return;
+        }
+
+        // 기존 노트 큐 초기화
+        ClearAllNotes();
+
+        // ChartData의 노트를 NoteManager 형식으로 변환
+        foreach (var noteData in chartData.notes)
+        {
+            // 트랙 인덱스 검증
+            if (noteData.track < 0 || noteData.track >= settings.lineCount)
+            {
+                Debug.LogWarning($"NoteManager: 유효하지 않은 트랙 인덱스 {noteData.track} (노트 타이밍: {noteData.timing})");
+                continue;
+            }
+
+            // 노트 타입 변환
+            NoteType type = NoteType.Normal;
+            if (noteData.isLongNote)
+            {
+                type = NoteType.Long;
+            }
+
+            // 노트 스폰 (timing은 double이므로 float로 변환)
+            SpawnNote(noteData.track, (float)noteData.timing, type);
+
+            // TODO: 롱노트 끝 타이밍 처리
+            // if (noteData.isLongNote)
+            // {
+            //     // 롱노트 끝 지점 처리 필요
+            // }
+        }
+
+        Debug.Log($"NoteManager: {chartData.songName}에서 {chartData.notes.Count}개 노트 로드 완료");
+    }
+
+    /// <summary>
+    /// 모든 노트 제거
+    /// </summary>
+    public void ClearAllNotes()
+    {
+        // 활성 노트 모두 풀로 반환
+        foreach (Note note in activeNotes)
+        {
+            ReturnNote(note);
+        }
+        activeNotes.Clear();
+
+        // 대기 중인 노트 큐 초기화
+        foreach (var queue in upcomingNotes.Values)
+        {
+            queue.Clear();
+        }
+    }
 }
