@@ -4,6 +4,24 @@ using System.Collections.Generic;
 namespace ChartSystem
 {
     /// <summary>
+    /// 마디선 오버라이드 설정 (특정 마디 범위에서 다른 박자 수 적용)
+    /// </summary>
+    [System.Serializable]
+    public class MeasureLineOverride
+    {
+        public int startMeasure;      // 시작 마디 번호 (1부터 시작)
+        public int endMeasure;        // 끝 마디 번호 (포함)
+        public int beatsPerMeasure;   // 이 구간의 마디당 박자 수
+
+        public MeasureLineOverride(int start, int end, int beats)
+        {
+            startMeasure = start;
+            endMeasure = end;
+            beatsPerMeasure = beats;
+        }
+    }
+
+    /// <summary>
     /// 독립적인 차트 데이터 - 완전히 자율적
     /// 노트와 메타데이터를 포함한 리듬 게임 차트 관련 모든 데이터를 저장
     /// </summary>
@@ -16,7 +34,11 @@ namespace ChartSystem
         public string audioFileName = "";
         public float bpm = 120f;
         public float chartDifficulty = 1.0f;
-        
+
+        [Header("마디선 설정 (플레이 시 표시)")]
+        public int defaultBeatsPerMeasure = 4;  // 기본 마디당 박자 수
+        public List<MeasureLineOverride> measureLineOverrides = new List<MeasureLineOverride>();
+
         [Header("차트 노트들")]
         public List<NoteData> notes = new List<NoteData>();
         
@@ -62,6 +84,8 @@ namespace ChartSystem
             audioFileName = "";
             bpm = 120f;
             chartDifficulty = 1.0f;
+            defaultBeatsPerMeasure = 4;
+            measureLineOverrides.Clear();
         }
         
         public int GetNoteCount()

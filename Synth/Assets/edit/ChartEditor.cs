@@ -35,6 +35,20 @@ namespace ChartSystem
         public Text modeText; // 현재 모드 표시 (Normal/Long/Slide)
         public Text gridSnapText; // 그리드 스냅 표시 (1/4, 1/8 등)
         public Text statusText; // 상태 메시지
+
+        [Header("비주얼 타임라인")]
+        public RectTransform timelineContainer; // 타임라인 컨테이너
+        public GameObject noteVisualPrefab; // 노트 시각화 프리팹
+        public GameObject beatLinePrefab; // 박자선 프리팹
+        public GameObject measureLinePrefab; // 마디선 프리팹
+        public RectTransform playheadIndicator; // 재생 헤드 표시
+        public ScrollRect timelineScrollRect; // 타임라인 스크롤
+        public float pixelsPerSecond = 100f; // 1초당 픽셀 수
+
+        [Header("오디오 파형 시각화")]
+        public RawImage waveformDisplay; // 파형 표시 UI
+        public int waveformResolution = 1000; // 파형 해상도
+        public Color waveformColor = Color.cyan; // 파형 색상
         #endregion
 
         #region Chart Settings
@@ -65,18 +79,16 @@ namespace ChartSystem
         private NoteInputMode currentNoteMode = NoteInputMode.Normal;
         #endregion
 
-        #region Grid Settings
-        public enum BeatDivision
-        {
-            Quarter = 4,    // 1/4 박자
-            Eighth = 8,     // 1/8 박자
-            Sixteenth = 16, // 1/16 박자
-            ThirtySecond = 32 // 1/32 박자
-        }
+        #region Grid and Measure Settings
+        [Header("박자선 설정 (에디터 전용, 플레이 시 비표시)")]
+        public InputField subdivisionInputField;  // subdivision 직접 입력
+        public Slider subdivisionSlider;          // subdivision 슬라이더 (1~100)
+        public int currentSubdivision = 16;       // 현재 박자 분할 (1~100분 음표, 기본 16)
+        public bool gridSnapEnabled = true;       // 그리드 스냅 활성화
 
-        [Header("그리드 설정")]
-        private BeatDivision currentBeatDivision = BeatDivision.Sixteenth;
-        private bool gridSnapEnabled = true;
+        [Header("마디선 설정 (플레이 시 표시)")]
+        public InputField beatsPerMeasureInput;   // 기본 마디당 박자 수 입력
+        public Button addMeasureOverrideButton;   // 마디 오버라이드 추가 버튼
         #endregion
 
         #region Private Variables
@@ -112,6 +124,22 @@ namespace ChartSystem
             PerMeasure  // 2번: n번 마디 ~ N번 마디 범위 지정
         }
         private EditScopeType currentEditScope = EditScopeType.PerNote;
+
+        // 타임라인 시각화
+        private List<GameObject> timelineNoteVisuals = new List<GameObject>();
+        private List<GameObject> timelineBeatLines = new List<GameObject>();
+        private List<GameObject> timelineMeasureLines = new List<GameObject>();
+        private bool timelineNeedsRefresh = false;
+
+        // 마우스 편집
+        private bool isDraggingNewNote = false;
+        private double dragStartTime = 0;
+        private int dragCurrentTrack = 0;
+        private GameObject previewNoteObject = null;
+        private List<NoteData> selectedNotes = new List<NoteData>();
+
+        // 복사/붙여넣기
+        private List<NoteData> clipboard = new List<NoteData>();
         #endregion
 
         #region Unity Lifecycle
@@ -130,6 +158,14 @@ namespace ChartSystem
         {
             UpdateTimeline();
             HandleKeyboardInput();
+            HandleMouseInput();
+            UpdatePlayheadPosition();
+
+            if (timelineNeedsRefresh)
+            {
+                RefreshTimelineVisuals();
+                timelineNeedsRefresh = false;
+            }
         }
 
         void OnDestroy()
@@ -216,6 +252,45 @@ namespace ChartSystem
                     if (float.TryParse(value, out float newOffset))
                         offset = newOffset / 1000f; // ms를 초로 변환
                 });
+
+            // Subdivision 입력 필드
+            if (subdivisionInputField != null)
+            {
+                subdivisionInputField.onEndEdit.AddListener(value => {
+                    if (int.TryParse(value, out int newSubdivision))
+                        SetSubdivision(newSubdivision);
+                });
+            }
+
+            // Subdivision 슬라이더
+            if (subdivisionSlider != null)
+            {
+                subdivisionSlider.minValue = 1;
+                subdivisionSlider.maxValue = 100;
+                subdivisionSlider.wholeNumbers = true;
+                subdivisionSlider.value = currentSubdivision;
+                subdivisionSlider.onValueChanged.AddListener(value => SetSubdivision((int)value));
+            }
+
+            // 마디당 박자 수 입력
+            if (beatsPerMeasureInput != null)
+            {
+                beatsPerMeasureInput.text = currentChart.defaultBeatsPerMeasure.ToString();
+                beatsPerMeasureInput.onEndEdit.AddListener(value => {
+                    if (int.TryParse(value, out int newBeats) && newBeats > 0)
+                    {
+                        currentChart.defaultBeatsPerMeasure = newBeats;
+                        RequestTimelineRefresh();
+                        ShowStatus($"기본 마디: {newBeats}박자");
+                    }
+                });
+            }
+
+            // 마디 오버라이드 추가 버튼 (TODO: 별도 UI 패널 필요)
+            if (addMeasureOverrideButton != null)
+            {
+                addMeasureOverrideButton.onClick.AddListener(OnAddMeasureOverrideClicked);
+            }
         }
 
         void CleanupEditor()
@@ -258,10 +333,20 @@ namespace ChartSystem
                 else
                     Undo();
             }
+            else if (Input.GetKeyDown(KeyCode.C) && Input.GetKey(KeyCode.LeftControl))
+            {
+                // Ctrl+C: 복사
+                CopySelectedNotes();
+            }
+            else if (Input.GetKeyDown(KeyCode.V) && Input.GetKey(KeyCode.LeftControl))
+            {
+                // Ctrl+V: 붙여넣기
+                PasteNotes();
+            }
             else if (Input.GetKeyDown(KeyCode.G))
             {
-                // G키: 그리드 스냅 전환
-                CycleGridSnap();
+                // G키: 그리드 스냅 ON/OFF 토글
+                ToggleGridSnap();
             }
             else if (Input.GetKeyDown(KeyCode.T))
             {
@@ -275,6 +360,11 @@ namespace ChartSystem
                     OnPauseButtonClicked();
                 else
                     OnPlayButtonClicked();
+            }
+            else if (Input.GetKeyDown(KeyCode.Delete) || Input.GetKeyDown(KeyCode.Backspace))
+            {
+                // Delete/Backspace: 선택된 노트 삭제
+                DeleteSelectedNotes();
             }
 
             // 녹음 중 노트 입력
@@ -335,6 +425,9 @@ namespace ChartSystem
             currentChart.AddNote(noteData);
             lastNoteTime = (float)timing;
 
+            // 타임라인 새로고침 요청
+            RequestTimelineRefresh();
+
             ShowStatus($"노트 추가: {timing:F2}초, 트랙 {track}");
             Debug.Log($"일반 노트 추가 - 시간: {timing:F2}초, 트랙: {track}");
         }
@@ -376,6 +469,9 @@ namespace ChartSystem
                 SaveStateForUndo();
                 currentChart.AddNote(longNote);
 
+                // 타임라인 새로고침 요청
+                RequestTimelineRefresh();
+
                 ShowStatus($"롱노트 추가: {startTime:F2}초 ~ {endTime:F2}초, 트랙 {track}");
                 Debug.Log($"롱노트 추가 - 시작: {startTime:F2}초, 종료: {endTime:F2}초, 트랙: {track}");
 
@@ -387,38 +483,466 @@ namespace ChartSystem
                 ShowStatus("롱노트는 같은 트랙에서 시작과 종료를 지정해야 합니다");
             }
         }
+
+        /// <summary>
+        /// 마우스 입력을 처리합니다 (타임라인에서 노트 드래그 추가)
+        /// </summary>
+        void HandleMouseInput()
+        {
+            if (timelineContainer == null || audioSource.clip == null)
+                return;
+
+            // 마우스 왼쪽 버튼을 누르기 시작
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector2 mousePos = Input.mousePosition;
+                if (IsMouseOverTimeline(mousePos))
+                {
+                    // Shift 키가 눌려있으면 노트 선택 모드
+                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    {
+                        TrySelectNoteAtPosition(mousePos);
+                    }
+                    else
+                    {
+                        // 새 노트 배치 모드
+                        StartNoteDrag(mousePos);
+                    }
+                }
+            }
+
+            // 마우스 드래그 중
+            if (Input.GetMouseButton(0) && isDraggingNewNote)
+            {
+                UpdateNoteDrag(Input.mousePosition);
+            }
+
+            // 마우스 버튼을 뗌 (노트 배치 완료)
+            if (Input.GetMouseButtonUp(0) && isDraggingNewNote)
+            {
+                FinishNoteDrag(Input.mousePosition);
+            }
+        }
+
+        /// <summary>
+        /// 마우스가 타임라인 위에 있는지 확인합니다
+        /// </summary>
+        bool IsMouseOverTimeline(Vector2 mousePos)
+        {
+            if (timelineContainer == null)
+                return false;
+
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                mousePos,
+                null,
+                out Vector2 localPoint
+            );
+
+            return timelineContainer.rect.Contains(localPoint);
+        }
+
+        /// <summary>
+        /// 노트 드래그를 시작합니다
+        /// </summary>
+        void StartNoteDrag(Vector2 mousePos)
+        {
+            isDraggingNewNote = true;
+
+            // 마우스 위치를 타임라인 좌표로 변환
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                mousePos,
+                null,
+                out Vector2 localPoint
+            );
+
+            // 타임과 트랙 계산
+            dragStartTime = localPoint.x / pixelsPerSecond;
+            dragCurrentTrack = CalculateTrackFromYPosition(localPoint.y);
+
+            // 그리드 스냅 적용
+            if (gridSnapEnabled)
+            {
+                dragStartTime = SnapToGrid(dragStartTime);
+            }
+
+            // 프리뷰 노트 생성
+            if (noteVisualPrefab != null)
+            {
+                previewNoteObject = Instantiate(noteVisualPrefab, timelineContainer);
+                RectTransform rt = previewNoteObject.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    float xPos = (float)dragStartTime * pixelsPerSecond;
+                    float yPos = CalculateNoteYPosition(dragCurrentTrack);
+                    rt.anchoredPosition = new Vector2(xPos, yPos);
+
+                    // 반투명하게 표시
+                    Image img = previewNoteObject.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        Color col = GetTrackColor(dragCurrentTrack);
+                        col.a = 0.5f;
+                        img.color = col;
+                    }
+                }
+            }
+
+            ShowStatus($"노트 배치 시작: {dragStartTime:F2}초");
+        }
+
+        /// <summary>
+        /// 노트 드래그를 업데이트합니다
+        /// </summary>
+        void UpdateNoteDrag(Vector2 mousePos)
+        {
+            if (previewNoteObject == null)
+                return;
+
+            // 마우스 위치를 타임라인 좌표로 변환
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                mousePos,
+                null,
+                out Vector2 localPoint
+            );
+
+            // 현재 트랙 업데이트
+            int newTrack = CalculateTrackFromYPosition(localPoint.y);
+            if (newTrack != dragCurrentTrack)
+            {
+                dragCurrentTrack = newTrack;
+
+                // 프리뷰 노트 색상 업데이트
+                Image img = previewNoteObject.GetComponent<Image>();
+                if (img != null)
+                {
+                    Color col = GetTrackColor(dragCurrentTrack);
+                    col.a = 0.5f;
+                    img.color = col;
+                }
+            }
+
+            // 프리뷰 노트 위치 업데이트
+            RectTransform rt = previewNoteObject.GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                float xPos = (float)dragStartTime * pixelsPerSecond;
+                float yPos = CalculateNoteYPosition(dragCurrentTrack);
+                rt.anchoredPosition = new Vector2(xPos, yPos);
+
+                // 롱노트 모드인 경우 길이 표시
+                if (currentNoteMode == NoteInputMode.Long)
+                {
+                    double currentTime = localPoint.x / pixelsPerSecond;
+                    if (gridSnapEnabled)
+                    {
+                        currentTime = SnapToGrid(currentTime);
+                    }
+
+                    double duration = System.Math.Abs(currentTime - dragStartTime);
+                    if (duration > 0.1)
+                    {
+                        rt.sizeDelta = new Vector2((float)duration * pixelsPerSecond, rt.sizeDelta.y);
+                    }
+                }
+            }
+
+            ShowStatus($"트랙: {dragCurrentTrack + 1}/{keyCount}");
+        }
+
+        /// <summary>
+        /// 노트 드래그를 완료하고 노트를 추가합니다
+        /// </summary>
+        void FinishNoteDrag(Vector2 mousePos)
+        {
+            isDraggingNewNote = false;
+
+            // 프리뷰 노트 제거
+            if (previewNoteObject != null)
+            {
+                Destroy(previewNoteObject);
+                previewNoteObject = null;
+            }
+
+            // 유효한 트랙인지 확인
+            if (dragCurrentTrack < 0 || dragCurrentTrack >= keyCount)
+            {
+                ShowStatus("유효하지 않은 트랙입니다");
+                return;
+            }
+
+            // 노트 추가
+            if (currentNoteMode == NoteInputMode.Normal)
+            {
+                // 일반 노트 추가
+                AddNormalNote(dragStartTime, dragCurrentTrack);
+            }
+            else if (currentNoteMode == NoteInputMode.Long)
+            {
+                // 롱노트 추가
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    timelineContainer,
+                    mousePos,
+                    null,
+                    out Vector2 localPoint
+                );
+
+                double endTime = localPoint.x / pixelsPerSecond;
+                if (gridSnapEnabled)
+                {
+                    endTime = SnapToGrid(endTime);
+                }
+
+                // 시작과 끝 시간 정렬
+                double startTime = System.Math.Min(dragStartTime, endTime);
+                double finalEndTime = System.Math.Max(dragStartTime, endTime);
+
+                // 최소 길이 체크
+                if (finalEndTime - startTime < 0.1)
+                {
+                    ShowStatus("롱노트가 너무 짧습니다 (최소 0.1초)");
+                    return;
+                }
+
+                // 롱노트 생성
+                NoteData longNote = new NoteData(startTime, dragCurrentTrack, selectedKeySoundType, true, finalEndTime);
+                longNote.CalculateBeatTiming(bpm);
+
+                SaveStateForUndo();
+                currentChart.AddNote(longNote);
+
+                // 타임라인 새로고침
+                RequestTimelineRefresh();
+
+                ShowStatus($"롱노트 추가: {startTime:F2}초 ~ {finalEndTime:F2}초, 트랙 {dragCurrentTrack}");
+                Debug.Log($"롱노트 추가 (마우스) - 시작: {startTime:F2}초, 종료: {finalEndTime:F2}초, 트랙: {dragCurrentTrack}");
+            }
+        }
+
+        /// <summary>
+        /// Y 위치로부터 트랙 번호를 계산합니다
+        /// </summary>
+        int CalculateTrackFromYPosition(float yPos)
+        {
+            float trackHeight = 30f;
+            float startY = -trackHeight * keyCount / 2f;
+            int track = Mathf.FloorToInt((yPos - startY) / trackHeight);
+            return Mathf.Clamp(track, 0, keyCount - 1);
+        }
+
+        /// <summary>
+        /// 지정된 위치에 있는 노트를 선택하려고 시도합니다
+        /// </summary>
+        void TrySelectNoteAtPosition(Vector2 mousePos)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                mousePos,
+                null,
+                out Vector2 localPoint
+            );
+
+            double clickTime = localPoint.x / pixelsPerSecond;
+            int clickTrack = CalculateTrackFromYPosition(localPoint.y);
+
+            // 클릭 위치 근처의 노트 찾기 (0.2초 오차 범위)
+            NoteData foundNote = null;
+            double minDistance = 0.2;
+
+            foreach (NoteData note in currentChart.notes)
+            {
+                if (note.track == clickTrack)
+                {
+                    double distance = System.Math.Abs(note.timing - clickTime);
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        foundNote = note;
+                    }
+                }
+            }
+
+            if (foundNote != null)
+            {
+                // 이미 선택된 노트라면 선택 해제
+                if (selectedNotes.Contains(foundNote))
+                {
+                    selectedNotes.Remove(foundNote);
+                    ShowStatus($"노트 선택 해제: {foundNote.timing:F2}초");
+                }
+                else
+                {
+                    selectedNotes.Add(foundNote);
+                    ShowStatus($"노트 선택: {foundNote.timing:F2}초, 트랙 {foundNote.track} (총 {selectedNotes.Count}개 선택)");
+                }
+
+                // 선택된 노트 하이라이트 업데이트
+                RefreshNoteSelection();
+            }
+        }
+
+        /// <summary>
+        /// 선택된 노트들을 삭제합니다
+        /// </summary>
+        void DeleteSelectedNotes()
+        {
+            if (selectedNotes.Count == 0)
+            {
+                ShowStatus("선택된 노트가 없습니다");
+                return;
+            }
+
+            SaveStateForUndo();
+
+            int deleteCount = selectedNotes.Count;
+            foreach (NoteData note in selectedNotes)
+            {
+                currentChart.notes.Remove(note);
+            }
+
+            selectedNotes.Clear();
+
+            // 타임라인 새로고침
+            RequestTimelineRefresh();
+
+            ShowStatus($"{deleteCount}개 노트 삭제 완료");
+            Debug.Log($"{deleteCount}개 노트 삭제");
+        }
+
+        /// <summary>
+        /// 선택된 노트의 시각적 표시를 업데이트합니다
+        /// </summary>
+        void RefreshNoteSelection()
+        {
+            // 간단한 구현: 타임라인 전체 새로고침
+            // 나중에 최적화 가능 (선택된 노트만 테두리 표시 등)
+            RequestTimelineRefresh();
+        }
+
+        /// <summary>
+        /// 선택된 노트들을 클립보드에 복사합니다
+        /// </summary>
+        void CopySelectedNotes()
+        {
+            if (selectedNotes.Count == 0)
+            {
+                ShowStatus("선택된 노트가 없습니다");
+                return;
+            }
+
+            clipboard.Clear();
+
+            // 선택된 노트들을 복사 (깊은 복사)
+            foreach (NoteData note in selectedNotes)
+            {
+                NoteData noteCopy = new NoteData(
+                    note.timing,
+                    note.track,
+                    note.keySoundType,
+                    note.isLongNote,
+                    note.longNoteEndTiming
+                );
+                // beatTiming은 CalculateBeatTiming()으로 자동 계산되므로 복사 불필요
+                clipboard.Add(noteCopy);
+            }
+
+            ShowStatus($"{clipboard.Count}개 노트 복사 완료");
+            Debug.Log($"{clipboard.Count}개 노트를 클립보드에 복사");
+        }
+
+        /// <summary>
+        /// 클립보드의 노트들을 현재 재생 위치에 붙여넣기합니다
+        /// </summary>
+        void PasteNotes()
+        {
+            if (clipboard.Count == 0)
+            {
+                ShowStatus("클립보드가 비어있습니다");
+                return;
+            }
+
+            SaveStateForUndo();
+
+            // 클립보드 노트들의 최소 시간 계산
+            double minTime = double.MaxValue;
+            foreach (NoteData note in clipboard)
+            {
+                if (note.timing < minTime)
+                    minTime = note.timing;
+            }
+
+            // 현재 재생 시간 (또는 0)
+            double currentTime = audioSource != null ? audioSource.time : 0;
+
+            // 그리드 스냅 적용
+            if (gridSnapEnabled)
+            {
+                currentTime = SnapToGrid(currentTime);
+            }
+
+            // 시간 오프셋 계산
+            double timeOffset = currentTime - minTime;
+
+            // 노트들을 새 위치에 붙여넣기
+            int pastedCount = 0;
+            foreach (NoteData note in clipboard)
+            {
+                NoteData newNote = new NoteData(
+                    note.timing + timeOffset,
+                    note.track,
+                    note.keySoundType,
+                    note.isLongNote,
+                    note.isLongNote ? note.longNoteEndTiming + timeOffset : 0
+                );
+                newNote.CalculateBeatTiming(bpm);
+
+                currentChart.AddNote(newNote);
+                pastedCount++;
+            }
+
+            // 붙여넣은 노트들을 선택
+            selectedNotes.Clear();
+            // 마지막에 추가된 노트들 선택 (간단히 시간 범위로 필터링)
+            double pasteStartTime = currentTime;
+            double pasteEndTime = currentTime + (clipboard[clipboard.Count - 1].timing - minTime) + 0.1;
+            foreach (NoteData note in currentChart.notes)
+            {
+                if (note.timing >= pasteStartTime && note.timing <= pasteEndTime)
+                {
+                    selectedNotes.Add(note);
+                }
+            }
+
+            // 타임라인 새로고침
+            RequestTimelineRefresh();
+
+            ShowStatus($"{pastedCount}개 노트 붙여넣기 완료 ({currentTime:F2}초)");
+            Debug.Log($"{pastedCount}개 노트를 {currentTime:F2}초 위치에 붙여넣기");
+        }
         #endregion
 
         #region Grid System
-        void CycleGridSnap()
+        /// <summary>
+        /// G키로 그리드 스냅 토글 (ON/OFF만)
+        /// </summary>
+        void ToggleGridSnap()
         {
-            int currentValue = (int)currentBeatDivision;
-
-            switch (currentBeatDivision)
-            {
-                case BeatDivision.Quarter:
-                    currentBeatDivision = BeatDivision.Eighth;
-                    break;
-                case BeatDivision.Eighth:
-                    currentBeatDivision = BeatDivision.Sixteenth;
-                    break;
-                case BeatDivision.Sixteenth:
-                    currentBeatDivision = BeatDivision.ThirtySecond;
-                    break;
-                case BeatDivision.ThirtySecond:
-                    gridSnapEnabled = !gridSnapEnabled;
-                    if (!gridSnapEnabled)
-                    {
-                        ShowStatus("그리드 스냅: OFF");
-                        UpdateGridDisplay();
-                        return;
-                    }
-                    currentBeatDivision = BeatDivision.Quarter;
-                    break;
-            }
-
-            ShowStatus($"그리드 스냅: 1/{(int)currentBeatDivision}");
+            gridSnapEnabled = !gridSnapEnabled;
             UpdateGridDisplay();
+            ShowStatus(gridSnapEnabled ? $"그리드 스냅: ON (1/{currentSubdivision})" : "그리드 스냅: OFF");
+        }
+
+        /// <summary>
+        /// subdivision 값을 설정합니다 (1~100)
+        /// </summary>
+        public void SetSubdivision(int value)
+        {
+            currentSubdivision = Mathf.Clamp(value, 1, 100);
+            UpdateGridDisplay();
+            RefreshTimelineVisuals();
+            ShowStatus($"박자 분할: 1/{currentSubdivision}분 음표");
         }
 
         double SnapToGrid(double time)
@@ -426,11 +950,15 @@ namespace ChartSystem
             if (!gridSnapEnabled || bpm <= 0)
                 return time;
 
+            // subdivision 범위 제한 (1~100)
+            int safeSubdivision = Mathf.Clamp(currentSubdivision, 1, 100);
+
             // 1박자 길이 (초)
             double beatLength = 60.0 / bpm;
 
-            // 그리드 간격 (초)
-            double gridInterval = beatLength / ((int)currentBeatDivision / 4.0);
+            // subdivision분 음표 간격 계산
+            // currentSubdivision = n이면 n분음표
+            double gridInterval = beatLength * (4.0 / safeSubdivision);
 
             // 가장 가까운 그리드에 스냅
             double snappedTime = System.Math.Round(time / gridInterval) * gridInterval;
@@ -443,9 +971,21 @@ namespace ChartSystem
             if (gridSnapText != null)
             {
                 if (gridSnapEnabled)
-                    gridSnapText.text = $"Grid: 1/{(int)currentBeatDivision}";
+                    gridSnapText.text = $"Grid: 1/{currentSubdivision}";
                 else
                     gridSnapText.text = "Grid: OFF";
+            }
+
+            // subdivision 입력 필드 업데이트
+            if (subdivisionInputField != null)
+            {
+                subdivisionInputField.text = currentSubdivision.ToString();
+            }
+
+            // subdivision 슬라이더 업데이트
+            if (subdivisionSlider != null)
+            {
+                subdivisionSlider.value = currentSubdivision;
             }
         }
         #endregion
@@ -560,6 +1100,12 @@ namespace ChartSystem
                     audioFilePath = path;
                     currentChart.audioFileName = Path.GetFileName(path);
 
+                    // 타임라인 새로고침
+                    RequestTimelineRefresh();
+
+                    // 파형 생성
+                    GenerateWaveform();
+
                     ShowStatus($"오디오 로드 완료: {clip.name} ({clip.length:F2}초)");
                     Debug.Log($"오디오 로드 완료: {clip.name} ({clip.length:F2}초)");
                 }
@@ -635,6 +1181,9 @@ namespace ChartSystem
                 if (songNameInput != null) songNameInput.text = songName;
                 if (artistNameInput != null) artistNameInput.text = artistName;
                 if (bpmInput != null) bpmInput.text = bpm.ToString();
+
+                // 타임라인 새로고침
+                RequestTimelineRefresh();
 
                 ShowStatus($"차트 로드 완료: {currentChart.GetNoteCount()}개 노트");
                 Debug.Log($"차트 로드: {currentChart.GetNoteCount()}개 노트");
@@ -778,6 +1327,27 @@ namespace ChartSystem
             }
         }
 
+        /// <summary>
+        /// 마디 오버라이드 추가 버튼 클릭 시 호출
+        /// TODO: 별도 UI 패널로 입력 받도록 개선 필요
+        /// </summary>
+        void OnAddMeasureOverrideClicked()
+        {
+            // 임시 구현: 하드코딩된 값으로 오버라이드 추가
+            // 실제로는 InputField 3개를 가진 팝업 UI가 필요함
+            int startMeasure = 8;
+            int endMeasure = 21;
+            int beatsPerMeasure = 12;
+
+            var newOverride = new MeasureLineOverride(startMeasure, endMeasure, beatsPerMeasure);
+            currentChart.measureLineOverrides.Add(newOverride);
+
+            RequestTimelineRefresh();
+            ShowStatus($"마디 오버라이드 추가: {startMeasure}~{endMeasure}마디 = {beatsPerMeasure}박자");
+
+            Debug.LogWarning("[ChartEditor] OnAddMeasureOverrideClicked: 임시 구현입니다. UI 패널 필요!");
+        }
+
         void ShowStatus(string message)
         {
             if (statusText != null)
@@ -831,6 +1401,318 @@ namespace ChartSystem
         public float GetCurrentTime()
         {
             return audioSource != null ? audioSource.time : 0f;
+        }
+        #endregion
+
+        #region Timeline Visualization
+        /// <summary>
+        /// 타임라인의 모든 시각 요소를 새로고침합니다
+        /// </summary>
+        public void RefreshTimelineVisuals()
+        {
+            if (timelineContainer == null || audioSource.clip == null)
+                return;
+
+            ClearTimelineVisuals();
+            GenerateBeatLines();
+            GenerateMeasureLines();
+            GenerateNoteVisuals();
+        }
+
+        /// <summary>
+        /// 타임라인의 모든 시각 요소를 제거합니다
+        /// </summary>
+        void ClearTimelineVisuals()
+        {
+            foreach (GameObject obj in timelineNoteVisuals)
+            {
+                if (obj != null) Destroy(obj);
+            }
+            timelineNoteVisuals.Clear();
+
+            foreach (GameObject obj in timelineBeatLines)
+            {
+                if (obj != null) Destroy(obj);
+            }
+            timelineBeatLines.Clear();
+
+            foreach (GameObject obj in timelineMeasureLines)
+            {
+                if (obj != null) Destroy(obj);
+            }
+            timelineMeasureLines.Clear();
+        }
+
+        /// <summary>
+        /// BPM 기반 박자선을 생성합니다 (에디터 전용, 플레이 시 비표시)
+        /// subdivision: 1~100분 음표
+        /// </summary>
+        void GenerateBeatLines()
+        {
+            if (beatLinePrefab == null || bpm <= 0 || audioSource.clip == null)
+                return;
+
+            // subdivision 범위 제한 (1~100)
+            int safeSubdivision = Mathf.Clamp(currentSubdivision, 1, 100);
+
+            float songLength = audioSource.clip.length;
+            float beatInterval = 60f / bpm; // 1박자 길이 (초)
+
+            // subdivision분 음표 간격 계산
+            // 1/4박자(quarter note) = 4분음표
+            // currentSubdivision = n이면 n분음표
+            float subdivisionInterval = beatInterval * (4f / safeSubdivision);
+
+            for (float time = 0; time < songLength; time += subdivisionInterval)
+            {
+                GameObject beatLine = Instantiate(beatLinePrefab, timelineContainer);
+                RectTransform rt = beatLine.GetComponent<RectTransform>();
+
+                if (rt != null)
+                {
+                    float xPos = time * pixelsPerSecond;
+                    rt.anchoredPosition = new Vector2(xPos, 0);
+
+                    // 1박자마다 더 굵게 표시
+                    bool isMainBeat = Mathf.Approximately(time % beatInterval, 0);
+                    Image img = beatLine.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        // 박자선은 반투명하게 (에디터에서만 보임)
+                        img.color = isMainBeat ? new Color(0.5f, 0.5f, 1f, 0.4f) : new Color(0.5f, 0.5f, 1f, 0.15f);
+                    }
+                }
+
+                timelineBeatLines.Add(beatLine);
+            }
+        }
+
+        /// <summary>
+        /// 마디선을 생성합니다 (플레이 시 표시, 오버라이드 지원)
+        /// </summary>
+        void GenerateMeasureLines()
+        {
+            if (measureLinePrefab == null || bpm <= 0 || audioSource.clip == null || currentChart == null)
+                return;
+
+            float songLength = audioSource.clip.length;
+            float beatLength = 60f / bpm; // 1박자 길이 (초)
+
+            int defaultBeats = Mathf.Max(1, currentChart.defaultBeatsPerMeasure); // 기본 마디당 박자 수
+            float currentTime = 0f;
+            int measureNumber = 1;
+
+            while (currentTime < songLength)
+            {
+                // 현재 마디에 적용할 박자 수 결정
+                int beatsForThisMeasure = GetBeatsPerMeasureAtMeasureNumber(measureNumber, defaultBeats);
+
+                // 마디선 생성
+                GameObject measureLine = Instantiate(measureLinePrefab, timelineContainer);
+                RectTransform rt = measureLine.GetComponent<RectTransform>();
+
+                if (rt != null)
+                {
+                    float xPos = currentTime * pixelsPerSecond;
+                    rt.anchoredPosition = new Vector2(xPos, 0);
+
+                    // 마디 번호 텍스트 추가
+                    Text measureText = measureLine.GetComponentInChildren<Text>();
+                    if (measureText != null)
+                    {
+                        measureText.text = $"M{measureNumber}\n({beatsForThisMeasure}박자)";
+                    }
+
+                    // 마디선은 굵고 진하게 (플레이 시 표시)
+                    Image img = measureLine.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        img.color = new Color(1f, 1f, 1f, 0.8f); // 흰색, 불투명
+                    }
+                }
+
+                timelineMeasureLines.Add(measureLine);
+
+                // 다음 마디 시작 시간 계산
+                currentTime += beatLength * beatsForThisMeasure;
+                measureNumber++;
+            }
+        }
+
+        /// <summary>
+        /// 특정 마디 번호에서 적용할 박자 수를 반환합니다 (오버라이드 고려)
+        /// </summary>
+        int GetBeatsPerMeasureAtMeasureNumber(int measureNum, int defaultBeats)
+        {
+            if (currentChart == null || currentChart.measureLineOverrides == null)
+                return defaultBeats;
+
+            // 오버라이드 리스트에서 해당하는 범위 찾기
+            foreach (var mOverride in currentChart.measureLineOverrides)
+            {
+                if (measureNum >= mOverride.startMeasure && measureNum <= mOverride.endMeasure)
+                {
+                    return Mathf.Max(1, mOverride.beatsPerMeasure);
+                }
+            }
+
+            return defaultBeats;
+        }
+
+        /// <summary>
+        /// 차트의 모든 노트를 타임라인에 시각화합니다
+        /// </summary>
+        void GenerateNoteVisuals()
+        {
+            if (noteVisualPrefab == null || currentChart == null)
+                return;
+
+            foreach (NoteData note in currentChart.notes)
+            {
+                GameObject noteVisual = Instantiate(noteVisualPrefab, timelineContainer);
+                RectTransform rt = noteVisual.GetComponent<RectTransform>();
+
+                if (rt != null)
+                {
+                    float xPos = (float)note.timing * pixelsPerSecond;
+                    float yPos = CalculateNoteYPosition(note.track);
+                    rt.anchoredPosition = new Vector2(xPos, yPos);
+
+                    // 롱노트인 경우 길이 표시
+                    if (note.isLongNote && note.longNoteEndTiming > note.timing)
+                    {
+                        float duration = (float)(note.longNoteEndTiming - note.timing);
+                        rt.sizeDelta = new Vector2(duration * pixelsPerSecond, rt.sizeDelta.y);
+                    }
+
+                    // 트랙별 색상 구분
+                    Image img = noteVisual.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        img.color = GetTrackColor(note.track);
+                    }
+                }
+
+                timelineNoteVisuals.Add(noteVisual);
+            }
+        }
+
+        /// <summary>
+        /// 트랙 인덱스에 따라 Y 포지션을 계산합니다
+        /// </summary>
+        float CalculateNoteYPosition(int track)
+        {
+            float trackHeight = 30f; // 트랙당 높이
+            float startY = -trackHeight * keyCount / 2f;
+            return startY + (track * trackHeight);
+        }
+
+        /// <summary>
+        /// 트랙별 색상을 반환합니다
+        /// </summary>
+        Color GetTrackColor(int track)
+        {
+            Color[] trackColors = new Color[]
+            {
+                new Color(1f, 0.3f, 0.3f),   // 빨강
+                new Color(0.3f, 0.6f, 1f),   // 파랑
+                new Color(0.3f, 1f, 0.3f),   // 초록
+                new Color(1f, 1f, 0.3f),     // 노랑
+                new Color(1f, 0.3f, 1f),     // 핑크
+                new Color(0.3f, 1f, 1f),     // 청록
+                new Color(1f, 0.6f, 0.3f),   // 주황
+                new Color(0.6f, 0.3f, 1f),   // 보라
+                new Color(1f, 1f, 1f),       // 흰색
+                new Color(0.8f, 0.8f, 0.8f)  // 회색
+            };
+
+            return trackColors[track % trackColors.Length];
+        }
+
+        /// <summary>
+        /// 재생 헤드의 위치를 업데이트합니다
+        /// </summary>
+        void UpdatePlayheadPosition()
+        {
+            if (playheadIndicator == null || audioSource == null)
+                return;
+
+            float currentTime = audioSource.time;
+            float xPos = currentTime * pixelsPerSecond;
+            playheadIndicator.anchoredPosition = new Vector2(xPos, playheadIndicator.anchoredPosition.y);
+
+            // 자동 스크롤 (재생 중일 때)
+            if (isPlaying && timelineScrollRect != null && audioSource.clip != null)
+            {
+                float scrollPercentage = currentTime / audioSource.clip.length;
+                timelineScrollRect.horizontalNormalizedPosition = scrollPercentage;
+            }
+        }
+
+        /// <summary>
+        /// 타임라인 새로고침을 요청합니다 (다음 프레임에 실행)
+        /// </summary>
+        public void RequestTimelineRefresh()
+        {
+            timelineNeedsRefresh = true;
+        }
+
+        /// <summary>
+        /// 오디오 클립의 파형을 생성하고 표시합니다
+        /// </summary>
+        public void GenerateWaveform()
+        {
+            if (waveformDisplay == null || audioSource.clip == null)
+                return;
+
+            AudioClip clip = audioSource.clip;
+            int sampleCount = clip.samples * clip.channels;
+            float[] samples = new float[sampleCount];
+            clip.GetData(samples, 0);
+
+            int width = waveformResolution;
+            int height = 200;
+            Texture2D texture = new Texture2D(width, height);
+
+            // 배경을 투명하게
+            Color[] clearColors = new Color[width * height];
+            for (int i = 0; i < clearColors.Length; i++)
+                clearColors[i] = new Color(0, 0, 0, 0);
+            texture.SetPixels(clearColors);
+
+            // 파형 그리기
+            int samplesPerPixel = sampleCount / width;
+            for (int x = 0; x < width; x++)
+            {
+                int sampleIndex = x * samplesPerPixel;
+                if (sampleIndex >= sampleCount)
+                    break;
+
+                // 구간별 최대/최소값 계산
+                float min = 1f;
+                float max = -1f;
+                for (int i = 0; i < samplesPerPixel && (sampleIndex + i) < sampleCount; i++)
+                {
+                    float sample = samples[sampleIndex + i];
+                    if (sample < min) min = sample;
+                    if (sample > max) max = sample;
+                }
+
+                // 정규화 (-1~1 → 0~height)
+                int yMin = Mathf.Clamp((int)((min + 1f) * height * 0.5f), 0, height - 1);
+                int yMax = Mathf.Clamp((int)((max + 1f) * height * 0.5f), 0, height - 1);
+
+                // 세로선 그리기
+                for (int y = yMin; y <= yMax; y++)
+                {
+                    texture.SetPixel(x, y, waveformColor);
+                }
+            }
+
+            texture.Apply();
+            waveformDisplay.texture = texture;
+
+            Debug.Log($"파형 생성 완료: {width}x{height}, 샘플 수: {sampleCount}");
         }
         #endregion
 
