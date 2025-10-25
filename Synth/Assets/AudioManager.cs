@@ -325,6 +325,38 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         }
     }
 
+    // 배경음악을 일시정지하는 함수
+    public void PauseBGM()
+    {
+        if (bgmChannel.hasHandle())
+        {
+            bool isPaused;
+            bgmChannel.getPaused(out isPaused);
+
+            if (!isPaused)
+            {
+                bgmChannel.setPaused(true);
+                UnityEngine.Debug.Log("BGM 일시정지됨");
+            }
+        }
+    }
+
+    // 배경음악을 재개하는 함수
+    public void ResumeBGM()
+    {
+        if (bgmChannel.hasHandle())
+        {
+            bool isPaused;
+            bgmChannel.getPaused(out isPaused);
+
+            if (isPaused)
+            {
+                bgmChannel.setPaused(false);
+                UnityEngine.Debug.Log("BGM 재개됨");
+            }
+        }
+    }
+
     // 효과음을 재생하는 함수
     public void PlaySFX(SFXType sfxType)
     {

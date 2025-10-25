@@ -235,7 +235,7 @@ public class GameManager : MonoBehaviour
         // 오디오 일시정지
         if (audioManager != null)
         {
-            audioManager.StopBGM(); // TODO: Pause 메서드 추가 필요
+            audioManager.PauseBGM();
         }
 
         Debug.Log("GameManager: 게임 일시정지");
@@ -254,7 +254,7 @@ public class GameManager : MonoBehaviour
         // 오디오 재개
         if (audioManager != null)
         {
-            audioManager.PlayBGM(); // TODO: Resume 메서드 추가 필요 (현재는 처음부터 재생)
+            audioManager.ResumeBGM();
         }
 
         Debug.Log("GameManager: 게임 재개");
