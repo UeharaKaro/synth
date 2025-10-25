@@ -9,6 +9,7 @@ public class NoteController : MonoBehaviour
     [Header("Note Data")]
     public float hitTime; // 언제 쳐야 하는 시간
     public int trackIndex; // 어느 트랙의 노트인지
+    public KeySoundType keySoundType = KeySoundType.None; // 이 노트의 키 사운드
 
     private Vector3 startPosition;
     private Vector3 targetPosition;
@@ -72,12 +73,13 @@ public class NoteController : MonoBehaviour
         }
     }
     
-    public void Initialize(Vector3 startPos, Vector3 targetPos, float noteHitTime, int track)
+    public void Initialize(Vector3 startPos, Vector3 targetPos, float noteHitTime, int track, KeySoundType keySound = KeySoundType.None)
     {
         startPosition = startPos;
         targetPosition = targetPos;
         hitTime = noteHitTime;
         trackIndex = track;
+        keySoundType = keySound;
         
         transform.position = startPos;
         ApplyNoteSettings();
@@ -144,14 +146,13 @@ public class NoteController : MonoBehaviour
     
     private float GetCurrentGameTime()
     {
-        // AudioManager에서 정확한 시간 가져오기
-        AudioManager audioManager = FindObjectOfType<AudioManager>();
-        if (audioManager != null)
+        // AudioManager에서 정확한 시간 가져오기 (싱글톤 사용)
+        if (AudioManager.Instance != null && AudioManager.Instance.IsPlaying)
         {
-            return audioManager.GetMusicTime();
+            return AudioManager.Instance.GetMusicTime();
         }
-        
-        // AudioManager가 없다면 Time.time 사용
+
+        // AudioManager가 없거나 재생 중이 아니면 Time.time 사용
         return Time.time - creationTime;
     }
     
@@ -194,6 +195,21 @@ public class NoteController : MonoBehaviour
         IsHit = true;
         isActive = false;
 
+        // 키 사운드 재생
+        if (keySoundType != KeySoundType.None && AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayKeySound(keySoundType);
+        }
+
+        // 판정 효과음 재생 (Good 이하는 히트 사운드)
+        if (AudioManager.Instance != null)
+        {
+            if (result == JudgmentType.S_Perfect || result == JudgmentType.Perfect || result == JudgmentType.Great)
+            {
+                AudioManager.Instance.PlaySFX(SFXType.Hit);
+            }
+        }
+
         // HP 시스템 업데이트
         if (hpSystem != null)
         {
@@ -224,6 +240,12 @@ public class NoteController : MonoBehaviour
     {
         IsMissed = true;
         isActive = false;
+
+        // Miss 효과음 재생
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlaySFX(SFXType.Miss);
+        }
 
         // HP 시스템 업데이트 (Miss)
         if (hpSystem != null)

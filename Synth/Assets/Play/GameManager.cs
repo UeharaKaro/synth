@@ -191,6 +191,18 @@ public class GameManager : MonoBehaviour
             hpSystem.InitializeHP();
         }
 
+        // 오디오 재생 시작
+        if (audioManager != null && !string.IsNullOrEmpty(chart.audioFileName))
+        {
+            audioManager.LoadBGM(chart.audioFileName);
+            audioManager.PlayBGM();
+            Debug.Log($"GameManager: 오디오 재생 - {chart.audioFileName}");
+        }
+        else
+        {
+            Debug.LogWarning("GameManager: AudioManager가 없거나 오디오 파일명이 비어있습니다!");
+        }
+
         // 노트 스폰 시작 (선택된 시스템에 따라)
         if (useNoteSpawner && noteSpawner != null)
         {
@@ -206,12 +218,6 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogWarning("GameManager: 노트 스폰 시스템이 설정되지 않았습니다!");
         }
-
-        // TODO: 오디오 재생 시작
-        // if (audioManager != null)
-        // {
-        //     audioManager.PlaySong(chart.audioFileName);
-        // }
 
         Debug.Log($"GameManager: 게임 시작 - {chart.songName}");
     }
@@ -229,7 +235,7 @@ public class GameManager : MonoBehaviour
         // 오디오 일시정지
         if (audioManager != null)
         {
-            // audioManager.PauseSong();
+            audioManager.StopBGM(); // TODO: Pause 메서드 추가 필요
         }
 
         Debug.Log("GameManager: 게임 일시정지");
@@ -248,7 +254,7 @@ public class GameManager : MonoBehaviour
         // 오디오 재개
         if (audioManager != null)
         {
-            // audioManager.ResumeSong();
+            audioManager.PlayBGM(); // TODO: Resume 메서드 추가 필요 (현재는 처음부터 재생)
         }
 
         Debug.Log("GameManager: 게임 재개");
@@ -287,7 +293,7 @@ public class GameManager : MonoBehaviour
         // 오디오 중지
         if (audioManager != null)
         {
-            // audioManager.StopSong();
+            audioManager.StopBGM();
         }
 
         // TODO: 게임오버 UI 표시 또는 결과 화면으로 전환

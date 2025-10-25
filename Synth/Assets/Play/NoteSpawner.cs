@@ -157,7 +157,7 @@ public class NoteSpawner : MonoBehaviour
         if (controller != null)
         {
             Vector3 targetPosition = new Vector3(spawnPosition.x, judgmentLineY, spawnPosition.z);
-            controller.Initialize(spawnPosition, targetPosition, (float)noteData.timing, noteData.track);
+            controller.Initialize(spawnPosition, targetPosition, (float)noteData.timing, noteData.track, noteData.keySoundType);
         }
         else
         {
@@ -200,12 +200,13 @@ public class NoteSpawner : MonoBehaviour
     /// </summary>
     private float GetCurrentSongTime()
     {
-        if (audioManager != null)
+        if (audioManager != null && audioManager.IsPlaying)
         {
             return audioManager.GetMusicTime();
         }
 
-        // AudioManager가 없으면 Time.time 사용 (임시)
+        // AudioManager가 없거나 재생 중이 아니면 Time.time 사용 (테스트용)
+        Debug.LogWarning("NoteSpawner: AudioManager가 없거나 재생 중이 아닙니다. Time.time 사용");
         return Time.time;
     }
 
