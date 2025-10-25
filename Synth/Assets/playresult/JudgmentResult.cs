@@ -1,6 +1,4 @@
-﻿namespace ChartSystem;
-
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 
