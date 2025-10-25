@@ -33,9 +33,16 @@ public class NoteData
     }
 
     // BPM 기준으로 박자 타이밍 계산
-    public void CaculateBeatTiming(float bpm)
+    public void CalculateBeatTiming(float bpm)
     {
         beatTiming = (float)(timing * bpm / 60.0f); // BPM을 초 단위로 변환하여 박자 타이밍 계산
+    }
+
+    // 하위 호환성을 위한 오타 메서드 (deprecated)
+    [System.Obsolete("CaculateBeatTiming is deprecated. Use CalculateBeatTiming instead.", false)]
+    public void CaculateBeatTiming(float bpm)
+    {
+        CalculateBeatTiming(bpm);
     }
 }
 

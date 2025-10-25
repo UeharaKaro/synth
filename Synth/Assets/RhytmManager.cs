@@ -5,25 +5,8 @@ using FMOD;
 using FMOD.Studio;
 using Debug = UnityEngine.Debug;
 
-
-// 판정 모드를 나타내는 열거형 
-
-public enum JudgmentMode
-{   
-    JudgmentMode_Normal,       // 일반 게이머들 추천
-    JudgmentMode_Hard,         // 심화 유저들 추천, 추후 랭크전 도입시 변별용
-    JudgmentMode_Super,        // 현재 추가 계획 없음
-}
-// 판정 등급을 나타내는 열거형
-public enum JudgmentType
-{                   // 순서대로 Normal, Hard, Super 모드
-    S_Perfect,      // 세부판정, None, 16.67ms, 4.17ms 
-    Perfect,        //         41.66ms, 32.25ms, 12.50ms
-    Great,          //         83.33ms, 62.49ms, 25.00ms
-    Good,           //         120ms, 88.33ms, 62.49ms
-    Bad,            //         150ms, 120ms, 놓침 (Bad 이하부터 콤보 break)
-    Miss            //         놓침
-}   
+// JudgmentMode, JudgmentType enum은 Assets/GameEnums.cs에 정의되어 있습니다.
+// 하위 호환성을 위해 JudgmentMode_Normal, JudgmentMode_Hard, JudgmentMode_Super 별칭 제공
 
 public class RhythmManager : MonoBehaviour
 {

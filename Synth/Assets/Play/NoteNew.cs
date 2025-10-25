@@ -335,26 +335,6 @@ namespace ChartSystem
         }
     }
 
-    /// <summary>
-    /// 독립적인 판정 모드 열거형
-    /// </summary>
-    public enum JudgmentMode
-    {
-        Normal,    // 일반 난이도 - 캐주얼 플레이어용 권장
-        Hard,      // 하드 난이도 - 숙련된 플레이어용 권장
-        Super      // 슈퍼 난이도 - 전문가용
-    }
-
-    /// <summary>
-    /// 독립적인 판정 타입 열거형
-    /// </summary>
-    public enum JudgmentType
-    {
-        S_Perfect, // 최고 정확도 판정
-        Perfect,   // 높은 정확도 판정
-        Great,     // 좋은 정확도 판정
-        Good,      // 허용 가능한 정확도 판정
-        Bad,       // 낮은 정확도 판정 (콤보 끊김)
-        Miss       // 완전한 놓침
-    }
+    // JudgmentMode, JudgmentType, KeySoundType enum은 Assets/GameEnums.cs에 정의되어 있습니다.
+    // ChartSystem namespace에서 global namespace의 enum을 사용합니다.
 }

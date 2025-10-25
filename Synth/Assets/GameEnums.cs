@@ -44,7 +44,7 @@ public enum JudgmentType
     Perfect,    // 완벽 (Normal: 41.66ms, Hard: 32.25ms, Super: 12.50ms)
     Great,      // 좋음 (Normal: 83.33ms, Hard: 62.49ms, Super: 25.00ms)
     Good,       // 보통 (Normal: 120ms, Hard: 88.33ms, Super: 62.49ms)
-    Bad,        // 나쁨 (Normal: 150ms, Hard: 120ms, Super: 없음 - Miss로 처리)
+    Bad,        // 나쁨 (Normal: 150ms, Hard: 120ms, Super: 없음 - Miss로 처리), Bad 이하부터 콤보 break
     Miss        // 놓침
 }
 
@@ -52,11 +52,11 @@ public enum JudgmentType
 /// 판정 모드 열거형
 /// 게임의 난이도에 따른 판정 기준
 /// </summary>
-public enum JudgmentMode
+public enum JudgmentMode // 판정 모드를 나타내는 열거형
 {
-    Normal,     // 일반 모드 - 가장 관대한 타이밍, S_Perfect 없음
+    Normal,     // 일반 모드 - 가장 쉬운 판정, S_Perfect 없음
     Hard,       // 하드 모드 - 중간 난이도, S_Perfect 포함
-    Super,      // 슈퍼 모드 - 가장 엄격한 타이밍, Bad 없음 (Good 실패 시 바로 Miss)
+    Super,      // 슈퍼 모드 - 가장 엄격한 판정, Bad 없음 (Good 실패 시 바로 Miss), 현재 추가 계획 없음
 
     // 하위 호환성을 위한 별칭
     JudgmentMode_Normal = Normal,
