@@ -72,9 +72,9 @@ namespace ChartSystem
             targetY = target;
             keySoundType = noteData.keySoundType;
             track = noteData.track;
-            timing = noteData.timing;
+            timing = (float)noteData.timing;
             isLongNote = noteData.isLongNote;
-            longNoteEndTiming = noteData.longNoteEndTiming;
+            longNoteEndTiming = (float)noteData.longNoteEndTiming;
             spawnTime = currentTime;
             initialized = true;
             isHit = false;
