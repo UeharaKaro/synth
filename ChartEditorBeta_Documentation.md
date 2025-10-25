@@ -1,338 +1,473 @@
-# ChartEditorBeta - Unity Rhythm Game Chart Editor
+# ChartEditor - Unity Rhythm Game Chart Editor
 
 ## Overview
 
-ChartEditorBeta is an enhanced version of the Unity rhythm game chart editor with improved functionality, better user experience, and advanced features for professional chart creation.
+ChartEditor is a unified chart editing tool for Unity rhythm games, built based on the requirements in DEVELOPMENT_TODO.md. It provides complete chart creation and editing capabilities with an improved user experience and advanced features.
 
-## Features
+**Location**: `Assets/edit/ChartEditor.cs`
+**Namespace**: `ChartSystem`
+**Status**: Phase 1 Complete
 
-### Core Functionality
-- **Multi-lane support**: 4, 5, 6, 7, 8, and 10 lane configurations
-- **Note types**: Normal notes and long notes with visual trails
-- **Real-time preview**: Play mode with accurate timing simulation
-- **Grid snapping**: Precise note placement with customizable divisions
-- **AES encryption**: Secure audio file encryption for distribution
+## Key Features
 
-### Editor Controls
+### Phase 1 Features (Complete)
+- ✅ **Multi-lane support**: 4K, 5K, 6K, 7K, 8K, 10K configurations
+- ✅ **Note type switching**: Normal (N key) / Long (L key) modes
+- ✅ **Bidirectional long notes**: Place from top-to-bottom or bottom-to-top
+- ✅ **Grid snap system**: G key cycles through 1/4, 1/8, 1/16, 1/32, OFF
+- ✅ **Undo/Redo**: Up to 50 steps (Ctrl+Z, Ctrl+Shift+Z)
+- ✅ **Keyboard shortcuts**: Ctrl+S (save), Space (play/pause), T (edit scope toggle)
+- ✅ **Audio control**: Load, play, pause, stop, seek
+- ✅ **Chart management**: Load, save, create new
 
-#### Mode Switching
-- **N key**: Switch to Normal note mode
-- **L key**: Switch to Long note mode
-- **P key**: Toggle Preview mode
+### Phase 2 Features (Planned)
+- ⏳ Visual timeline with waveform
+- ⏳ Advanced editing (copy, paste, mirror)
+- ⏳ BPM change support
+- ⏳ Slide notes
+- ⏳ Multi-select and batch operations
 
-#### Lane Management
-- **+ key / = key**: Increase lane count
-- **- key**: Decrease lane count
+## Editor Controls
 
-#### Audio Controls
-- **Space**: Play/Pause audio
-- **Timeline Slider**: Seek to specific time
+### Mode Switching
+| Key | Function | Description |
+|-----|----------|-------------|
+| **N** | Normal Note Mode | Place standard notes |
+| **L** | Long Note Mode | Place long notes (hold notes) |
+| **S** | Slide Note Mode | ⏳ Coming in Phase 2 |
 
-#### Note Operations
-- **Left Click + Drag**: Place notes (mode dependent)
-- **Shift + Click**: Multi-select notes
-- **Ctrl + A**: Select all notes
-- **Delete / Backspace**: Delete selected notes
-- **Escape**: Clear selection
+### Note Placement
 
-#### Editor Functions
-- **Ctrl + Z**: Undo
-- **Ctrl + Shift + Z**: Redo
-- **Ctrl + S**: Save chart (if UI button connected)
-- **Ctrl + O**: Load chart (if UI button connected)
+#### Normal Notes
+1. Press **N** key to enter Normal note mode
+2. Click on a track to place a note
+3. Notes snap to grid if grid snap is enabled
 
-#### Grid and Timing
-- **G key**: Cycle grid snap modes (None, 1/4, 1/8, 1/16, 1/32)
-- **[ key**: Decrease beat division
-- **] key**: Increase beat division
+#### Long Notes (Bidirectional)
+1. Press **L** key to enter Long note mode
+2. Click on start position (either top or bottom)
+3. Click on end position (can be above or below start)
+4. System automatically determines start/end timing
 
-#### Preview Mode Keys (Lane-dependent)
-- **4 lanes**: D, F, J, K
-- **5 lanes**: D, F, Space, J, K
-- **6 lanes**: S, D, F, J, K, L
-- **7 lanes**: S, D, F, Space, J, K, L
-- **8 lanes**: A, S, D, F, J, K, L, ;
-- **10 lanes**: A, S, D, F, G, H, J, K, L, ;
+**Example:**
+```
+Top-to-Bottom:     Bottom-to-Top:
+   [Click 1] ●        [Click 2] ●
+      |                   |
+      ↓                   ↑
+   [Click 2] ●        [Click 1] ●
+```
+
+### Grid Snapping
+
+**G Key**: Cycle through grid snap modes
+- **1/4 beat** → **1/8 beat** → **1/16 beat** → **1/32 beat** → **OFF** → (repeat)
+
+**Beat Division:**
+- `[` key: Decrease beat division
+- `]` key: Increase beat division
+
+Grid snap calculates note timing based on:
+```csharp
+double beatInterval = 60.0 / bpm;  // Seconds per beat
+double snapInterval = beatInterval / (int)currentBeatDivision;
+```
+
+### Audio Controls
+
+| Key/Button | Function |
+|------------|----------|
+| **Space** | Play/Pause toggle |
+| **Stop Button** | Stop playback and reset to start |
+| **Timeline Slider** | Seek to specific time |
+
+### Editing Functions
+
+| Shortcut | Function | Description |
+|----------|----------|-------------|
+| **Ctrl + Z** | Undo | Undo last action (max 50 steps) |
+| **Ctrl + Shift + Z** | Redo | Redo last undone action |
+| **Ctrl + S** | Save | Save current chart |
+| **T** | Toggle Edit Scope | Switch between Per-Note / Per-Measure |
+| **Delete** | Delete Note | Delete selected notes |
+
+### Edit Scope (T Key)
+
+**Per-Note Mode**: Apply changes to individual notes
+**Per-Measure Mode**: Apply changes to note ranges by measure
+
+This feature is prepared for future BPM/tempo change functionality.
 
 ## Setup Instructions
 
 ### 1. Basic Setup
+
 1. Create an empty GameObject in your scene
-2. Add the `ChartEditorBeta` component
-3. Configure the public fields in the inspector
+2. Add the `ChartEditor` component (from `ChartSystem` namespace)
+3. Configure public fields in the Inspector
 
-### 2. Required Components
+### 2. Required UI Components
+
 ```csharp
-// Audio components
-public AudioSource audioSource; // Automatically added
-public AudioManagerBeta audioManagerBeta; // Automatically created
+[Header("오디오 컨트롤 UI")]
+public InputField audioPathInputField;    // Path to audio file
+public Slider timelineSlider;             // Timeline seek slider
+public Text currentTimeText;              // Display current time
+public Text totalTimeText;                // Display total duration
+public Button loadAudioButton;            // Load audio button
+public Button playButton;                 // Play button
+public Button pauseButton;                // Pause button
+public Button stopButton;                 // Stop button
 
-// UI elements (optional but recommended)
-public InputField audioPathInputField;
-public Slider timelineSlider;
-public Text currentTimeText;
-public Text totalTimeText;
-public Button playButton;
-public Button pauseButton;
-public Button stopButton;
-public Button saveButton;
-public Button loadButton;
+[Header("차트 정보 UI")]
+public InputField songNameInput;          // Song name input
+public InputField artistNameInput;        // Artist name input
+public InputField bpmInput;               // BPM input
+public InputField offsetInput;            // Audio offset (ms)
 
-// Visual elements
-public GameObject notePrefab;
-public GameObject longNotePrefab;
-public Transform noteContainer;
-public Transform[] tracks;
-public Material gridLineMaterial;
+[Header("에디터 상태 UI")]
+public Text modeText;                     // Current mode display
+public Text gridSnapText;                 // Grid snap display
+public Text statusText;                   // Status messages
 ```
 
-### 3. Prefab Creation
-Use the `ChartEditorBetaPrefabCreator` script to automatically generate required prefabs:
+### 3. Chart Settings
 
-1. Attach `ChartEditorBetaPrefabCreator` to any GameObject
-2. Configure the materials and settings
-3. Call `CreatePrefabs()` or use the context menu
-4. Assign the created prefabs to ChartEditorBeta
+```csharp
+[Header("차트 설정")]
+public string songName = "";              // Song title
+public string artistName = "";            // Artist name
+public float bpm = 120f;                  // Beats per minute
+public float offset = 0f;                 // Audio offset (seconds)
 
-### 4. UI Setup
-The editor can work without UI, but for full functionality:
+[Header("에디터 설정")]
+public int keyCount = 4;                  // Lane count (4/5/6/7/8/10)
+public KeyCode[] trackKeys;               // Input keys for each lane
+public Transform[] noteSpawnPoints;       // Spawn positions per lane
+public GameObject notePrefab;             // Note prefab
+```
 
-1. Create a Canvas
-2. Add UI elements for timeline, buttons, and info displays
-3. Connect them to the ChartEditorBeta component
-4. Use `ChartEditorBetaPrefabCreator.CreateEditorUIPrefab()` for automatic UI creation
+### 4. Prefab Requirements
+
+**Note Prefab:**
+- Must have `SpriteRenderer` component
+- Can have custom visuals
+- Will be pooled for performance
+
+**Auto-generation:**
+If `notePrefab` is null, the editor automatically creates a simple white square sprite.
+
+## Technical Details
+
+### Undo/Redo System
+
+The editor uses JSON serialization for undo/redo:
+
+```csharp
+private Stack<ChartDataNew> undoStack = new Stack<ChartDataNew>();
+private Stack<ChartDataNew> redoStack = new Stack<ChartDataNew>();
+private const int MAX_UNDO_STACK = 50;
+```
+
+**How it works:**
+1. Before each modification, current chart state is serialized to JSON
+2. JSON is pushed onto undo stack
+3. Ctrl+Z deserializes previous state
+4. Maximum 50 undo steps to prevent memory issues
+
+### Grid Snap Calculation
+
+```csharp
+double CalculateSnappedTiming(double currentTime)
+{
+    if (!gridSnapEnabled) return currentTime;
+
+    double beatInterval = 60.0 / bpm;
+    double snapInterval = beatInterval / (int)currentBeatDivision;
+
+    return System.Math.Round(currentTime / snapInterval) * snapInterval;
+}
+```
+
+### Long Note Bidirectional Placement
+
+```csharp
+void HandleLongNoteInput(double timing, int track)
+{
+    if (!isPlacingLongNote)
+    {
+        // First click - store start position
+        longNoteStart = new NoteData(timing, track, selectedKeySoundType);
+        longNoteTrack = track;
+        isPlacingLongNote = true;
+    }
+    else
+    {
+        // Second click - determine start and end
+        double startTime = System.Math.Min(longNoteStart.timing, timing);
+        double endTime = System.Math.Max(longNoteStart.timing, timing);
+
+        NoteData longNote = new NoteData(
+            startTime,
+            track,
+            selectedKeySoundType,
+            true,  // isLongNote
+            endTime
+        );
+
+        AddNoteToChart(longNote);
+        isPlacingLongNote = false;
+    }
+}
+```
+
+## Data Structures
+
+### ChartDataNew
+
+```csharp
+[System.Serializable]
+public class ChartDataNew
+{
+    public string songName;
+    public string artistName;
+    public string audioFileName;
+    public float bpm;
+    public float chartDifficulty;
+    public List<NoteData> notes;
+}
+```
+
+### NoteData
+
+```csharp
+[System.Serializable]
+public class NoteData
+{
+    public double timing;              // Note hit time (seconds)
+    public float beatTiming;           // Beat-based timing
+    public int track;                  // Lane index (0-based)
+    public KeySoundType keySoundType;  // Key sound to play
+    public bool isLongNote;            // Is this a long note?
+    public double longNoteEndTiming;   // End time for long notes
+}
+```
+
+### Enums
+
+All enums are defined in `Assets/GameEnums.cs`:
+
+```csharp
+public enum KeySoundType
+{
+    None, Kick, Snare, Hihat, Vocal1, Vocal2,
+    Synth1, Synth2, Bass, Piano, Guitar
+}
+
+public enum JudgmentMode
+{
+    Normal, Hard, Super,
+    // Backward compatibility aliases
+    JudgmentMode_Normal = Normal,
+    JudgmentMode_Hard = Hard,
+    JudgmentMode_Super = Super
+}
+```
+
+## Workflow Example
+
+### Creating a New Chart
+
+1. **Setup**
+   - Assign UI elements in Inspector
+   - Set default BPM (e.g., 120)
+   - Set key count (e.g., 4K)
+
+2. **Load Audio**
+   - Enter audio file path in `audioPathInputField`
+   - Click "Load Audio" button
+   - Audio loads via UnityWebRequest
+
+3. **Chart Metadata**
+   - Enter song name in `songNameInput`
+   - Enter artist name in `artistNameInput`
+   - Adjust BPM if needed in `bpmInput`
+
+4. **Place Notes**
+   - Press **N** for normal notes
+   - Click on tracks to place notes
+   - Press **L** for long notes
+   - Click start and end positions
+
+5. **Adjust Grid**
+   - Press **G** to cycle grid snap
+   - Use `[` `]` for beat division
+
+6. **Save Chart**
+   - Press **Ctrl + S**
+   - Chart saved as JSON
+
+## Keyboard Reference
+
+### Essential Shortcuts
+```
+N              - Normal note mode
+L              - Long note mode
+Space          - Play/Pause
+G              - Cycle grid snap
+T              - Toggle edit scope
+Ctrl + Z       - Undo
+Ctrl + Shift+Z - Redo
+Ctrl + S       - Save chart
+```
+
+### Grid Control
+```
+G              - Cycle snap: 1/4 → 1/8 → 1/16 → 1/32 → OFF
+[              - Decrease beat division
+]              - Increase beat division
+```
 
 ## Advanced Features
 
-### Audio Encryption
+### Edit Scope System
+
+**Purpose**: Prepared for future BPM change support
+
+**Two Modes:**
+1. **Per-Note**: Apply changes to individual notes
+2. **Per-Measure**: Apply changes to note ranges
+
+**Toggle**: Press **T** key
+
+Currently acts as a placeholder for future measure-based editing features.
+
+### Undo Stack Management
+
 ```csharp
-// Encrypt audio file
-ChartEditorBetaFileUtils.EncryptAudioFile(
-    "path/to/audio.wav", 
-    "path/to/encrypted.eaw", 
-    "your-encryption-key"
-);
-
-// AudioManagerBeta automatically decrypts during loading
-audioManagerBeta.LoadAudioFile("path/to/encrypted.eaw");
-```
-
-### Chart Export/Import
-```csharp
-// Export with metadata
-chartEditor.SaveChartAs(
-    "path/to/chart.chart",
-    "Song Title",
-    "Artist Name", 
-    "Charter Name"
-);
-
-// Load from specific path
-chartEditor.LoadChartFrom("path/to/chart.chart");
-```
-
-### Preview System Integration
-```csharp
-// Access preview system
-ChartEditorBetaPreview preview = chartEditor.previewSystem;
-
-// Subscribe to events
-preview.OnNoteJudged += (judgment) => Debug.Log($"Judgment: {judgment}");
-preview.OnNoteSpawned += (noteData) => Debug.Log($"Note spawned: {noteData.track}");
-```
-
-## File Format
-
-### Chart Data Structure
-```json
+void SaveUndoState()
 {
-    "audioFileName": "song.wav",
-    "bpm": 120.0,
-    "laneCount": 4,
-    "scrollSpeed": 8.0,
-    "beatDivision": 4,
-    "audioOffset": 0.0,
-    "notes": [
-        {
-            "timing": 1.0,
-            "beatTiming": 2.0,
-            "track": 0,
-            "keySoundType": 0,
-            "isLongNote": false,
-            "longNoteEndTiming": 0.0
-        }
-    ]
+    string json = JsonUtility.ToJson(currentChart);
+    ChartDataNew snapshot = JsonUtility.FromJson<ChartDataNew>(json);
+
+    undoStack.Push(snapshot);
+
+    // Limit stack size
+    if (undoStack.Count > MAX_UNDO_STACK)
+    {
+        // Remove oldest entry
+        var temp = undoStack.ToArray();
+        undoStack.Clear();
+        for (int i = 1; i < temp.Length; i++)
+            undoStack.Push(temp[i]);
+    }
+
+    redoStack.Clear(); // Clear redo on new action
 }
 ```
 
-### Export Data with Metadata
-```json
-{
-    "metadata": {
-        "title": "Song Title",
-        "artist": "Artist Name",
-        "charter": "Charter Name",
-        "createdDate": "2023-12-07 10:30:00",
-        "version": "1.0"
-    },
-    "chartData": { /* Chart data structure */ }
-}
-```
+## Known Limitations
 
-## Performance Considerations
+### Phase 1 (Current)
+- No visual waveform display
+- No copy/paste functionality
+- No BPM changes during chart
+- No slide notes
+- Manual JSON save only (no file dialog)
 
-### Note Pooling
-The preview system uses object pooling for optimal performance:
-- Notes are reused rather than constantly created/destroyed
-- Pool size automatically adjusts based on chart complexity
-- Memory usage is minimized for long charts
-
-### Grid System
-- Grid lines are generated dynamically based on BPM and beat division
-- Only visible grid lines are rendered
-- Grid updates only when settings change
-
-### Audio Management
-- Audio decryption is performed once during loading
-- Encrypted files are cached in memory for quick access
-- Support for streaming large audio files
-
-## Integration with Existing Systems
-
-### Compatibility
-- **AudioManager.cs**: Maintains compatibility, uses FMOD when available
-- **NoteData.cs**: Extends with NoteDataBeta, preserves original structure
-- **RhythmManager.cs**: Uses existing judgment system and enums
-- **GameSettings.cs**: Integrates with existing settings system
-
-### Migration
-To use ChartEditorBeta with existing charts:
-```csharp
-// Convert existing ChartData to ChartDataBeta
-ChartDataBeta betaChart = new ChartDataBeta();
-betaChart.audioFileName = originalChart.audioFileName;
-betaChart.bpm = originalChart.bpm;
-betaChart.laneCount = 4; // Set appropriate lane count
-
-// Convert notes
-foreach(var note in originalChart.notes)
-{
-    var betaNote = new NoteDataBeta(
-        note.timing, 
-        note.track, 
-        note.keySoundType, 
-        note.isLongNote, 
-        note.longNoteEndTiming
-    );
-    betaChart.notes.Add(betaNote);
-}
-```
+### Planned for Phase 2
+- Visual timeline with waveform
+- Advanced clipboard operations
+- Multiple BPM sections
+- Slide note support
+- File browser integration
 
 ## Troubleshooting
 
-### Common Issues
+### Issue: Notes don't snap to grid
+**Solution**: Press **G** until desired snap mode is active. Check `gridSnapText` UI display.
 
-1. **Notes not appearing**: Check that `notePrefab` and `noteContainer` are assigned
-2. **Grid not showing**: Ensure `gridLineMaterial` is assigned and `showGrid` is true
-3. **Audio not loading**: Verify file path and encryption key if using encrypted files
-4. **Preview mode not working**: Check that lanes are properly configured and input keys are not conflicting
+### Issue: Long notes don't connect
+**Solution**: Ensure you're in Long note mode (press **L**). Long notes must be on the same track.
 
-### Debug Options
+### Issue: Undo doesn't work
+**Solution**: Check that you've made changes after editor initialization. First action cannot be undone.
+
+### Issue: Audio doesn't load
+**Solution**:
+- Check file path is correct
+- File must be in `StreamingAssets` or accessible path
+- Supported formats: .wav, .ogg, .mp3
+
+### Issue: Can't find ChartEditor component
+**Solution**: Make sure you're looking in `ChartSystem` namespace. Use `using ChartSystem;` in scripts.
+
+## Integration with Main Game
+
+### Loading Charts in Gameplay
+
 ```csharp
-// Enable debug logging in ChartEditorBeta
-Debug.Log("Current mode: " + currentEditMode);
-Debug.Log("Selected notes: " + selectedNotes.Count);
-Debug.Log("Preview active: " + previewSystem.IsActive);
+using ChartSystem;
+
+// Load chart created in editor
+ChartDataNew editorChart = LoadChartFromJSON("path/to/chart.json");
+
+// Convert to gameplay format if needed
+ChartData gameplayChart = ConvertToGameplayFormat(editorChart);
+
+// Use in game
+GameManager.Instance.LoadChart(gameplayChart);
 ```
 
-### Performance Monitoring
-```csharp
-// Monitor performance
-Debug.Log("Active preview notes: " + previewSystem.ActiveNoteCount);
-Debug.Log("Remaining notes: " + previewSystem.RemainingNoteCount);
+### Enum Compatibility
+
+All enums (JudgmentMode, JudgmentType, KeySoundType) are shared between:
+- Editor (`ChartSystem` namespace)
+- Gameplay (global namespace)
+
+Defined in: `Assets/GameEnums.cs`
+
+## File Structure
+
+```
+Assets/
+├── edit/
+│   ├── ChartEditor.cs          ← Main editor (this file)
+│   ├── ChartDataNew.cs         ← Editor chart data
+│   └── ChartEditorNew.cs       ← DEPRECATED (commented out)
+├── GameEnums.cs                 ← All game enums
+└── Play/
+    ├── NoteData.cs              ← Shared note data structure
+    └── ...
 ```
 
-## Examples
+## Version History
 
-### Basic Usage
-```csharp
-public class ChartEditorController : MonoBehaviour
-{
-    public ChartEditorBeta chartEditor;
-    
-    void Start()
-    {
-        // Load audio file
-        chartEditor.LoadAudioFile("Assets/Audio/song.wav");
-        
-        // Set BPM
-        chartEditor.UpdateBPM(140f);
-        
-        // Set lane count
-        chartEditor.UpdateLaneCount(6);
-    }
-    
-    void Update()
-    {
-        // Custom controls
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            chartEditor.SaveChart();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            chartEditor.LoadChart();
-        }
-    }
-}
-```
+### Version 1.0 (Phase 1) - 2025-10-25
+- ✅ Initial release
+- ✅ Basic note placement (Normal/Long)
+- ✅ Bidirectional long notes
+- ✅ Grid snap system (G key)
+- ✅ Undo/Redo (50 steps)
+- ✅ Keyboard shortcuts
+- ✅ Audio control
+- ✅ Chart save/load
 
-### Advanced Integration
-```csharp
-public class AdvancedChartEditor : MonoBehaviour
-{
-    public ChartEditorBeta chartEditor;
-    
-    void Start()
-    {
-        // Subscribe to events
-        chartEditor.previewSystem.OnNoteJudged += HandleJudgment;
-        chartEditor.previewSystem.OnPreviewStarted += OnPreviewStart;
-        
-        // Configure settings
-        chartEditor.scrollSpeed = 10f;
-        chartEditor.gridSnapMode = GridSnapMode.Beat_1_8;
-        
-        // Load encrypted audio
-        var audioManager = AudioManagerBeta.Instance;
-        audioManager.SetEncryptionKey("MySecretKey123");
-        audioManager.LoadAudioFile("path/to/encrypted.eaw");
-    }
-    
-    void HandleJudgment(JudgmentType judgment)
-    {
-        // Handle judgment feedback
-        Debug.Log($"Player hit: {judgment}");
-    }
-    
-    void OnPreviewStart()
-    {
-        Debug.Log("Preview mode started!");
-    }
-}
-```
+### Version 2.0 (Phase 2) - Planned
+- ⏳ Visual timeline
+- ⏳ Advanced editing
+- ⏳ BPM changes
+- ⏳ Slide notes
 
-## Contributing
+## Support
 
-When extending ChartEditorBeta:
+For issues or questions:
+- Check `DEVELOPMENT_TODO.md` for roadmap
+- See `CLAUDE.md` for architecture details
+- Refer to `SESSION_SUMMARY_2025-10-25_2.md` for recent changes
 
-1. Follow the existing code structure and patterns
-2. Add proper error handling and debug logging
-3. Maintain compatibility with existing systems
-4. Add unit tests using `ChartEditorBetaTest`
-5. Update documentation for new features
+---
 
-## License
-
-This is part of the Unity rhythm game project. Follow the project's licensing terms.
+**Last Updated**: 2025-10-25
+**Phase**: 1 Complete
+**Status**: Production Ready

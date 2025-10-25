@@ -1,338 +1,473 @@
-# ChartEditorBeta - Unity 리듬 게임 차트 에디터
+# ChartEditor - Unity 리듬 게임 채보 에디터
 
 ## 개요
 
-ChartEditorBeta는 향상된 기능, 더 나은 사용자 경험, 그리고 전문적인 차트 제작을 위한 고급 기능을 갖춘 Unity 리듬 게임 차트 에디터의 개선된 버전입니다.
+ChartEditor는 DEVELOPMENT_TODO.md의 요구사항을 기반으로 구축된 Unity 리듬 게임용 통합 채보 편집 도구입니다. 향상된 사용자 경험과 고급 기능을 통해 완전한 채보 생성 및 편집 기능을 제공합니다.
 
-## 기능
+**위치**: `Assets/edit/ChartEditor.cs`
+**네임스페이스**: `ChartSystem`
+**상태**: Phase 1 완료
 
-### 핵심 기능
-- **멀티 레인 지원**: 4, 5, 6, 7, 8, 10 레인 구성
-- **노트 타입**: 일반 노트와 비주얼 트레일을 가진 롱노트
-- **실시간 프리뷰**: 정확한 타이밍 시뮬레이션을 가진 플레이 모드
-- **그리드 스냅**: 사용자 정의 분할을 통한 정밀한 노트 배치
-- **AES 암호화**: 배포용 오디오 파일 보안 암호화
+## 주요 기능
 
-### 에디터 컨트롤
+### Phase 1 기능 (완료)
+- ✅ **다중 레인 지원**: 4K, 5K, 6K, 7K, 8K, 10K 구성
+- ✅ **노트 타입 전환**: Normal (N 키) / Long (L 키) 모드
+- ✅ **양방향 롱노트**: 위에서 아래 또는 아래에서 위로 배치 가능
+- ✅ **그리드 스냅 시스템**: G 키로 1/4, 1/8, 1/16, 1/32, OFF 순환
+- ✅ **실행 취소/다시 실행**: 최대 50단계 (Ctrl+Z, Ctrl+Shift+Z)
+- ✅ **키보드 단축키**: Ctrl+S (저장), Space (재생/일시정지), T (편집 범위 전환)
+- ✅ **오디오 컨트롤**: 로드, 재생, 일시정지, 정지, 탐색
+- ✅ **차트 관리**: 로드, 저장, 새로 만들기
 
-#### 모드 전환
-- **N key**: 일반 노트 모드로 전환
-- **L key**: 롱노트 모드로 전환
-- **P key**: 프리뷰 모드 토글
+### Phase 2 기능 (계획됨)
+- ⏳ 파형이 있는 비주얼 타임라인
+- ⏳ 고급 편집 (복사, 붙여넣기, 미러)
+- ⏳ BPM 변경 지원
+- ⏳ 슬라이드 노트
+- ⏳ 다중 선택 및 일괄 작업
 
-#### 레인 관리
-- **+ key / = key**: 레인 수 증가
-- **- key**: 레인 수 감소
+## 에디터 컨트롤
 
-#### 오디오 컨트롤
-- **Space**: 오디오 재생/일시정지
-- **Timeline Slider**: 특정 시간으로 이동
+### 모드 전환
+| 키 | 기능 | 설명 |
+|-----|----------|-------------|
+| **N** | 일반 노트 모드 | 표준 노트 배치 |
+| **L** | 롱노트 모드 | 롱노트(홀드 노트) 배치 |
+| **S** | 슬라이드 노트 모드 | ⏳ Phase 2에서 제공 예정 |
 
-#### 노트 조작
-- **Left Click + Drag**: 노트 배치 (모드에 따름)
-- **Shift + Click**: 노트 다중 선택
-- **Ctrl + A**: 모든 노트 선택
-- **Delete / Backspace**: 선택된 노트 삭제
-- **Escape**: 선택 해제
+### 노트 배치
 
-#### 에디터 기능
-- **Ctrl + Z**: 실행 취소
-- **Ctrl + Shift + Z**: 다시 실행
-- **Ctrl + S**: 차트 저장 (UI 버튼이 연결된 경우)
-- **Ctrl + O**: 차트 로드 (UI 버튼이 연결된 경우)
+#### 일반 노트
+1. **N** 키를 눌러 일반 노트 모드로 진입
+2. 트랙을 클릭하여 노트 배치
+3. 그리드 스냅이 활성화되어 있으면 노트가 그리드에 맞춰짐
 
-#### 그리드 및 타이밍
-- **G key**: 그리드 스냅 모드 순환 (None, 1/4, 1/8, 1/16, 1/32)
-- **[ key**: 비트 분할 감소
-- **] key**: 비트 분할 증가
+#### 롱노트 (양방향)
+1. **L** 키를 눌러 롱노트 모드로 진입
+2. 시작 위치 클릭 (위쪽 또는 아래쪽 모두 가능)
+3. 끝 위치 클릭 (시작점 위 또는 아래 모두 가능)
+4. 시스템이 자동으로 시작/끝 타이밍 결정
 
-#### 프리뷰 모드 키 (레인별)
-- **4 레인**: D, F, J, K
-- **5 레인**: D, F, Space, J, K
-- **6 레인**: S, D, F, J, K, L
-- **7 레인**: S, D, F, Space, J, K, L
-- **8 레인**: A, S, D, F, J, K, L, ;
-- **10 레인**: A, S, D, F, G, H, J, K, L, ;
+**예시:**
+```
+위에서 아래:         아래에서 위:
+   [클릭 1] ●        [클릭 2] ●
+      |                   |
+      ↓                   ↑
+   [클릭 2] ●        [클릭 1] ●
+```
+
+### 그리드 스냅
+
+**G 키**: 그리드 스냅 모드 순환
+- **1/4 박자** → **1/8 박자** → **1/16 박자** → **1/32 박자** → **OFF** → (반복)
+
+**비트 분할:**
+- `[` 키: 비트 분할 감소
+- `]` 키: 비트 분할 증가
+
+그리드 스냅은 다음을 기반으로 노트 타이밍 계산:
+```csharp
+double beatInterval = 60.0 / bpm;  // 박자당 초
+double snapInterval = beatInterval / (int)currentBeatDivision;
+```
+
+### 오디오 컨트롤
+
+| 키/버튼 | 기능 |
+|------------|----------|
+| **Space** | 재생/일시정지 전환 |
+| **정지 버튼** | 재생 정지 및 시작 지점으로 리셋 |
+| **타임라인 슬라이더** | 특정 시간으로 탐색 |
+
+### 편집 기능
+
+| 단축키 | 기능 | 설명 |
+|----------|----------|-------------|
+| **Ctrl + Z** | 실행 취소 | 마지막 작업 취소 (최대 50단계) |
+| **Ctrl + Shift + Z** | 다시 실행 | 취소한 작업 다시 실행 |
+| **Ctrl + S** | 저장 | 현재 차트 저장 |
+| **T** | 편집 범위 전환 | 노트별 / 마디별 전환 |
+| **Delete** | 노트 삭제 | 선택한 노트 삭제 |
+
+### 편집 범위 (T 키)
+
+**노트별 모드**: 개별 노트에 변경사항 적용
+**마디별 모드**: 마디 범위의 노트에 변경사항 적용
+
+이 기능은 향후 BPM/템포 변경 기능을 위해 준비되었습니다.
 
 ## 설정 지침
 
 ### 1. 기본 설정
-1. 씬에 빈 GameObject를 생성합니다
-2. `ChartEditorBeta` 컴포넌트를 추가합니다
-3. 인스펙터에서 공개 필드를 구성합니다
 
-### 2. 필수 컴포넌트
+1. 씬에 빈 GameObject 생성
+2. `ChartEditor` 컴포넌트 추가 (`ChartSystem` 네임스페이스에서)
+3. Inspector에서 public 필드 구성
+
+### 2. 필수 UI 컴포넌트
+
 ```csharp
-// 오디오 컴포넌트
-public AudioSource audioSource; // 자동으로 추가됨
-public AudioManagerBeta audioManagerBeta; // 자동으로 생성됨
+[Header("오디오 컨트롤 UI")]
+public InputField audioPathInputField;    // 오디오 파일 경로
+public Slider timelineSlider;             // 타임라인 탐색 슬라이더
+public Text currentTimeText;              // 현재 시간 표시
+public Text totalTimeText;                // 총 길이 표시
+public Button loadAudioButton;            // 오디오 로드 버튼
+public Button playButton;                 // 재생 버튼
+public Button pauseButton;                // 일시정지 버튼
+public Button stopButton;                 // 정지 버튼
 
-// UI 요소 (선택사항이지만 권장)
-public InputField audioPathInputField;
-public Slider timelineSlider;
-public Text currentTimeText;
-public Text totalTimeText;
-public Button playButton;
-public Button pauseButton;
-public Button stopButton;
-public Button saveButton;
-public Button loadButton;
+[Header("차트 정보 UI")]
+public InputField songNameInput;          // 곡명 입력
+public InputField artistNameInput;        // 아티스트명 입력
+public InputField bpmInput;               // BPM 입력
+public InputField offsetInput;            // 오디오 오프셋 (ms)
 
-// 비주얼 요소
-public GameObject notePrefab;
-public GameObject longNotePrefab;
-public Transform noteContainer;
-public Transform[] tracks;
-public Material gridLineMaterial;
+[Header("에디터 상태 UI")]
+public Text modeText;                     // 현재 모드 표시
+public Text gridSnapText;                 // 그리드 스냅 표시
+public Text statusText;                   // 상태 메시지
 ```
 
-### 3. 프리팹 생성
-`ChartEditorBetaPrefabCreator` 스크립트를 사용하여 필요한 프리팹을 자동으로 생성합니다:
+### 3. 차트 설정
 
-1. 임의의 GameObject에 `ChartEditorBetaPrefabCreator`를 연결합니다
-2. 머티리얼과 설정을 구성합니다
-3. `CreatePrefabs()`를 호출하거나 컨텍스트 메뉴를 사용합니다
-4. 생성된 프리팹을 ChartEditorBeta에 할당합니다
+```csharp
+[Header("차트 설정")]
+public string songName = "";              // 곡 제목
+public string artistName = "";            // 아티스트명
+public float bpm = 120f;                  // 분당 박자
+public float offset = 0f;                 // 오디오 오프셋 (초)
 
-### 4. UI 설정
-에디터는 UI 없이도 작동할 수 있지만, 완전한 기능을 위해서는:
+[Header("에디터 설정")]
+public int keyCount = 4;                  // 레인 개수 (4/5/6/7/8/10)
+public KeyCode[] trackKeys;               // 각 레인의 입력 키
+public Transform[] noteSpawnPoints;       // 레인별 스폰 위치
+public GameObject notePrefab;             // 노트 프리팹
+```
 
-1. Canvas를 생성합니다
-2. 타임라인, 버튼, 정보 표시용 UI 요소를 추가합니다
-3. 이들을 ChartEditorBeta 컴포넌트에 연결합니다
-4. 자동 UI 생성을 위해 `ChartEditorBetaPrefabCreator.CreateEditorUIPrefab()`를 사용합니다
+### 4. 프리팹 요구사항
+
+**노트 프리팹:**
+- `SpriteRenderer` 컴포넌트 필수
+- 커스텀 비주얼 가능
+- 성능을 위해 풀링됨
+
+**자동 생성:**
+`notePrefab`이 null이면 에디터가 자동으로 간단한 흰색 사각형 스프라이트를 생성합니다.
+
+## 기술 세부사항
+
+### 실행 취소/다시 실행 시스템
+
+에디터는 실행 취소/다시 실행을 위해 JSON 직렬화 사용:
+
+```csharp
+private Stack<ChartDataNew> undoStack = new Stack<ChartDataNew>();
+private Stack<ChartDataNew> redoStack = new Stack<ChartDataNew>();
+private const int MAX_UNDO_STACK = 50;
+```
+
+**작동 방식:**
+1. 각 수정 전에 현재 차트 상태를 JSON으로 직렬화
+2. JSON을 undo 스택에 푸시
+3. Ctrl+Z로 이전 상태 역직렬화
+4. 메모리 문제 방지를 위해 최대 50단계
+
+### 그리드 스냅 계산
+
+```csharp
+double CalculateSnappedTiming(double currentTime)
+{
+    if (!gridSnapEnabled) return currentTime;
+
+    double beatInterval = 60.0 / bpm;
+    double snapInterval = beatInterval / (int)currentBeatDivision;
+
+    return System.Math.Round(currentTime / snapInterval) * snapInterval;
+}
+```
+
+### 롱노트 양방향 배치
+
+```csharp
+void HandleLongNoteInput(double timing, int track)
+{
+    if (!isPlacingLongNote)
+    {
+        // 첫 번째 클릭 - 시작 위치 저장
+        longNoteStart = new NoteData(timing, track, selectedKeySoundType);
+        longNoteTrack = track;
+        isPlacingLongNote = true;
+    }
+    else
+    {
+        // 두 번째 클릭 - 시작과 끝 결정
+        double startTime = System.Math.Min(longNoteStart.timing, timing);
+        double endTime = System.Math.Max(longNoteStart.timing, timing);
+
+        NoteData longNote = new NoteData(
+            startTime,
+            track,
+            selectedKeySoundType,
+            true,  // isLongNote
+            endTime
+        );
+
+        AddNoteToChart(longNote);
+        isPlacingLongNote = false;
+    }
+}
+```
+
+## 데이터 구조
+
+### ChartDataNew
+
+```csharp
+[System.Serializable]
+public class ChartDataNew
+{
+    public string songName;
+    public string artistName;
+    public string audioFileName;
+    public float bpm;
+    public float chartDifficulty;
+    public List<NoteData> notes;
+}
+```
+
+### NoteData
+
+```csharp
+[System.Serializable]
+public class NoteData
+{
+    public double timing;              // 노트 히트 시간 (초)
+    public float beatTiming;           // 박자 기반 타이밍
+    public int track;                  // 레인 인덱스 (0부터 시작)
+    public KeySoundType keySoundType;  // 재생할 키 사운드
+    public bool isLongNote;            // 롱노트 여부
+    public double longNoteEndTiming;   // 롱노트 종료 시간
+}
+```
+
+### Enum
+
+모든 enum은 `Assets/GameEnums.cs`에 정의:
+
+```csharp
+public enum KeySoundType
+{
+    None, Kick, Snare, Hihat, Vocal1, Vocal2,
+    Synth1, Synth2, Bass, Piano, Guitar
+}
+
+public enum JudgmentMode
+{
+    Normal, Hard, Super,
+    // 하위 호환성 별칭
+    JudgmentMode_Normal = Normal,
+    JudgmentMode_Hard = Hard,
+    JudgmentMode_Super = Super
+}
+```
+
+## 워크플로우 예제
+
+### 새 차트 만들기
+
+1. **설정**
+   - Inspector에서 UI 요소 할당
+   - 기본 BPM 설정 (예: 120)
+   - 키 개수 설정 (예: 4K)
+
+2. **오디오 로드**
+   - `audioPathInputField`에 오디오 파일 경로 입력
+   - "Load Audio" 버튼 클릭
+   - UnityWebRequest를 통해 오디오 로드
+
+3. **차트 메타데이터**
+   - `songNameInput`에 곡명 입력
+   - `artistNameInput`에 아티스트명 입력
+   - 필요시 `bpmInput`에서 BPM 조정
+
+4. **노트 배치**
+   - **N** 누르면 일반 노트
+   - 트랙을 클릭하여 노트 배치
+   - **L** 누르면 롱노트
+   - 시작 및 끝 위치 클릭
+
+5. **그리드 조정**
+   - **G** 눌러 그리드 스냅 순환
+   - `[` `]` 로 비트 분할 조정
+
+6. **차트 저장**
+   - **Ctrl + S** 누르기
+   - JSON으로 차트 저장
+
+## 키보드 참조
+
+### 필수 단축키
+```
+N              - 일반 노트 모드
+L              - 롱노트 모드
+Space          - 재생/일시정지
+G              - 그리드 스냅 순환
+T              - 편집 범위 전환
+Ctrl + Z       - 실행 취소
+Ctrl + Shift+Z - 다시 실행
+Ctrl + S       - 차트 저장
+```
+
+### 그리드 컨트롤
+```
+G              - 스냅 순환: 1/4 → 1/8 → 1/16 → 1/32 → OFF
+[              - 비트 분할 감소
+]              - 비트 분할 증가
+```
 
 ## 고급 기능
 
-### 오디오 암호화
+### 편집 범위 시스템
+
+**목적**: 향후 BPM 변경 지원을 위한 준비
+
+**두 가지 모드:**
+1. **노트별**: 개별 노트에 변경사항 적용
+2. **마디별**: 노트 범위에 변경사항 적용
+
+**전환**: **T** 키 누르기
+
+현재는 향후 마디 기반 편집 기능을 위한 플레이스홀더로 작동합니다.
+
+### Undo 스택 관리
+
 ```csharp
-// 오디오 파일 암호화
-ChartEditorBetaFileUtils.EncryptAudioFile(
-    "path/to/audio.wav", 
-    "path/to/encrypted.eaw", 
-    "your-encryption-key"
-);
-
-// AudioManagerBeta가 로딩 중 자동으로 복호화
-audioManagerBeta.LoadAudioFile("path/to/encrypted.eaw");
-```
-
-### 차트 내보내기/가져오기
-```csharp
-// 메타데이터와 함께 내보내기
-chartEditor.SaveChartAs(
-    "path/to/chart.chart",
-    "Song Title",
-    "Artist Name", 
-    "Charter Name"
-);
-
-// 특정 경로에서 로드
-chartEditor.LoadChartFrom("path/to/chart.chart");
-```
-
-### 프리뷰 시스템 통합
-```csharp
-// 프리뷰 시스템 접근
-ChartEditorBetaPreview preview = chartEditor.previewSystem;
-
-// 이벤트 구독
-preview.OnNoteJudged += (judgment) => Debug.Log($"Judgment: {judgment}");
-preview.OnNoteSpawned += (noteData) => Debug.Log($"Note spawned: {noteData.track}");
-```
-
-## 파일 형식
-
-### 차트 데이터 구조
-```json
+void SaveUndoState()
 {
-    "audioFileName": "song.wav",
-    "bpm": 120.0,
-    "laneCount": 4,
-    "scrollSpeed": 8.0,
-    "beatDivision": 4,
-    "audioOffset": 0.0,
-    "notes": [
-        {
-            "timing": 1.0,
-            "beatTiming": 2.0,
-            "track": 0,
-            "keySoundType": 0,
-            "isLongNote": false,
-            "longNoteEndTiming": 0.0
-        }
-    ]
+    string json = JsonUtility.ToJson(currentChart);
+    ChartDataNew snapshot = JsonUtility.FromJson<ChartDataNew>(json);
+
+    undoStack.Push(snapshot);
+
+    // 스택 크기 제한
+    if (undoStack.Count > MAX_UNDO_STACK)
+    {
+        // 가장 오래된 항목 제거
+        var temp = undoStack.ToArray();
+        undoStack.Clear();
+        for (int i = 1; i < temp.Length; i++)
+            undoStack.Push(temp[i]);
+    }
+
+    redoStack.Clear(); // 새 작업 시 redo 지우기
 }
 ```
 
-### 메타데이터를 포함한 내보내기 데이터
-```json
-{
-    "metadata": {
-        "title": "Song Title",
-        "artist": "Artist Name",
-        "charter": "Charter Name",
-        "createdDate": "2023-12-07 10:30:00",
-        "version": "1.0"
-    },
-    "chartData": { /* 차트 데이터 구조 */ }
-}
-```
+## 알려진 제한사항
 
-## 성능 고려사항
+### Phase 1 (현재)
+- 비주얼 파형 표시 없음
+- 복사/붙여넣기 기능 없음
+- 차트 중 BPM 변경 없음
+- 슬라이드 노트 없음
+- 수동 JSON 저장만 가능 (파일 대화상자 없음)
 
-### 노트 풀링
-프리뷰 시스템은 최적의 성능을 위해 오브젝트 풀링을 사용합니다:
-- 노트들이 계속해서 생성/파괴되지 않고 재사용됩니다
-- 풀 크기는 차트 복잡도에 따라 자동으로 조정됩니다
-- 긴 차트에 대한 메모리 사용량이 최소화됩니다
-
-### 그리드 시스템
-- 그리드 라인은 BPM과 비트 분할에 따라 동적으로 생성됩니다
-- 보이는 그리드 라인만 렌더링됩니다
-- 그리드는 설정이 변경될 때만 업데이트됩니다
-
-### 오디오 관리
-- 오디오 복호화는 로딩 중 한 번만 수행됩니다
-- 암호화된 파일은 빠른 접근을 위해 메모리에 캐시됩니다
-- 대용량 오디오 파일의 스트리밍을 지원합니다
-
-## 기존 시스템과의 통합
-
-### 호환성
-- **AudioManager.cs**: 호환성을 유지하며, FMOD가 사용 가능할 때 사용합니다
-- **NoteData.cs**: NoteDataBeta로 확장하여 원본 구조를 보존합니다
-- **RhythmManager.cs**: 기존 판정 시스템과 열거형을 사용합니다
-- **GameSettings.cs**: 기존 설정 시스템과 통합됩니다
-
-### 마이그레이션
-기존 차트와 함께 ChartEditorBeta를 사용하려면:
-```csharp
-// 기존 ChartData를 ChartDataBeta로 변환
-ChartDataBeta betaChart = new ChartDataBeta();
-betaChart.audioFileName = originalChart.audioFileName;
-betaChart.bpm = originalChart.bpm;
-betaChart.laneCount = 4; // 적절한 레인 수 설정
-
-// 노트 변환
-foreach(var note in originalChart.notes)
-{
-    var betaNote = new NoteDataBeta(
-        note.timing, 
-        note.track, 
-        note.keySoundType, 
-        note.isLongNote, 
-        note.longNoteEndTiming
-    );
-    betaChart.notes.Add(betaNote);
-}
-```
+### Phase 2 계획
+- 파형이 있는 비주얼 타임라인
+- 고급 클립보드 작업
+- 다중 BPM 섹션
+- 슬라이드 노트 지원
+- 파일 브라우저 통합
 
 ## 문제 해결
 
-### 일반적인 문제
+### 문제: 노트가 그리드에 스냅되지 않음
+**해결책**: **G**를 눌러 원하는 스냅 모드가 활성화될 때까지 순환합니다. `gridSnapText` UI 표시를 확인하세요.
 
-1. **노트가 나타나지 않음**: `notePrefab`과 `noteContainer`가 할당되었는지 확인하세요
-2. **그리드가 보이지 않음**: `gridLineMaterial`이 할당되고 `showGrid`가 true인지 확인하세요
-3. **오디오가 로드되지 않음**: 파일 경로와 암호화된 파일을 사용하는 경우 암호화 키를 확인하세요
-4. **프리뷰 모드가 작동하지 않음**: 레인이 올바르게 구성되고 입력 키가 충돌하지 않는지 확인하세요
+### 문제: 롱노트가 연결되지 않음
+**해결책**: 롱노트 모드인지 확인 (**L** 누르기). 롱노트는 같은 트랙에 있어야 합니다.
 
-### 디버그 옵션
+### 문제: 실행 취소가 작동하지 않음
+**해결책**: 에디터 초기화 후 변경사항이 있는지 확인하세요. 첫 번째 작업은 취소할 수 없습니다.
+
+### 문제: 오디오가 로드되지 않음
+**해결책**:
+- 파일 경로가 올바른지 확인
+- 파일이 `StreamingAssets` 또는 접근 가능한 경로에 있어야 함
+- 지원되는 형식: .wav, .ogg, .mp3
+
+### 문제: ChartEditor 컴포넌트를 찾을 수 없음
+**해결책**: `ChartSystem` 네임스페이스를 확인하세요. 스크립트에서 `using ChartSystem;`을 사용하세요.
+
+## 메인 게임과의 통합
+
+### 게임플레이에서 차트 로드
+
 ```csharp
-// ChartEditorBeta에서 디버그 로깅 활성화
-Debug.Log("Current mode: " + currentEditMode);
-Debug.Log("Selected notes: " + selectedNotes.Count);
-Debug.Log("Preview active: " + previewSystem.IsActive);
+using ChartSystem;
+
+// 에디터에서 생성한 차트 로드
+ChartDataNew editorChart = LoadChartFromJSON("path/to/chart.json");
+
+// 필요시 게임플레이 형식으로 변환
+ChartData gameplayChart = ConvertToGameplayFormat(editorChart);
+
+// 게임에서 사용
+GameManager.Instance.LoadChart(gameplayChart);
 ```
 
-### 성능 모니터링
-```csharp
-// 성능 모니터링
-Debug.Log("Active preview notes: " + previewSystem.ActiveNoteCount);
-Debug.Log("Remaining notes: " + previewSystem.RemainingNoteCount);
+### Enum 호환성
+
+모든 enum (JudgmentMode, JudgmentType, KeySoundType)은 다음 간에 공유:
+- 에디터 (`ChartSystem` 네임스페이스)
+- 게임플레이 (global 네임스페이스)
+
+정의 위치: `Assets/GameEnums.cs`
+
+## 파일 구조
+
+```
+Assets/
+├── edit/
+│   ├── ChartEditor.cs          ← 메인 에디터 (이 파일)
+│   ├── ChartDataNew.cs         ← 에디터 차트 데이터
+│   └── ChartEditorNew.cs       ← DEPRECATED (주석 처리됨)
+├── GameEnums.cs                 ← 모든 게임 enum
+└── Play/
+    ├── NoteData.cs              ← 공유 노트 데이터 구조
+    └── ...
 ```
 
-## 예제
+## 버전 히스토리
 
-### 기본 사용법
-```csharp
-public class ChartEditorController : MonoBehaviour
-{
-    public ChartEditorBeta chartEditor;
-    
-    void Start()
-    {
-        // 오디오 파일 로드
-        chartEditor.LoadAudioFile("Assets/Audio/song.wav");
-        
-        // BPM 설정
-        chartEditor.UpdateBPM(140f);
-        
-        // 레인 수 설정
-        chartEditor.UpdateLaneCount(6);
-    }
-    
-    void Update()
-    {
-        // 사용자 정의 컨트롤
-        if (Input.GetKeyDown(KeyCode.F1))
-        {
-            chartEditor.SaveChart();
-        }
-        
-        if (Input.GetKeyDown(KeyCode.F2))
-        {
-            chartEditor.LoadChart();
-        }
-    }
-}
-```
+### Version 1.0 (Phase 1) - 2025-10-25
+- ✅ 초기 릴리스
+- ✅ 기본 노트 배치 (Normal/Long)
+- ✅ 양방향 롱노트
+- ✅ 그리드 스냅 시스템 (G 키)
+- ✅ 실행 취소/다시 실행 (50 단계)
+- ✅ 키보드 단축키
+- ✅ 오디오 컨트롤
+- ✅ 차트 저장/로드
 
-### 고급 통합
-```csharp
-public class AdvancedChartEditor : MonoBehaviour
-{
-    public ChartEditorBeta chartEditor;
-    
-    void Start()
-    {
-        // 이벤트 구독
-        chartEditor.previewSystem.OnNoteJudged += HandleJudgment;
-        chartEditor.previewSystem.OnPreviewStarted += OnPreviewStart;
-        
-        // 설정 구성
-        chartEditor.scrollSpeed = 10f;
-        chartEditor.gridSnapMode = GridSnapMode.Beat_1_8;
-        
-        // 암호화된 오디오 로드
-        var audioManager = AudioManagerBeta.Instance;
-        audioManager.SetEncryptionKey("MySecretKey123");
-        audioManager.LoadAudioFile("path/to/encrypted.eaw");
-    }
-    
-    void HandleJudgment(JudgmentType judgment)
-    {
-        // 판정 피드백 처리
-        Debug.Log($"Player hit: {judgment}");
-    }
-    
-    void OnPreviewStart()
-    {
-        Debug.Log("Preview mode started!");
-    }
-}
-```
+### Version 2.0 (Phase 2) - 계획됨
+- ⏳ 비주얼 타임라인
+- ⏳ 고급 편집
+- ⏳ BPM 변경
+- ⏳ 슬라이드 노트
 
-## 기여하기
+## 지원
 
-ChartEditorBeta를 확장할 때:
+문제 또는 질문이 있으시면:
+- 로드맵은 `DEVELOPMENT_TODO.md` 확인
+- 아키텍처 세부사항은 `CLAUDE.md` 참조
+- 최근 변경사항은 `SESSION_SUMMARY_2025-10-25_2.md` 참조
 
-1. 기존 코드 구조와 패턴을 따르세요
-2. 적절한 오류 처리와 디버그 로깅을 추가하세요
-3. 기존 시스템과의 호환성을 유지하세요
-4. `ChartEditorBetaTest`를 사용하여 단위 테스트를 추가하세요
-5. 새로운 기능에 대한 문서를 업데이트하세요
+---
 
-## 라이선스
-
-이것은 Unity 리듬 게임 프로젝트의 일부입니다. 프로젝트의 라이선스 조건을 따르세요.
+**최종 업데이트**: 2025-10-25
+**단계**: 1 완료
+**상태**: 프로덕션 준비 완료
