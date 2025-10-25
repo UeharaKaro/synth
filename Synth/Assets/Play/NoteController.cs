@@ -5,31 +5,52 @@ public class NoteController : MonoBehaviour
     [Header("Note Settings")]
     [SerializeField] private SpriteRenderer noteRenderer;
     [SerializeField] private Transform noteTransform;
-    
+
     [Header("Note Data")]
     public float hitTime; // 언제 쳐야 하는 시간
     public int trackIndex; // 어느 트랙의 노트인지
-    
+
     private Vector3 startPosition;
     private Vector3 targetPosition;
     private float speed;
     private bool isActive = true;
     private float creationTime;
-    
+
     // 노트 상태
     public bool IsHit { get; private set; } = false;
     public bool IsMissed { get; private set; } = false;
+
+    // 시스템 참조
+    private RhythmManager rhythmManager;
+    private HPSystem hpSystem;
+    private GearController gearController;
     
     private void Awake()
     {
         // 컴포넌트 자동 할당
         if (noteRenderer == null)
             noteRenderer = GetComponent<SpriteRenderer>();
-        
+
         if (noteTransform == null)
             noteTransform = transform;
-            
+
         creationTime = Time.time;
+
+        // 시스템 참조 찾기
+        rhythmManager = FindObjectOfType<RhythmManager>();
+        hpSystem = HPSystem.Instance;
+        gearController = FindObjectOfType<GearController>();
+
+        // 필수 참조 검증
+        if (rhythmManager == null)
+        {
+            Debug.LogError("NoteController: RhythmManager를 찾을 수 없습니다!");
+        }
+
+        if (hpSystem == null)
+        {
+            Debug.LogWarning("NoteController: HPSystem을 찾을 수 없습니다. HP 변경이 적용되지 않습니다.");
+        }
     }
     
     private void Start()
@@ -134,85 +155,111 @@ public class NoteController : MonoBehaviour
         return Time.time - creationTime;
     }
     
-    public JudgmentResult TryHit()
+    public JudgmentType TryHit()
     {
-        if (IsHit || IsMissed || !isActive) return JudgmentResult.Miss;
-        
+        if (IsHit || IsMissed || !isActive) return JudgmentType.Miss;
+
+        if (rhythmManager == null)
+        {
+            Debug.LogError("NoteController: RhythmManager가 없어 판정할 수 없습니다!");
+            return JudgmentType.Miss;
+        }
+
         float currentTime = GetCurrentGameTime();
         var settings = SettingsManager.Instance?.Settings;
-        
+
         // 판정 오프셋 적용
         float adjustedCurrentTime = currentTime;
         if (settings != null)
         {
             adjustedCurrentTime += settings.judgmentOffset / 1000f;
         }
-        
-        float timeDifference = Mathf.Abs(adjustedCurrentTime - hitTime);
-        JudgmentResult result = GetJudgmentResult(timeDifference);
-        
-        if (result != JudgmentResult.Miss)
+
+        // 시간 차이 계산 (밀리초 단위로 변환)
+        float timeDifferenceMs = (adjustedCurrentTime - hitTime) * 1000f;
+
+        // RhythmManager를 통한 판정
+        JudgmentType result = rhythmManager.GetJudgment(timeDifferenceMs);
+
+        if (result != JudgmentType.Miss)
         {
-            Hit(result);
+            Hit(result, timeDifferenceMs);
         }
-        
+
         return result;
     }
     
-    private JudgmentResult GetJudgmentResult(float timeDifference)
-    {
-        // 판정 기준 (초 단위)
-        if (timeDifference <= 0.05f) return JudgmentResult.Perfect;
-        if (timeDifference <= 0.1f) return JudgmentResult.Great;
-        if (timeDifference <= 0.15f) return JudgmentResult.Good;
-        if (timeDifference <= 0.2f) return JudgmentResult.Bad;
-        return JudgmentResult.Miss;
-    }
-    
-    private void Hit(JudgmentResult result)
+    private void Hit(JudgmentType result, float timeDifferenceMs)
     {
         IsHit = true;
         isActive = false;
-        
+
+        // HP 시스템 업데이트
+        if (hpSystem != null)
+        {
+            hpSystem.ProcessJudgment(result);
+        }
+
+        // GearController에 판정 표시 (콤보, 점수 업데이트)
+        if (gearController != null)
+        {
+            gearController.ProcessJudgment(result);
+            gearController.ShowJudgmentOffset(result, timeDifferenceMs);
+        }
+
         // 히트 이펙트 (색상 변경 등)
         if (noteRenderer != null)
         {
             Color hitColor = GetJudgmentColor(result);
             noteRenderer.color = hitColor;
         }
-        
+
         // 노트 파괴 (약간의 지연 후)
         Destroy(gameObject, 0.1f);
-        
-        Debug.Log($"Note hit with {result} judgment!");
+
+        Debug.Log($"Note hit with {result} judgment! (Offset: {timeDifferenceMs:F2}ms)");
     }
     
     private void Miss()
     {
         IsMissed = true;
         isActive = false;
-        
+
+        // HP 시스템 업데이트 (Miss)
+        if (hpSystem != null)
+        {
+            hpSystem.ProcessJudgment(JudgmentType.Miss);
+        }
+
+        // GearController에 Miss 처리
+        if (gearController != null)
+        {
+            gearController.ProcessJudgment(JudgmentType.Miss);
+        }
+
         // Miss 이펙트
         if (noteRenderer != null)
         {
             noteRenderer.color = Color.red;
         }
-        
+
         // 노트 파괴
         Destroy(gameObject, 0.5f);
-        
+
         Debug.Log("Note missed!");
     }
-    
-    private Color GetJudgmentColor(JudgmentResult result)
+
+    private Color GetJudgmentColor(JudgmentType result)
     {
         switch (result)
         {
-            case JudgmentResult.Perfect: return Color.yellow;
-            case JudgmentResult.Great: return Color.green;
-            case JudgmentResult.Good: return Color.blue;
-            case JudgmentResult.Bad: return Color.orange;
-            default: return Color.red;
+            case JudgmentType.S_Perfect: return new Color(1f, 0.84f, 0f); // 금색
+            case JudgmentType.Perfect: return Color.yellow;
+            case JudgmentType.Great: return Color.green;
+            case JudgmentType.Good: return Color.cyan;
+            case JudgmentType.Bad: return Color.magenta;
+            case JudgmentType.Miss: return Color.red;
+            default: return Color.white;
         }
     }
     
@@ -228,13 +275,4 @@ public class NoteController : MonoBehaviour
     {
         return transform.position.y < boundaryY;
     }
-}
-
-public enum JudgmentResult
-{
-    Perfect,
-    Great,
-    Good,
-    Bad,
-    Miss
 }

@@ -218,12 +218,67 @@ public class GearController : MonoBehaviour
         glow.GetComponent<Renderer>().material = glowMat;
     }
     
+    /// <summary>
+    /// 판정에 따른 점수 및 콤보 처리
+    /// </summary>
+    public void ProcessJudgment(JudgmentType judgment)
+    {
+        // 점수 증가
+        int scoreToAdd = GetScoreForJudgment(judgment);
+        currentScore += scoreToAdd;
+        UpdateScoreDisplay();
+
+        // 콤보 처리
+        if (judgment == JudgmentType.Bad || judgment == JudgmentType.Miss)
+        {
+            // 콤보 끊김
+            currentCombo = 0;
+        }
+        else
+        {
+            // 콤보 증가
+            currentCombo++;
+            if (currentCombo > maxCombo)
+                maxCombo = currentCombo;
+        }
+        UpdateComboDisplay();
+
+        // 판정 표시 (ComboJudgmentDisplay를 통해)
+        // TODO: ComboJudgmentDisplay 연동 필요 
+        // 이것을 해결하기위해 : 1. ComboJudgmentDisplay 컴포넌트 참조 추가
+        // 2. ProcessJudgment() 메서드에서 판정 타입(S_Perfect, Perfect, Great 등)을 ComboJudgmentDisplay에 전달하여 화면에 표시
+    }
+
+    /// <summary>
+    /// 판정별 점수 반환 (기본 점수, 추후 차트 총 노트 수에 따라 조정)
+    /// </summary>
+    private int GetScoreForJudgment(JudgmentType judgment)
+    {
+        switch (judgment)
+        {
+            case JudgmentType.S_Perfect:
+                return 1000; // 최고 점수
+            case JudgmentType.Perfect:
+                return 900;
+            case JudgmentType.Great:
+                return 700;
+            case JudgmentType.Good:
+                return 400;
+            case JudgmentType.Bad:
+                return 100;
+            case JudgmentType.Miss:
+                return 0;
+            default:
+                return 0;
+        }
+    }
+
     public void UpdateScore(int score)
     {
         currentScore = score;
         UpdateScoreDisplay();
     }
-    
+
     public void UpdateCombo(int combo)
     {
         currentCombo = combo;
@@ -231,14 +286,14 @@ public class GearController : MonoBehaviour
             maxCombo = combo;
         UpdateComboDisplay();
     }
-    
+
     public void UpdateHP(float hp)
     {
         currentHP = Mathf.Clamp(hp, 0, 100);
         if (hpBarAnimator != null)
             hpBarAnimator.SetHP(currentHP);
     }
-    
+
     public void ShowJudgmentOffset(JudgmentType judgment, float offsetMs)
     {
         if (offsetDisplay != null)
