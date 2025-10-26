@@ -94,6 +94,9 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
     private float originalMusicTime = 0f; // 원본 음악의 재생 시간 
     private bool isPlaying = false; // 음악 재생 중인지 여부
+    
+    // Public 프로퍼티: 외부에서 재생 상태 확인
+    public bool IsPlaying => isPlaying;
 
     // FMOD에서 사용하는 핵심 구성요소들
     private FMOD.System system; // FMOD 전체 시스템 (오디오 엔진의 뇌 역할)
@@ -278,6 +281,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             // DSP 시간을 기록하여 정확한 곡 시작 지점 추적
             dspSongTime = AudioSettings.dspTime;
             isSongStarted = true; // 곡이 시작되었음을 표시
+            isPlaying = true; // 재생 상태 업데이트
 
             // 배경음악 재생 시작
             var result = system.playSound(bgmSound, bgmChannelGroup, false, out bgmChannel);
@@ -289,6 +293,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
             else
             {
                 UnityEngine.Debug.LogError($"BGM 재생 실패: {result}");
+                isPlaying = false;
             }
         }
     }
@@ -300,6 +305,7 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         {
             bgmChannel.stop();
             isSongStarted = false; // 곡이 정지되었음을 표시
+            isPlaying = false; // 재생 상태 업데이트
             UnityEngine.Debug.Log("BGM 정지됨");
         }
     }
@@ -771,20 +777,22 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         }
     }
 
-    // 현재 음악 재생 시간 (오프셋 적용된)
+    // 현재 음악 재생 시간 (FMOD 기반, 오프셋 적용)
     public float GetMusicTime()
     {
-        if (musicSource == null || !isPlaying) return 0f;
+        if (!isSongStarted || !isPlaying) return 0f;
 
+        // FMOD BGM 기반 정밀한 시간 계산 (DSP 시간 사용)
+        double currentTime = GetSongPositionInSeconds();
+        
         var settings = SettingsManager.Instance?.Settings;
-        float currentTime = musicSource.time;
-
         if (settings != null)
         {
-            currentTime += settings.volumeOffset / 1000f;
+            // 볼륨 오프셋 적용 (ms를 초로 변환)
+            currentTime += settings.volumeOffset / 1000.0;
         }
 
-        return currentTime;
+        return (float)currentTime;
     }
 
     // DSP 타임 기반 정밀한 시간
@@ -803,6 +811,4 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
         return timeSinceStart;
     }
-
-    public bool IsPlaying => isPlaying && musicSource != null && musicSource.isPlaying;
 }
