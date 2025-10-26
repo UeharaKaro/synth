@@ -13,6 +13,17 @@ public class NoteData
     public bool isLongNote; // 롱노트 여부
     public double longNoteEndTiming; // 롱노트의 끝나는 시간 (초 단위, DSP 시간 기준)
 
+    // 기본 생성자 (객체 초기화 구문 지원)
+    public NoteData()
+    {
+        timing = 0;
+        beatTiming = 0;
+        track = 0;
+        keySoundType = KeySoundType.None;
+        isLongNote = false;
+        longNoteEndTiming = 0;
+    }
+    
     // 생성자 함수  
     /// <summary>
     /// NoteData 클래스의 생성자입니다.
@@ -26,6 +37,7 @@ public class NoteData
     public NoteData(double timing, int track, KeySoundType keySoundType, bool isLongNote = false, double endTiming = 0)
     {
         this.timing = timing;
+        this.beatTiming = 0;
         this.track = track;
         this.keySoundType = keySoundType;
         this.isLongNote = isLongNote;
