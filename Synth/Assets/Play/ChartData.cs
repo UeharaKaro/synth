@@ -12,6 +12,7 @@ public class ChartData
     public string songName = "";
     public string artistName = "";
     public string audioFileName = "";
+    public string coverImageFileName = ""; // 커버 이미지 파일명 (예: "sample_audio.png")
     public float bpm = 120f;
     public float offset = 0f; // 오디오 오프셋 (초)
 

@@ -24,7 +24,7 @@ public class JudgmentModeManager : MonoBehaviour
         // Instance가 없다면, 이 객체를 Instance로 지정
         Instance = this;
 
-        // 다른 씬으로 넘억도 이 게임 오브젝트가 파괴되지 않도록 설정
+        // 다른 씬으로 넘어가도 이 게임 오브젝트가 파괴되지 않도록 설정
         DontDestroyOnLoad(gameObject);
     }
 }   

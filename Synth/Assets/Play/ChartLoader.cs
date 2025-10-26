@@ -9,8 +9,8 @@ using System.IO;
 public class ChartLoader : MonoBehaviour
 {
     [Header("차트 경로 설정")]
-    [SerializeField] private string chartsFolderPath = "Charts"; // Resources 폴더 기준 상대 경로
-    [SerializeField] private bool useStreamingAssets = false; // StreamingAssets 사용 여부
+    [SerializeField] private string chartsFolderPath = "Charts"; // StreamingAssets 기준 상대 경로
+    [SerializeField] private bool useStreamingAssets = true; // StreamingAssets 사용 (기본값: true)
 
     [Header("현재 로드된 차트")]
     [SerializeField] private ChartData currentChart;
@@ -199,7 +199,7 @@ public class ChartLoader : MonoBehaviour
         {
             songName = "Sample Song",
             artistName = "Sample Artist",
-            audioFileName = "sample_audio.mp3",
+            audioFileName = "sample_audio.wav", // FMOD는 wav 파일 권장
             bpm = 120f,
             offset = 0f,
             difficulty = "Normal",
