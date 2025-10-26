@@ -204,6 +204,131 @@ public class CoverArtLoader : MonoBehaviour
     }
 
     /// <summary>
+    /// SongData로부터 커버 이미지를 비동기로 로드하는 코루틴
+    /// </summary>
+    public IEnumerator LoadCoverArtCoroutine(SongData songData, System.Action<Texture2D> onComplete)
+    {
+        if (songData == null)
+        {
+            Debug.LogWarning("CoverArtLoader: SongData가 null입니다");
+            onComplete?.Invoke(null);
+            yield break;
+        }
+
+        // 파일명 결정
+        string fileName = null;
+
+        // 1. audioFileName이 있으면 그것을 기반으로
+        if (!string.IsNullOrEmpty(songData.audioFileName))
+        {
+            string baseFileName = Path.GetFileNameWithoutExtension(songData.audioFileName);
+            
+            // PNG 우선 시도
+            string pngFileName = baseFileName + ".png";
+            string pngPath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, pngFileName);
+            if (File.Exists(pngPath))
+            {
+                fileName = pngFileName;
+            }
+            else
+            {
+                // JPG 시도
+                string jpgFileName = baseFileName + ".jpg";
+                string jpgPath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, jpgFileName);
+                if (File.Exists(jpgPath))
+                {
+                    fileName = jpgFileName;
+                }
+            }
+        }
+
+        // 2. audioPath가 있으면 시도
+        if (string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(songData.audioPath))
+        {
+            string baseFileName = Path.GetFileNameWithoutExtension(songData.audioPath);
+            
+            string pngFileName = baseFileName + ".png";
+            string pngPath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, pngFileName);
+            if (File.Exists(pngPath))
+            {
+                fileName = pngFileName;
+            }
+            else
+            {
+                string jpgFileName = baseFileName + ".jpg";
+                string jpgPath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, jpgFileName);
+                if (File.Exists(jpgPath))
+                {
+                    fileName = jpgFileName;
+                }
+            }
+        }
+
+        // 파일명을 찾지 못했으면 null 반환
+        if (string.IsNullOrEmpty(fileName))
+        {
+            Debug.LogWarning($"CoverArtLoader: {songData.title}의 커버 이미지를 찾을 수 없습니다");
+            onComplete?.Invoke(null);
+            yield break;
+        }
+
+        // 캐시 확인
+        if (coverCache.ContainsKey(fileName))
+        {
+            Sprite cachedSprite = coverCache[fileName];
+            if (cachedSprite != null && cachedSprite.texture != null)
+            {
+                onComplete?.Invoke(cachedSprite.texture);
+                yield break;
+            }
+        }
+
+        // 파일 로드
+        string filePath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, fileName);
+        
+        byte[] fileData = null;
+        System.Threading.Tasks.Task<byte[]> loadTask = System.Threading.Tasks.Task.Run(() => File.ReadAllBytes(filePath));
+
+        // 로딩 대기
+        while (!loadTask.IsCompleted)
+        {
+            yield return null;
+        }
+
+        try
+        {
+            fileData = loadTask.Result;
+
+            // Texture 생성
+            Texture2D texture = new Texture2D(2, 2);
+            if (texture.LoadImage(fileData))
+            {
+                // Sprite도 캐시에 저장
+                Sprite sprite = Sprite.Create(
+                    texture,
+                    new Rect(0, 0, texture.width, texture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+
+                coverCache[fileName] = sprite;
+
+                Debug.Log($"CoverArtLoader: 커버 이미지 로드 성공 - {fileName}");
+                onComplete?.Invoke(texture);
+            }
+            else
+            {
+                Debug.LogError($"CoverArtLoader: 이미지 디코딩 실패 - {fileName}");
+                onComplete?.Invoke(null);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"CoverArtLoader: 이미지 로드 중 오류 - {e.Message}");
+            onComplete?.Invoke(null);
+        }
+    }
+
+    /// <summary>
     /// 캐시 초기화
     /// </summary>
     public void ClearCache()

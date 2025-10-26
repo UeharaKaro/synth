@@ -52,6 +52,15 @@ public class GameResultManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 현재 플레이 중인 곡 정보를 설정합니다. (별칭 메서드)
+    /// SetCurrentSongInfo의 단축 버전입니다.
+    /// </summary>
+    public void SetCurrentSong(string songTitle, string artistName, string difficulty, int keyCount)
+    {
+        SetCurrentSongInfo(songTitle, artistName, difficulty, keyCount);
+    }
+
+    /// <summary>
     /// 게임 결과를 저장하고 결과 화면으로 전환합니다.
     /// </summary>
     public void SaveResultAndShowResultScreen(GameResult gameResult, string resultSceneName = "ResultScene")

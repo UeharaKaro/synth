@@ -298,6 +298,16 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         }
     }
 
+    /// <summary>
+    /// 배경음악을 로드하고 바로 재생하는 함수 (오버로드)
+    /// </summary>
+    /// <param name="fileName">재생할 오디오 파일명</param>
+    public void PlayBGM(string fileName)
+    {
+        LoadBGM(fileName);
+        PlayBGM();
+    }
+
     // 배경음악을 정지하는 함수
     public void StopBGM()
     {

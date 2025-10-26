@@ -21,6 +21,9 @@ public class SongData
     [Tooltip("음악 파일 경로 또는 리소스 경로")]
     public string audioPath = "";
 
+    [Tooltip("오디오 파일 이름")]
+    public string audioFileName = "";
+
     [Tooltip("미리듣기 시작 시간 (초)")]
     public float previewStartTime = 30f;
 
@@ -55,6 +58,9 @@ public class SongData
 
     [Tooltip("잠금 여부")]
     public bool isLocked = false;
+
+    [Tooltip("잠금 해제 조건 설명")]
+    public string unlockCondition = "";
 
     /// <summary>
     /// 특정 난이도 이름으로 난이도 정보를 가져옵니다.
@@ -98,20 +104,42 @@ public class DifficultyInfo
     [Tooltip("난이도 레벨 (1~10 등)")]
     public int level = 1;
 
+    [Tooltip("키 개수 (4, 5, 6, 7, 8, 10)")]
+    public int keyCount = 4;
+
     [Tooltip("총 노트 수")]
     public int totalNotes = 0;
 
     [Tooltip("난이도 색상")]
     public Color difficultyColor = Color.white;
 
-    [Tooltip("키 개수별 차트 파일 경로")]
+    [Tooltip("차트 파일 경로")]
+    public string chartFileName = "";
+
+    [Tooltip("키 개수별 차트 파일 경로 (레거시)")]
     public List<ChartPathInfo> chartPaths = new List<ChartPathInfo>();
+
+    /// <summary>
+    /// 난이도 색상 (호환성을 위한 프로퍼티)
+    /// </summary>
+    public Color color
+    {
+        get { return difficultyColor; }
+        set { difficultyColor = value; }
+    }
 
     /// <summary>
     /// 특정 키 개수에 대한 차트 경로를 가져옵니다.
     /// </summary>
     public string GetChartPath(int keyCount)
     {
+        // 먼저 chartFileName이 있으면 그것을 반환
+        if (!string.IsNullOrEmpty(chartFileName))
+        {
+            return chartFileName;
+        }
+
+        // 레거시 방식: chartPaths에서 찾기
         ChartPathInfo info = chartPaths.Find(c => c.keyCount == keyCount);
         return info != null ? info.chartPath : "";
     }
