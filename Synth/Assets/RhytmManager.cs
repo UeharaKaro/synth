@@ -117,6 +117,23 @@ public class RhythmManager : MonoBehaviour
         // 모든 판정 범위를 벗어나면 Miss
         return JudgmentType.Miss;
     }
+    
+    /// <summary>
+    /// 현재 판정 모드를 반환
+    /// </summary>
+    public JudgmentMode GetCurrentMode()
+    {
+        return currentMode;
+    }
+    
+    /// <summary>
+    /// 판정 모드를 변경
+    /// </summary>
+    public void SetJudgmentMode(JudgmentMode mode)
+    {
+        currentMode = mode;
+        Debug.Log($"RhythmManager: 판정 모드를 {mode}로 변경했습니다.");
+    }
 
     // 예제 사용법(임시)
     void Update()
