@@ -108,6 +108,14 @@ public class GameResultManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 현재 곡 정보를 구조체로 반환합니다.
+    /// </summary>
+    public (string songTitle, string artistName, string difficulty, int keyCount, string sceneName) GetCurrentSongInfo()
+    {
+        return (currentSongTitle, currentArtistName, currentDifficulty, currentKeyCount, currentGameSceneName);
+    }
+
+    /// <summary>
     /// 마지막으로 플레이한 씬 이름을 가져옵니다.
     /// </summary>
     public string GetLastPlayedSceneName()

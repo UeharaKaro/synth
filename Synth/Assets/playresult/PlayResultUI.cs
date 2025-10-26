@@ -89,15 +89,60 @@ public class PlayResultUI : MonoBehaviour
     [Tooltip("숫자 카운트 애니메이션 지속 시간")]
     public float countAnimationDuration = 1.5f;
 
+    [Tooltip("랭크 표시 애니메이션 지속 시간")]
+    public float rankAnimationDuration = 0.8f;
+
+    [Header("사운드 설정")]
+    [Tooltip("결과 화면 표시 사운드")]
+    public AudioClip resultShowSound;
+
+    [Tooltip("랭크 표시 사운드")]
+    public AudioClip rankRevealSound;
+
+    [Tooltip("NEW RECORD 사운드")]
+    public AudioClip newRecordSound;
+
+    [Tooltip("버튼 클릭 사운드")]
+    public AudioClip buttonClickSound;
+
+    [Header("신기록 표시")]
+    [Tooltip("NEW RECORD 표시 오브젝트")]
+    public GameObject newRecordIndicator;
+
+    [Tooltip("이전 최고 점수 (비교용, 0이면 비활성화)")]
+    public int previousBestScore = 0;
+
     private PlayResultData resultData;
+    private AudioSource audioSource;
+    private bool isNewRecord = false;
+
+    void Awake()
+    {
+        // AudioSource 자동 생성
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+        }
+    }
 
     void Start()
     {
         // 버튼 이벤트 등록
         RegisterButtonEvents();
 
-        // 테스트용 데이터로 초기화 (실제로는 게임 씬에서 전달받아야 함)
-        // LoadTestData();
+        // GameResultManager에서 결과 데이터 가져오기
+        if (GameResultManager.Instance != null && GameResultManager.Instance.HasResultData())
+        {
+            SetResultData(GameResultManager.Instance.GetCurrentResultData());
+        }
+        else
+        {
+            // 테스트용 데이터로 초기화
+            Debug.LogWarning("GameResultManager에 결과 데이터가 없습니다. 테스트 데이터를 로드합니다.");
+            LoadTestData();
+        }
     }
 
     /// <summary>
@@ -121,50 +166,65 @@ public class PlayResultUI : MonoBehaviour
     public void SetResultData(PlayResultData data)
     {
         resultData = data;
-        StartCoroutine(DisplayResultsWithAnimation());
+
+        // 신기록 체크
+        CheckNewRecord();
+
+        // 곡 정보 업데이트
+        UpdateSongInfo();
+
+        // 판정 카운트 업데이트
+        UpdateJudgmentCounts();
+
+        // 특수 표시 업데이트
+        UpdateSpecialIndicators();
+
+        // 결과 표시 애니메이션 시작
+        StartCoroutine(ShowResultSequence());
     }
 
     /// <summary>
-    /// 플레이 결과를 애니메이션과 함께 표시합니다.
+    /// 신기록 여부를 체크합니다.
     /// </summary>
-    private IEnumerator DisplayResultsWithAnimation()
+    private void CheckNewRecord()
     {
-        // 초기 상태: 모든 UI 숨김
-        HideAllUI();
+        if (previousBestScore > 0 && resultData.score > previousBestScore)
+        {
+            isNewRecord = true;
+            Debug.Log($"NEW RECORD! 이전: {previousBestScore}, 현재: {resultData.score}");
+        }
+        else
+        {
+            isNewRecord = false;
+        }
+    }
 
-        yield return new WaitForSeconds(0.5f);
+    /// <summary>
+    /// 결과 표시 시퀀스 애니메이션입니다.
+    /// </summary>
+    private IEnumerator ShowResultSequence()
+    {
+        // 결과 표시 사운드 재생
+        PlaySound(resultShowSound);
 
-        // 1. 곡 정보 표시
-        UpdateSongInfo();
-        yield return new WaitForSeconds(animationDuration);
-
-        // 2. 랭크 표시
-        UpdateRank();
-        yield return new WaitForSeconds(animationDuration);
-
-        // 3. 점수, 정확도, 콤보 애니메이션
+        // 1. 점수 애니메이션
         yield return StartCoroutine(AnimateScoreDisplay());
 
-        // 4. 판정 카운트 표시
-        UpdateJudgmentCounts();
-        yield return new WaitForSeconds(animationDuration);
+        // 잠깐 대기
+        yield return new WaitForSeconds(0.3f);
 
-        // 5. 특수 표시 (Full Combo, Perfect Play)
-        UpdateSpecialIndicators();
-    }
+        // 2. 랭크 애니메이션
+        yield return StartCoroutine(AnimateRankDisplay());
 
-    /// <summary>
-    /// 모든 UI를 초기 상태로 숨깁니다.
-    /// </summary>
-    private void HideAllUI()
-    {
-        if (scoreText != null) scoreText.text = "";
-        if (accuracyText != null) accuracyText.text = "";
-        if (maxComboText != null) maxComboText.text = "";
-        if (rankText != null) rankText.text = "";
+        // 3. 신기록 표시
+        if (isNewRecord && newRecordIndicator != null)
+        {
+            newRecordIndicator.SetActive(true);
+            PlaySound(newRecordSound);
 
-        if (fullComboIndicator != null) fullComboIndicator.SetActive(false);
-        if (perfectPlayIndicator != null) perfectPlayIndicator.SetActive(false);
+            // 신기록 애니메이션 (선택사항)
+            StartCoroutine(AnimateNewRecordIndicator());
+        }
     }
 
     /// <summary>
@@ -186,14 +246,88 @@ public class PlayResultUI : MonoBehaviour
     }
 
     /// <summary>
-    /// 랭크를 업데이트합니다.
+    /// 랭크 애니메이션을 표시합니다.
     /// </summary>
-    private void UpdateRank()
+    private IEnumerator AnimateRankDisplay()
     {
-        if (rankText != null)
+        if (rankText == null)
+            yield break;
+
+        // 랭크 사운드 재생
+        PlaySound(rankRevealSound);
+
+        // 랭크 설정
+        rankText.text = resultData.rank;
+        rankText.color = resultData.GetRankColor();
+
+        // 스케일 애니메이션
+        RectTransform rankTransform = rankText.GetComponent<RectTransform>();
+        if (rankTransform != null)
         {
-            rankText.text = resultData.rank;
-            rankText.color = resultData.GetRankColor();
+            Vector3 originalScale = rankTransform.localScale;
+            rankTransform.localScale = Vector3.zero;
+
+            float elapsed = 0f;
+            while (elapsed < rankAnimationDuration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / rankAnimationDuration);
+
+                // Elastic ease-out 효과
+                float overshoot = 1.5f;
+                float easedT = Mathf.Pow(2, -10 * t) * Mathf.Sin((t - overshoot / 4) * (2 * Mathf.PI) / overshoot) + 1;
+
+                rankTransform.localScale = originalScale * easedT;
+
+                yield return null;
+            }
+
+            rankTransform.localScale = originalScale;
+        }
+    }
+
+    /// <summary>
+    /// 신기록 표시 애니메이션입니다.
+    /// </summary>
+    private IEnumerator AnimateNewRecordIndicator()
+    {
+        if (newRecordIndicator == null)
+            yield break;
+
+        RectTransform recordTransform = newRecordIndicator.GetComponent<RectTransform>();
+        if (recordTransform != null)
+        {
+            // 펄스 애니메이션 (반복)
+            float pulseSpeed = 2f;
+            float minScale = 0.9f;
+            float maxScale = 1.1f;
+
+            for (int i = 0; i < 3; i++) // 3번 반복
+            {
+                float elapsed = 0f;
+                while (elapsed < 1f / pulseSpeed)
+                {
+                    elapsed += Time.deltaTime;
+                    float t = Mathf.PingPong(elapsed * pulseSpeed, 1f);
+                    float scale = Mathf.Lerp(minScale, maxScale, t);
+                    recordTransform.localScale = Vector3.one * scale;
+
+                    yield return null;
+                }
+            }
+
+            recordTransform.localScale = Vector3.one;
+        }
+    }
+
+    /// <summary>
+    /// 사운드를 재생합니다.
+    /// </summary>
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
         }
     }
 
@@ -294,17 +428,34 @@ public class PlayResultUI : MonoBehaviour
     /// </summary>
     public void OnRetryButtonClicked()
     {
+        PlaySound(buttonClickSound);
         Debug.Log("재시작 버튼 클릭 - 곡 다시 플레이");
 
-        // 현재 씬 이름 가져오기 (저장된 씬 이름이 없으면 PlayerPrefs에서 가져오기)
+        // GameResultManager를 통해 씬 이름 가져오기
         string sceneToLoad = currentGameSceneName;
-        if (PlayerPrefs.HasKey("LastPlayedScene"))
+        if (GameResultManager.Instance != null)
+        {
+            var songInfo = GameResultManager.Instance.GetCurrentSongInfo();
+            if (!string.IsNullOrEmpty(songInfo.sceneName))
+            {
+                sceneToLoad = songInfo.sceneName;
+            }
+        }
+
+        // PlayerPrefs 백업
+        if (string.IsNullOrEmpty(sceneToLoad) && PlayerPrefs.HasKey("LastPlayedScene"))
         {
             sceneToLoad = PlayerPrefs.GetString("LastPlayedScene");
         }
 
         if (!string.IsNullOrEmpty(sceneToLoad))
         {
+            // 결과 데이터 초기화 (재시작하므로)
+            if (GameResultManager.Instance != null)
+            {
+                GameResultManager.Instance.ClearResultData();
+            }
+
             SceneManager.LoadScene(sceneToLoad);
         }
         else
@@ -318,7 +469,14 @@ public class PlayResultUI : MonoBehaviour
     /// </summary>
     public void OnBackToSongSelectButtonClicked()
     {
+        PlaySound(buttonClickSound);
         Debug.Log("곡 선택 화면으로 돌아가기");
+
+        // 결과 데이터 초기화
+        if (GameResultManager.Instance != null)
+        {
+            GameResultManager.Instance.ClearResultData();
+        }
 
         if (!string.IsNullOrEmpty(songSelectionSceneName))
         {
@@ -335,7 +493,14 @@ public class PlayResultUI : MonoBehaviour
     /// </summary>
     public void OnBackToMainMenuButtonClicked()
     {
+        PlaySound(buttonClickSound);
         Debug.Log("메인 메뉴로 돌아가기");
+
+        // 결과 데이터 초기화
+        if (GameResultManager.Instance != null)
+        {
+            GameResultManager.Instance.ClearResultData();
+        }
 
         if (!string.IsNullOrEmpty(mainMenuSceneName))
         {
