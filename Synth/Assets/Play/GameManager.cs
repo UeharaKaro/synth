@@ -220,6 +220,21 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log($"GameManager: 게임 시작 - {chart.songName}");
+        
+        // PauseMenuUI 활성화 (게임플레이 시작)
+        NotifyPauseMenuGameplayState(true);
+    }
+
+    /// <summary>
+    /// PauseMenuUI에 게임플레이 상태 알림
+    /// </summary>
+    private void NotifyPauseMenuGameplayState(bool isActive)
+    {
+        PauseMenuUI pauseMenuUI = FindObjectOfType<PauseMenuUI>();
+        if (pauseMenuUI != null)
+        {
+            pauseMenuUI.SetGameplayActive(isActive);
+        }
     }
 
     /// <summary>
@@ -279,6 +294,9 @@ public class GameManager : MonoBehaviour
         currentState = GameState.Finished;
 
         Debug.Log("GameManager: 게임오버");
+        
+        // PauseMenuUI 비활성화 (게임 종료)
+        NotifyPauseMenuGameplayState(false);
 
         // 노트 스폰 중지
         if (useNoteSpawner && noteSpawner != null)
@@ -309,6 +327,9 @@ public class GameManager : MonoBehaviour
         currentState = GameState.Finished;
 
         Debug.Log("GameManager: 곡 클리어!");
+        
+        // PauseMenuUI 비활성화 (게임 종료)
+        NotifyPauseMenuGameplayState(false);
 
         // 클리어 판정
         bool isCleared = hpSystem.CheckClearCondition();
