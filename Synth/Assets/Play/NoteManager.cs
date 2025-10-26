@@ -46,49 +46,124 @@ public class NoteManager : MonoBehaviour
     
     void Start()
     {
+        // 참조 자동 찾기
+        FindReferences();
+        
         InitializeNotePool();
         SetupNoteLanes();
     }
     
+    void FindReferences()
+    {
+        // GearController 찾기
+        if (gearController == null)
+        {
+            gearController = FindObjectOfType<GearController>();
+            if (gearController == null)
+            {
+                Debug.LogError("NoteManager: GearController를 찾을 수 없습니다!");
+                return;
+            }
+        }
+        
+        // GearSettings 가져오기
+        if (settings == null && gearController != null)
+        {
+            settings = gearController.settings;
+            if (settings == null)
+            {
+                Debug.LogError("NoteManager: GearSettings를 찾을 수 없습니다!");
+                return;
+            }
+        }
+        
+        Debug.Log($"NoteManager: 초기화 완료 (Line Count: {settings.lineCount})");
+    }
+    
     void InitializeNotePool()
     {
+        if (settings == null)
+        {
+            Debug.LogWarning("NoteManager: settings가 없어 노트 풀 초기화를 건너뜁니다.");
+            return;
+        }
+        
         // 노트 풀 생성
         for (int i = 0; i < 100; i++)
         {
             Note note = CreateNote();
-            note.gameObject.SetActive(false);
-            notePool.Enqueue(note);
+            if (note != null && note.gameObject != null)
+            {
+                note.gameObject.SetActive(false);
+                notePool.Enqueue(note);
+            }
         }
+        
+        Debug.Log($"NoteManager: {notePool.Count}개 노트 풀 생성 완료");
     }
     
     void SetupNoteLanes()
     {
+        if (settings == null)
+        {
+            Debug.LogError("NoteManager: settings가 null입니다. SetupNoteLanes 실패.");
+            return;
+        }
+        
         // 각 라인별 노트 큐 초기화
         for (int i = 0; i < settings.lineCount; i++)
         {
             upcomingNotes[i] = new Queue<NoteData>();
         }
+        
+        Debug.Log($"NoteManager: {settings.lineCount}개 라인 설정 완료");
     }
     
     Note CreateNote()
     {
-        GameObject noteObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        noteObj.name = "Note";
-        noteObj.transform.SetParent(transform);
+        GameObject noteObj;
+        
+        // Prefab이 있으면 Prefab 사용, 없으면 Quad 생성
+        if (notePrefab != null)
+        {
+            noteObj = Instantiate(notePrefab, transform);
+        }
+        else
+        {
+            noteObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            noteObj.name = "Note";
+            noteObj.transform.SetParent(transform);
+        }
         
         // 노트 크기 설정
-        float noteWidth = settings.lineWidth * settings.noteSize;
-        noteObj.transform.localScale = new Vector3(noteWidth, noteWidth * 0.3f, 1);
+        if (settings != null)
+        {
+            float noteWidth = settings.lineWidth * settings.noteSize;
+            noteObj.transform.localScale = new Vector3(noteWidth, noteWidth * 0.3f, 1);
+        }
+        else
+        {
+            noteObj.transform.localScale = new Vector3(0.9f, 0.2f, 1);
+        }
+        
+        // Renderer 가져오기
+        Renderer rend = noteObj.GetComponent<Renderer>();
         
         // 노트 머티리얼 설정
-        Material noteMat = new Material(Shader.Find("Sprites/Default"));
-        noteMat.color = GetNoteColor();
-        Renderer rend = noteObj.GetComponent<Renderer>();
-        rend.material = noteMat;
+        if (rend != null)
+        {
+            Material noteMat = new Material(Shader.Find("Sprites/Default"));
+            noteMat.color = GetNoteColor();
+            rend.material = noteMat;
+        }
         
-        // 노트 콜라이더 추가
-        BoxCollider2D collider = noteObj.AddComponent<BoxCollider2D>();
-        collider.isTrigger = true;
+        // 노트 콜라이더 추가 (없으면)
+        BoxCollider2D collider = noteObj.GetComponent<BoxCollider2D>();
+        if (collider == null)
+        {
+            collider = noteObj.AddComponent<BoxCollider2D>();
+            collider.isTrigger = true;
+        }
         
         Note note = new Note
         {
@@ -169,12 +244,17 @@ public class NoteManager : MonoBehaviour
     
     void CheckAndSpawnNotes()
     {
+        if (settings == null || upcomingNotes == null)
+        {
+            return;
+        }
+        
         float currentTime = Time.time;
         float spawnLookAhead = spawnHeight / noteSpeed;
         
         for (int i = 0; i < settings.lineCount; i++)
         {
-            if (upcomingNotes[i].Count > 0)
+            if (upcomingNotes.ContainsKey(i) && upcomingNotes[i].Count > 0)
             {
                 NoteData nextNote = upcomingNotes[i].Peek();
                 
@@ -237,6 +317,11 @@ public class NoteManager : MonoBehaviour
     
     void UpdateActiveNotes()
     {
+        if (gearController == null)
+        {
+            return;
+        }
+        
         float judgmentY = gearController.GetJudgmentLineY();
         
         for (int i = activeNotes.Count - 1; i >= 0; i--)

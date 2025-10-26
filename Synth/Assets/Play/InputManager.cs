@@ -18,11 +18,57 @@ public class InputManager : MonoBehaviour
     
     void Start()
     {
+        FindReferences();
         SetupDefaultKeyBindings();
+    }
+    
+    void FindReferences()
+    {
+        // GearController 찾기
+        if (gearController == null)
+        {
+            gearController = FindObjectOfType<GearController>();
+            if (gearController == null)
+            {
+                Debug.LogError("InputManager: GearController를 찾을 수 없습니다!");
+                return;
+            }
+        }
+        
+        // GearSettings 가져오기
+        if (settings == null && gearController != null)
+        {
+            settings = gearController.settings;
+            if (settings == null)
+            {
+                Debug.LogError("InputManager: GearSettings를 찾을 수 없습니다!");
+                return;
+            }
+        }
+        
+        // NoteManager 찾기 (선택사항)
+        if (noteManager == null)
+        {
+            noteManager = FindObjectOfType<NoteManager>();
+        }
+        
+        // LongNoteSystem 찾기 (선택사항)
+        if (longNoteSystem == null)
+        {
+            longNoteSystem = FindObjectOfType<LongNoteSystem>();
+        }
+        
+        Debug.Log($"InputManager: 초기화 완료 (Line Count: {settings.lineCount})");
     }
     
     void SetupDefaultKeyBindings()
     {
+        if (settings == null)
+        {
+            Debug.LogWarning("InputManager: settings가 null입니다. 키 바인딩을 설정할 수 없습니다.");
+            return;
+        }
+        
         // 라인 개수에 따른 기본 키 설정
         switch (settings.lineCount)
         {
@@ -71,6 +117,11 @@ public class InputManager : MonoBehaviour
     
     void ProcessInput()
     {
+        if (settings == null)
+        {
+            return;
+        }
+        
         for (int i = 0; i < settings.lineCount; i++)
         {
             if (!keyBindings.ContainsKey(i))

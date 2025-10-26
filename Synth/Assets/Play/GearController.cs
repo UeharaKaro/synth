@@ -37,10 +37,36 @@ public class GearController : MonoBehaviour
     
     void Start()
     {
+        // Settings 자동 생성 (없으면)
+        if (settings == null)
+        {
+            CreateDefaultSettings();
+        }
+        
         InitializeGear();
         SetupCamera();
         CreateHPBar();
         CreateJudgmentOffsetDisplay();
+    }
+    
+    void CreateDefaultSettings()
+    {
+        settings = ScriptableObject.CreateInstance<GearSettings>();
+        
+        // 기본값 설정 (4K)
+        settings.lineCount = 4;
+        settings.lineWidth = 1f;
+        settings.lineSpacing = 0.1f;
+        settings.gearHeight = 8f;
+        settings.judgmentLineY = -3f;
+        settings.noteSize = 0.9f;
+        settings.noteSpeed = 5f;
+        
+        // HP 바 색상
+        settings.hpBarFullColor = Color.green;
+        settings.hpBarEmptyColor = Color.red;
+        
+        Debug.LogWarning("GearController: GearSettings가 없어 기본 설정을 생성했습니다. Inspector에서 GearSettings를 할당하는 것을 권장합니다.");
     }
     
     void InitializeGear()
