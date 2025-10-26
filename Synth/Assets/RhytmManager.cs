@@ -58,18 +58,18 @@ public class RhythmManager : MonoBehaviour
     // Start 함수를 추가하거나 기존의 Start/Awake 함수에 코드를 추가
     void Start()
     {
-        // GameSettingsManager로 부터 현재 설정된 판정 모드를 가져옴
-        if (GameSettingsManager.Instance != null)
+        // JudgmentModeManager로 부터 현재 설정된 판정 모드를 가져옴
+        if (JudgmentModeManager.Instance != null)
         {
             // 설정 관리자로부터 현재 모드를 읽어와서 자신의 currentMode에 저장
-            currentMode = GameSettingsManager.Instance.CurrentMode;
+            currentMode = JudgmentModeManager.Instance.CurrentMode;
             Debug.Log($"RhythmManager: 게임을 {currentMode} 모드로 시작합니다.");
         }
         else
         {
-            // GameSettingManager가 없는 경우 (테스트 등 ) 기본값으로 설정
+            // JudgmentModeManager가 없는 경우 (테스트 등 ) 기본값으로 설정
             currentMode = JudgmentMode.JudgmentMode_Normal;
-            Debug.LogWarning("GameSettingsManager를 찾을 수 없어 Normal 모드로 시작합니다.");
+            Debug.LogWarning("JudgmentModeManager를 찾을 수 없어 Normal 모드로 시작합니다.");
         }
     }
     

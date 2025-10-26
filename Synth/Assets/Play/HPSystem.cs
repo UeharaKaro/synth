@@ -111,15 +111,15 @@ public class HPSystem : MonoBehaviour
     /// </summary>
     private void LoadGameMode()
     {
-        if (GameSettingsManager.Instance != null)
+        if (JudgmentModeManager.Instance != null)
         {
-            currentMode = GameSettingsManager.Instance.CurrentMode;
+            currentMode = JudgmentModeManager.Instance.CurrentMode;
             Debug.Log($"HPSystem: 현재 모드 - {currentMode}");
         }
         else
         {
             currentMode = JudgmentMode.JudgmentMode_Normal;
-            Debug.LogWarning("HPSystem: GameSettingsManager를 찾을 수 없어 기본 모드(Normal)로 설정합니다.");
+            Debug.LogWarning("HPSystem: JudgmentModeManager를 찾을 수 없어 기본 모드(Normal)로 설정합니다.");
         }
     }
 

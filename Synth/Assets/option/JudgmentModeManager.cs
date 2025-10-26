@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class GameSettingsManager : MonoBehaviour
+public class JudgmentModeManager : MonoBehaviour
 {
-    // 다른 스크립트에서 GameSettingsManager.Instance 로 쉽게 접근할 수 있도록 설정
-    public static GameSettingsManager Instance { get; private set; }
+    // 다른 스크립트에서 JudgmentModeManager.Instance 로 쉽게 접근할 수 있도록 설정
+    public static JudgmentModeManager Instance { get; private set; }
 
     // 현재 선택된 판정 모드. 기본값은 Normal
     public JudgmentMode CurrentMode { get; set; } = JudgmentMode.JudgmentMode_Normal; 

@@ -85,14 +85,14 @@ public class MainMenuManager : MonoBehaviour
     public void OnNormalModeClicked()
     {
         Debug.Log("Normal 모드 선택됨");
-        GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Normal;
+        JudgmentModeManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Normal;
         SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡선택 씬으로 전환
     }
 
     public void OnHardModeClicked()
     {
         Debug.Log("Hard 모드 선택됨");
-        GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Hard;
+        JudgmentModeManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Hard;
         SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡 선택 씬으로 전환
     }
 

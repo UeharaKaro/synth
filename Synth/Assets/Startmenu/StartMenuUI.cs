@@ -20,8 +20,8 @@ public class StartMenuUI : MonoBehaviour
     //스크립트가 활성화 될 때 한 번 호출
     private void Start()
     {
-        // 시작할때 GameSettingManager에 저장된 모드나 기본값으로 Ui를 업데이트
-        currentModeIndex = (int)GameSettingsManager.Instance.CurrentMode;
+        // 시작할때 JudgmentModeManager에 저장된 모드나 기본값으로 Ui를 업데이트
+        currentModeIndex = (int)JudgmentModeManager.Instance.CurrentMode;
         UpdateUI();
     }
 
@@ -61,8 +61,8 @@ public class StartMenuUI : MonoBehaviour
             modeDisplayText.text = selectedMode.ToString(); // "Normal" 또는 "Hard" 텍스트로 표시(Super 도입시 "Super"표시)
         }
 
-        // 2. GameSettingsManager에 지정된 모드저장
-        GameSettingsManager.Instance.CurrentMode = selectedMode;
+        // 2. JudgmentModeManager에 지정된 모드저장
+        JudgmentModeManager.Instance.CurrentMode = selectedMode;
 
         Debug.Log($"판정 모드가 {selectedMode}로 설정되었습니다.");
     }
@@ -72,7 +72,7 @@ public class StartMenuUI : MonoBehaviour
     {
         // 여기에 게임 씬을 로드하는 코드를 추가
         /* ex): UnityEngine.SceneManagement.SceneManager.LoadScene("MainGameScene";
-         Debug.Log($"{GameSettingsManager.Instance.CurrentMode} 모드로 게임을 시작합니다."); */
+         Debug.Log($"{JudgmentModeManager.Instance.CurrentMode} 모드로 게임을 시작합니다."); */
     }
 }
 

@@ -61,10 +61,10 @@ public class OptionMenuUI : MonoBehaviour
 
     void Start()
     {
-        // GameSettingsManager가 없으면 경고
-        if (GameSettingsManager.Instance == null)
+        // JudgmentModeManager가 없으면 경고
+        if (JudgmentModeManager.Instance == null)
         {
-            Debug.LogWarning("GameSettingsManager 인스턴스를 찾을 수 없습니다!");
+            Debug.LogWarning("JudgmentModeManager 인스턴스를 찾을 수 없습니다!");
             return;
         }
 
