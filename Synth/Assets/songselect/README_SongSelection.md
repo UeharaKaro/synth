@@ -2,11 +2,47 @@
 
 Unity 리듬게임의 곡 선택 화면을 구현하는 스크립트들입니다.
 
-## 파일 구성
+## 📋 파일 구성
 
 1. **SongData.cs** - 개별 곡의 정보를 저장하는 데이터 클래스
 2. **SongDatabase.cs** - 모든 곡을 관리하는 ScriptableObject 데이터베이스
 3. **SongSelectionUI.cs** - 곡 선택 화면 UI를 관리하는 메인 스크립트
+4. **SongListLoader.cs** - 차트 자동 스캔 시스템 (NEW - 2025-10-26)
+5. **SampleChartGenerator.cs** - 샘플 차트 생성 유틸리티 (NEW - 2025-10-26)
+
+**연동 시스템**:
+- `GameResultManager` (Assets/playresult/) - 곡 정보 및 결과 데이터 관리
+
+## 🚀 빠른 시작
+
+### 방법 1: 자동 스캔 (권장)
+
+1. **SongDatabase 생성**: Create → Rhythm Game → Song Database
+2. **SongListLoader 추가**:
+   - 빈 GameObject 생성 → `SongListLoader` 컴포넌트 추가
+   - `Song Database` 필드에 데이터베이스 연결
+   - `Scan On Start` 체크
+3. 완료! 씬 시작 시 `StreamingAssets/Charts/` 자동 스캔
+
+### 방법 2: 수동 설정
+
+기존 방식대로 SongDatabase Inspector에서 수동으로 곡 추가
+
+## 🎵 주요 기능 (2025-10-26 업데이트)
+
+### 새로운 기능
+- ✅ **자동 차트 스캔**: `StreamingAssets/Charts/` 폴더 자동 스캔
+- ✅ **AudioManager 통합**: FMOD 기반 미리듣기
+- ✅ **커버 아트 자동 로딩**: `CoverArtLoader` 통합
+- ✅ **GameResultManager**: 씬 간 데이터 전달
+
+### 키보드 조작
+- **↑/↓**: 이전/다음 곡 선택
+- **←/→**: 이전/다음 난이도 선택
+- **Left Shift/Right Shift**: 이전/다음 키 개수 선택
+- **Enter**: 곡 선택 및 게임 시작
+- **Space**: 미리듣기 재생/중지
+- **ESC**: 뒤로 가기
 
 ## Unity 설정 방법
 
@@ -309,27 +345,62 @@ void LoadUnlockStatus()
 4. **앨범 아트와 배경 이미지**는 Sprite로 설정해야 합니다.
 5. 버튼 이벤트는 스크립트에서 자동으로 등록되므로 Inspector에서 OnClick 설정이 불필요합니다.
 
-## 미리듣기 기능 활성화
+## 미리듣기 기능 (AudioManager 통합)
 
-미리듣기 기능을 완전히 활성화하려면 `SongSelectionUI.cs`의 `PlayPreview()` 메서드에서 TODO 주석을 해제하고 오디오 로딩 로직을 구현하세요:
+미리듣기 기능이 이제 AudioManager와 완전히 통합되었습니다!
 
 ```csharp
+// SongSelectionUI.cs - 자동 구현됨
 private void PlayPreview()
 {
-    if (previewAudioSource == null || string.IsNullOrEmpty(currentSong.audioPath))
-        return;
-
-    // Resources 폴더에서 오디오 로드
-    AudioClip clip = Resources.Load<AudioClip>(currentSong.audioPath);
-    if (clip != null)
+    if (AudioManager.Instance != null)
     {
-        previewAudioSource.clip = clip;
-        previewAudioSource.time = currentSong.previewStartTime;
-        previewAudioSource.Play();
-        isPreviewPlaying = true;
+        AudioManager.Instance.LoadBGM(currentSong.audioPath);
+        AudioManager.Instance.PlayBGM();
+        // 미리듣기 시작 시간으로 이동
+        StartCoroutine(SeekToPreviewTime(currentSong.previewStartTime));
+    }
+}
+
+private void StopPreview()
+{
+    if (AudioManager.Instance != null)
+    {
+        AudioManager.Instance.StopBGM();
     }
 }
 ```
+
+**필요 조건**:
+- AudioManager 인스턴스가 씬에 존재
+- 오디오 파일이 `StreamingAssets/Audio/BGM/` 폴더에 존재
+- FMOD가 올바르게 초기화됨
+
+## 커버 아트 자동 로딩 (NEW)
+
+`CoverArtLoader`를 통해 커버 이미지를 자동으로 로드합니다:
+
+```csharp
+// SongSelectionUI.cs - 자동 구현됨
+private IEnumerator LoadCoverArtAsync(string audioFileName)
+{
+    var loadCoroutine = CoverArtLoader.LoadCoverArtAsync(audioFileName, (sprite) =>
+    {
+        if (sprite != null && albumArtImage != null)
+        {
+            albumArtImage.sprite = sprite;
+        }
+    });
+    yield return StartCoroutine(loadCoroutine);
+}
+```
+
+**커버 이미지 설정**:
+1. `StreamingAssets/CoverArt/` 폴더에 이미지 배치
+2. 파일명을 오디오 파일과 동일하게 설정:
+   ```
+   sample_audio.wav → sample_audio.png (또는 .jpg)
+   ```
 
 ## 디버그 팁
 

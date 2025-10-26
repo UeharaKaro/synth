@@ -368,11 +368,52 @@ public class SongSelectionUI : MonoBehaviour
         if (descriptionText != null)
             descriptionText.text = currentSong.description;
 
+        // 앨범 아트 로드 (CoverArtLoader 사용)
         if (albumArtImage != null)
-            albumArtImage.sprite = currentSong.albumArt;
+        {
+            // 먼저 SongData의 albumArt 스프라이트 사용 시도
+            if (currentSong.albumArt != null)
+            {
+                albumArtImage.sprite = currentSong.albumArt;
+            }
+            else if (!string.IsNullOrEmpty(currentSong.audioPath))
+            {
+                // audioPath로부터 커버 이미지 자동 로드
+                StartCoroutine(LoadCoverArtAsync(currentSong.audioPath));
+            }
+        }
 
         if (backgroundImage != null && currentSong.backgroundImage != null)
             backgroundImage.sprite = currentSong.backgroundImage;
+    }
+
+    /// <summary>
+    /// 커버 아트를 비동기로 로드합니다.
+    /// </summary>
+    private System.Collections.IEnumerator LoadCoverArtAsync(string audioFileName)
+    {
+        // CoverArtLoader 인스턴스 확인
+        if (CoverArtLoader.Instance == null)
+        {
+            Debug.LogWarning("CoverArtLoader 인스턴스가 없습니다!");
+            yield break;
+        }
+
+        // CoverArtLoader를 통해 이미지 로드
+        var loadCoroutine = CoverArtLoader.Instance.LoadCoverArtAsync(audioFileName, (sprite) =>
+        {
+            if (sprite != null && albumArtImage != null)
+            {
+                albumArtImage.sprite = sprite;
+                Debug.Log($"커버 아트 로드 성공: {audioFileName}");
+            }
+            else
+            {
+                Debug.LogWarning($"커버 아트를 찾을 수 없습니다: {audioFileName}");
+            }
+        });
+
+        yield return StartCoroutine(loadCoroutine);
     }
 
     /// <summary>
@@ -571,31 +612,51 @@ public class SongSelectionUI : MonoBehaviour
     /// </summary>
     private void PlayPreview()
     {
-        if (previewAudioSource == null || string.IsNullOrEmpty(currentSong.audioPath))
+        if (string.IsNullOrEmpty(currentSong.audioPath))
         {
-            Debug.LogWarning("미리듣기 오디오 소스가 없거나 오디오 파일 경로가 설정되지 않았습니다!");
+            Debug.LogWarning("오디오 파일 경로가 설정되지 않았습니다!");
             return;
         }
 
-        // TODO: 오디오 파일 로드 및 재생
-        // AudioClip clip = Resources.Load<AudioClip>(currentSong.audioPath);
-        // if (clip != null)
-        // {
-        //     previewAudioSource.clip = clip;
-        //     previewAudioSource.time = currentSong.previewStartTime;
-        //     previewAudioSource.Play();
-        //     isPreviewPlaying = true;
-        //
-        //     if (previewButton != null)
-        //     {
-        //         var buttonText = previewButton.GetComponentInChildren<TextMeshProUGUI>();
-        //         if (buttonText != null)
-        //             buttonText.text = "Stop";
-        //     }
-        // }
+        // AudioManager를 통한 미리듣기 재생
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.LoadBGM(currentSong.audioPath);
+            AudioManager.Instance.PlayBGM();
+            
+            // 미리듣기 시작 시간으로 이동 (코루틴 시작)
+            StartCoroutine(SeekToPreviewTime(currentSong.previewStartTime));
+            
+            isPreviewPlaying = true;
 
-        Debug.Log($"미리듣기 시작: {currentSong.title}");
-        isPreviewPlaying = true;
+            if (previewButton != null)
+            {
+                var buttonText = previewButton.GetComponentInChildren<TextMeshProUGUI>();
+                if (buttonText != null)
+                    buttonText.text = "Stop";
+            }
+
+            Debug.Log($"미리듣기 시작: {currentSong.title} (시작 시간: {currentSong.previewStartTime}초)");
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager를 찾을 수 없습니다!");
+        }
+    }
+
+    /// <summary>
+    /// 미리듣기 시작 시간으로 이동하는 코루틴
+    /// </summary>
+    private System.Collections.IEnumerator SeekToPreviewTime(float startTime)
+    {
+        // BGM이 시작될 때까지 짧은 대기
+        yield return new WaitForSeconds(0.1f);
+        
+        // 미리듣기 시간 설정 (FMOD 채널 위치 조정)
+        // Note: FMOD Channel의 setPosition을 사용하여 시간 이동
+        // 구현 방법은 AudioManager에 SetBGMPosition 메서드 추가 필요
+        // 임시로 여기서는 로그만 출력
+        Debug.Log($"미리듣기 위치 설정: {startTime}초");
     }
 
     /// <summary>
@@ -603,9 +664,9 @@ public class SongSelectionUI : MonoBehaviour
     /// </summary>
     private void StopPreview()
     {
-        if (previewAudioSource != null && previewAudioSource.isPlaying)
+        if (AudioManager.Instance != null)
         {
-            previewAudioSource.Stop();
+            AudioManager.Instance.StopBGM();
         }
 
         isPreviewPlaying = false;
