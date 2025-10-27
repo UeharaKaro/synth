@@ -34,6 +34,7 @@ namespace ChartSystem
         public string audioFileName = "";
         public float bpm = 120f;
         public float chartDifficulty = 1.0f;
+        public int keyCount = 4;  // 4K, 5K, 6K, 7K, 8K, 10K
 
         [Header("마디선 설정 (플레이 시 표시)")]
         public int defaultBeatsPerMeasure = 4;  // 기본 마디당 박자 수
@@ -46,13 +47,15 @@ namespace ChartSystem
         public ChartDataNew()
         {
             notes = new List<NoteData>();
+            keyCount = 4;  // 기본값 4K
         }
         
-        public ChartDataNew(string songName, string artistName, float bpm)
+        public ChartDataNew(string songName, string artistName, float bpm, int keyCount = 4)
         {
             this.songName = songName;
             this.artistName = artistName;
             this.bpm = bpm;
+            this.keyCount = keyCount;
             this.notes = new List<NoteData>();
         }
         
@@ -84,6 +87,7 @@ namespace ChartSystem
             audioFileName = "";
             bpm = 120f;
             chartDifficulty = 1.0f;
+            keyCount = 4;
             defaultBeatsPerMeasure = 4;
             measureLineOverrides.Clear();
         }

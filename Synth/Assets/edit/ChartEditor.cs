@@ -63,6 +63,9 @@ namespace ChartSystem
         public KeyCode[] trackKeys = { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F };
         public Transform[] noteSpawnPoints;
         public GameObject notePrefab;
+        
+        [Header("키 바인딩 프리셋 (실제 플레이와 동일)")]
+        public bool useGameplayKeyBindings = true; // 게임플레이 키 바인딩 사용
         #endregion
 
         #region Note Input Settings
@@ -190,8 +193,50 @@ namespace ChartSystem
             {
                 notePrefab = CreateDefaultNotePrefab();
             }
+            
+            // 게임플레이 키 바인딩 설정
+            if (useGameplayKeyBindings)
+            {
+                SetupGameplayKeyBindings();
+            }
 
             Debug.Log("ChartEditor 초기화 완료");
+        }
+        
+        /// <summary>
+        /// 실제 게임플레이와 동일한 키 바인딩을 설정합니다 (InputManager.cs 기반)
+        /// </summary>
+        void SetupGameplayKeyBindings()
+        {
+            switch (keyCount)
+            {
+                case 4:
+                    trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K };
+                    break;
+                case 5:
+                    trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K };
+                    break;
+                case 6:
+                    trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L };
+                    break;
+                case 7:
+                    trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K, KeyCode.L };
+                    break;
+                case 8:
+                    trackKeys = new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon };
+                    break;
+                case 10:
+                    trackKeys = new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, 
+                                                 KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon };
+                    break;
+                default:
+                    Debug.LogWarning($"ChartEditor: 지원하지 않는 keyCount ({keyCount}). 기본값(4K) 사용.");
+                    keyCount = 4;
+                    trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K };
+                    break;
+            }
+            
+            Debug.Log($"ChartEditor: {keyCount}K 게임플레이 키 바인딩 설정 완료 - {string.Join(", ", trackKeys)}");
         }
 
         GameObject CreateDefaultNotePrefab()
@@ -366,11 +411,85 @@ namespace ChartSystem
                 // Delete/Backspace: 선택된 노트 삭제
                 DeleteSelectedNotes();
             }
+            else if (Input.GetKeyDown(KeyCode.LeftBracket))
+            {
+                // [키: 박자 분할 감소
+                if (currentSubdivision > 1)
+                {
+                    currentSubdivision--;
+                    UpdateGridDisplay();
+                    ShowStatus($"박자 분할: 1/{currentSubdivision}");
+                }
+            }
+            else if (Input.GetKeyDown(KeyCode.RightBracket))
+            {
+                // ]키: 박자 분할 증가
+                if (currentSubdivision < 100)
+                {
+                    currentSubdivision++;
+                    UpdateGridDisplay();
+                    ShowStatus($"박자 분할: 1/{currentSubdivision}");
+                }
+            }
+            else if (Input.GetKeyDown(KeyCode.R) && Input.GetKey(KeyCode.LeftControl))
+            {
+                // Ctrl+R: 녹음 모드 토글
+                ToggleRecording();
+            }
 
-            // 녹음 중 노트 입력
+            // 실제 플레이 환경과 동일한 노트 입력 (녹음 모드)
             if (isRecording && audioSource.isPlaying)
             {
-                HandleNoteInput();
+                HandleRealtimeNoteInput();
+            }
+            
+            // 일시정지 중에도 노트 입력 가능 (편집 모드)
+            if (!isRecording && !audioSource.isPlaying)
+            {
+                HandleManualNoteInput();
+            }
+        }
+        
+        /// <summary>
+        /// 실시간 녹음 모드 - 실제 플레이와 동일한 입력 처리
+        /// </summary>
+        void HandleRealtimeNoteInput()
+        {
+            for (int i = 0; i < trackKeys.Length && i < keyCount; i++)
+            {
+                KeyCode key = trackKeys[i];
+                
+                // 키 눌림 (노트 시작)
+                if (Input.GetKeyDown(key))
+                {
+                    OnTrackKeyPressed(i);
+                }
+                
+                // 키 뗌 (롱노트 끝)
+                if (Input.GetKeyUp(key))
+                {
+                    OnTrackKeyReleased(i);
+                }
+                
+                // 키 홀드 중 (롱노트 유지)
+                if (Input.GetKey(key))
+                {
+                    OnTrackKeyHold(i);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 수동 편집 모드 - 일시정지 상태에서 노트 배치
+        /// </summary>
+        void HandleManualNoteInput()
+        {
+            for (int i = 0; i < trackKeys.Length && i < keyCount; i++)
+            {
+                if (Input.GetKeyDown(trackKeys[i]))
+                {
+                    HandleNoteInputForTrack(i);
+                }
             }
         }
 
@@ -483,6 +602,177 @@ namespace ChartSystem
                 ShowStatus("롱노트는 같은 트랙에서 시작과 종료를 지정해야 합니다");
             }
         }
+        
+        #region Realtime Input (Gameplay-like)
+        // 트랙별 롱노트 입력 상태 추적
+        private Dictionary<int, bool> trackKeyPressed = new Dictionary<int, bool>();
+        private Dictionary<int, double> trackKeyPressTime = new Dictionary<int, double>();
+        private Dictionary<int, NoteData> trackLongNoteStart = new Dictionary<int, NoteData>();
+        
+        /// <summary>
+        /// 트랙 키 눌림 - 실제 플레이와 동일한 처리 (InputManager.OnKeyPressed 기반)
+        /// </summary>
+        void OnTrackKeyPressed(int track)
+        {
+            double currentTime = audioSource.time;
+            
+            if (gridSnapEnabled)
+            {
+                currentTime = SnapToGrid(currentTime);
+            }
+            
+            trackKeyPressed[track] = true;
+            trackKeyPressTime[track] = currentTime;
+            
+            if (currentNoteMode == NoteInputMode.Normal)
+            {
+                // 일반 노트 즉시 추가
+                AddNormalNote(currentTime, track);
+            }
+            else if (currentNoteMode == NoteInputMode.Long)
+            {
+                // 롱노트 시작점 기록
+                NoteData longNoteStart = new NoteData(currentTime, track, selectedKeySoundType, true, 0);
+                trackLongNoteStart[track] = longNoteStart;
+                
+                ShowStatus($"롱노트 홀드 중: 트랙 {track} (키를 떼면 종료)");
+                Debug.Log($"롱노트 시작 - 시간: {currentTime:F2}초, 트랙: {track}");
+            }
+            
+            // 시각적 피드백 (선택사항)
+            ShowTrackPressEffect(track);
+        }
+        
+        /// <summary>
+        /// 트랙 키 뗌 - 롱노트 종료 처리 (InputManager.OnKeyReleased 기반)
+        /// </summary>
+        void OnTrackKeyReleased(int track)
+        {
+            if (!trackKeyPressed.ContainsKey(track) || !trackKeyPressed[track])
+                return;
+            
+            trackKeyPressed[track] = false;
+            double currentTime = audioSource.time;
+            
+            if (gridSnapEnabled)
+            {
+                currentTime = SnapToGrid(currentTime);
+            }
+            
+            // 롱노트 모드이고 시작점이 기록되어 있으면 롱노트 추가
+            if (currentNoteMode == NoteInputMode.Long && trackLongNoteStart.ContainsKey(track))
+            {
+                NoteData startNote = trackLongNoteStart[track];
+                double startTime = startNote.timing;
+                double endTime = currentTime;
+                
+                // 최소 길이 체크
+                if (endTime - startTime < 0.1)
+                {
+                    ShowStatus($"롱노트가 너무 짧습니다 (최소 0.1초) - 트랙 {track}");
+                    trackLongNoteStart.Remove(track);
+                    HideTrackPressEffect(track);
+                    return;
+                }
+                
+                // 롱노트 추가
+                NoteData longNote = new NoteData(startTime, track, selectedKeySoundType, true, endTime);
+                longNote.CalculateBeatTiming(bpm);
+                
+                SaveStateForUndo();
+                currentChart.AddNote(longNote);
+                
+                // 타임라인 새로고침 요청
+                RequestTimelineRefresh();
+                
+                ShowStatus($"롱노트 추가: {startTime:F2}초 ~ {endTime:F2}초, 트랙 {track}");
+                Debug.Log($"롱노트 완료 - 시작: {startTime:F2}초, 종료: {endTime:F2}초, 트랙: {track}, 길이: {(endTime - startTime):F2}초");
+                
+                trackLongNoteStart.Remove(track);
+            }
+            
+            // 시각적 피드백 제거
+            HideTrackPressEffect(track);
+        }
+        
+        /// <summary>
+        /// 트랙 키 홀드 중 - 롱노트 길이 시각화 (InputManager.OnKeyHold 기반)
+        /// </summary>
+        void OnTrackKeyHold(int track)
+        {
+            if (!trackKeyPressed.ContainsKey(track) || !trackKeyPressed[track])
+                return;
+            
+            // 롱노트 모드에서만 홀드 시간 표시
+            if (currentNoteMode == NoteInputMode.Long && trackLongNoteStart.ContainsKey(track))
+            {
+                double startTime = trackLongNoteStart[track].timing;
+                double currentTime = audioSource.time;
+                double holdDuration = currentTime - startTime;
+                
+                // 홀드 중인 롱노트 길이를 UI에 표시 (0.1초마다 업데이트)
+                if (holdDuration % 0.1 < 0.05f) // 대략적인 간격
+                {
+                    UpdateLongNotePreview(track, startTime, currentTime);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// 녹음 모드 토글
+        /// </summary>
+        void ToggleRecording()
+        {
+            isRecording = !isRecording;
+            
+            if (isRecording)
+            {
+                ShowStatus("녹음 모드 ON - 음악을 재생하고 키를 눌러 노트를 기록하세요");
+                
+                // 재생 중이 아니면 자동으로 재생 시작
+                if (!audioSource.isPlaying)
+                {
+                    OnPlayButtonClicked();
+                }
+            }
+            else
+            {
+                ShowStatus("녹음 모드 OFF");
+                
+                // 진행 중인 롱노트가 있으면 취소
+                trackLongNoteStart.Clear();
+                trackKeyPressed.Clear();
+            }
+            
+            Debug.Log($"녹음 모드: {(isRecording ? "ON" : "OFF")}");
+        }
+        
+        /// <summary>
+        /// 트랙 눌림 효과 표시 (시각적 피드백)
+        /// </summary>
+        void ShowTrackPressEffect(int track)
+        {
+            // TODO: 트랙 하이라이트 효과 추가
+            // 예: 트랙 배경색 변경, 파티클 효과 등
+        }
+        
+        /// <summary>
+        /// 트랙 눌림 효과 제거
+        /// </summary>
+        void HideTrackPressEffect(int track)
+        {
+            // TODO: 트랙 하이라이트 효과 제거
+        }
+        
+        /// <summary>
+        /// 롱노트 미리보기 업데이트 (홀드 중)
+        /// </summary>
+        void UpdateLongNotePreview(int track, double startTime, double endTime)
+        {
+            // TODO: 타임라인에 진행 중인 롱노트 시각화
+            // 예: 반투명 롱노트 막대 표시
+        }
+        #endregion
 
         /// <summary>
         /// 마우스 입력을 처리합니다 (타임라인에서 노트 드래그 추가)
@@ -1356,6 +1646,93 @@ namespace ChartSystem
             }
             Debug.Log($"[ChartEditor] {message}");
         }
+        
+        #region Key Binding Management
+        /// <summary>
+        /// keyCount 변경 시 호출 - 키 바인딩 자동 업데이트
+        /// </summary>
+        public void SetKeyCount(int newKeyCount)
+        {
+            if (newKeyCount < 4 || newKeyCount > 10)
+            {
+                ShowStatus($"지원하지 않는 키 개수입니다 (4~10K만 지원): {newKeyCount}");
+                return;
+            }
+            
+            keyCount = newKeyCount;
+            currentChart.keyCount = keyCount;
+            
+            // 게임플레이 키 바인딩 자동 적용
+            if (useGameplayKeyBindings)
+            {
+                SetupGameplayKeyBindings();
+            }
+            
+            ShowStatus($"키 개수 변경: {keyCount}K - 키 바인딩: {string.Join(", ", trackKeys)}");
+            Debug.Log($"ChartEditor: {keyCount}K로 변경, 새 키 바인딩: {string.Join(", ", trackKeys)}");
+        }
+        
+        /// <summary>
+        /// 현재 키 바인딩 정보를 UI에 표시
+        /// </summary>
+        public string GetKeyBindingInfo()
+        {
+            string info = $"{keyCount}K 키 바인딩:\n";
+            for (int i = 0; i < trackKeys.Length && i < keyCount; i++)
+            {
+                info += $"트랙 {i + 1}: {trackKeys[i]}\n";
+            }
+            return info;
+        }
+        
+        /// <summary>
+        /// 커스텀 키 바인딩 설정 (게임플레이 키 바인딩 비활성화 시)
+        /// </summary>
+        public void SetCustomKeyBinding(int trackIndex, KeyCode key)
+        {
+            if (trackIndex < 0 || trackIndex >= keyCount)
+            {
+                ShowStatus($"잘못된 트랙 인덱스: {trackIndex}");
+                return;
+            }
+            
+            if (useGameplayKeyBindings)
+            {
+                ShowStatus("게임플레이 키 바인딩이 활성화되어 있습니다. 커스텀 설정을 하려면 비활성화하세요.");
+                return;
+            }
+            
+            // 배열 크기 조정
+            if (trackKeys.Length < keyCount)
+            {
+                KeyCode[] newKeys = new KeyCode[keyCount];
+                System.Array.Copy(trackKeys, newKeys, trackKeys.Length);
+                trackKeys = newKeys;
+            }
+            
+            trackKeys[trackIndex] = key;
+            ShowStatus($"트랙 {trackIndex + 1} 키 변경: {key}");
+            Debug.Log($"커스텀 키 바인딩 - 트랙 {trackIndex}: {key}");
+        }
+        
+        /// <summary>
+        /// 게임플레이 키 바인딩 사용 여부 토글
+        /// </summary>
+        public void ToggleGameplayKeyBindings(bool enable)
+        {
+            useGameplayKeyBindings = enable;
+            
+            if (enable)
+            {
+                SetupGameplayKeyBindings();
+                ShowStatus($"게임플레이 키 바인딩 활성화: {keyCount}K");
+            }
+            else
+            {
+                ShowStatus("커스텀 키 바인딩 모드 활성화");
+            }
+        }
+        #endregion
 
         void ClearNoteVisuals()
         {
