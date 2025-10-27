@@ -176,7 +176,7 @@ public class CustomChartParser
             {
                 case "Name": chart.difficulty = kvp.Value; break;
                 case "Keys": int.TryParse(kvp.Value, out chart.keyCount); break;
-                case "Level": int.TryParse(kvp.Value, out chart.level); break;
+                case "Level": float.TryParse(kvp.Value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out chart.level); break;
             }
         }
     }

@@ -25,14 +25,14 @@ public class PlayRecord
     public int miss;
 
     [Header("패턴 난이도 (차트의 패턴 난이도)")]
-    public int trill = 0;
-    public int stairs = 0;
-    public int chord = 0;
-    public int denim = 0;
-    public int jacks = 0;
-    public int longNoteHybrid = 0;
-    public int burst = 0;
-    public int offbeat = 0;
+    public float trill = 0f;
+    public float stairs = 0f;
+    public float chord = 0f;
+    public float denim = 0f;
+    public float jacks = 0f;
+    public float longNoteHybrid = 0f;
+    public float burst = 0f;
+    public float offbeat = 0f;
 
     [Header("플레이 정보")]
     public string playDate; // YYYY-MM-DD HH:mm:ss

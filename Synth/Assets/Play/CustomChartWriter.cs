@@ -87,7 +87,7 @@ public class CustomChartWriter
         sb.AppendLine("[DIFFICULTY]");
         sb.AppendLine($"Name: {chart.difficulty}");
         sb.AppendLine($"Keys: {chart.keyCount}");
-        sb.AppendLine($"Level: {chart.level}");
+        sb.AppendLine($"Level: {chart.level:F1}");
         sb.AppendLine();
 
         // 차트 제작 정보

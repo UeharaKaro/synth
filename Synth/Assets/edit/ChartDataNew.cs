@@ -46,7 +46,7 @@ namespace ChartSystem
         [Header("난이도 정보")]
         public string difficulty = "Normal"; // Easy, Normal, Hard, Expert, Master, Special
         public int keyCount = 4;  // 4K, 5K, 6K, 7K, 8K, 10K
-        public int level = 1; // 난이도 레벨 (1-20)
+        public float level = 1.0f; // 난이도 레벨 (1-20, 소수점 1자리)
 
         [Header("차트 제작 정보")]
         public string chartAuthor = ""; // 차트 제작자
@@ -152,7 +152,7 @@ namespace ChartSystem
             // 난이도 정보
             difficulty = "Normal";
             keyCount = 4;
-            level = 1;
+            level = 1.0f;
 
             // 차트 제작 정보
             chartAuthor = "";

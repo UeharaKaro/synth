@@ -135,7 +135,7 @@ public class PlayerProfile
     /// <summary>
     /// PlayRecord에서 특정 패턴의 값 가져오기
     /// </summary>
-    private int GetPatternValue(PlayRecord record, string patternName)
+    private float GetPatternValue(PlayRecord record, string patternName)
     {
         switch (patternName)
         {
@@ -147,7 +147,7 @@ public class PlayerProfile
             case "longNoteHybrid": return record.longNoteHybrid;
             case "burst": return record.burst;
             case "offbeat": return record.offbeat;
-            default: return 0;
+            default: return 0f;
         }
     }
 
