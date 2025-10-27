@@ -821,4 +821,22 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
 
         return timeSinceStart;
     }
+
+    // Phase 2-B-5: 옵션 메뉴 UI 연동 메서드 (2025-10-27)
+    // 기존 SetBGMVolume, SetMasterVolume 메서드 사용
+    // 추가로 SFX 볼륨 조절 메서드만 추가
+
+    /// <summary>
+    /// 효과음 볼륨 설정 (0.0 ~ 1.0)
+    /// Unity AudioSource용 SFX 볼륨 조절
+    /// </summary>
+    public void SetSFXVolume(float volume)
+    {
+        sfxVolume = Mathf.Clamp01(volume);
+
+        if (sfxSource != null)
+        {
+            sfxSource.volume = sfxVolume;
+        }
+    }
 }

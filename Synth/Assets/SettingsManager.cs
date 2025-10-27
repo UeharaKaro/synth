@@ -145,4 +145,30 @@ public class SettingsManager : MonoBehaviour // 인게임 내 설정 메뉴
         gameSettings.noteScrollSpeed = Mathf.Clamp(speed, 1f, 20f);
         OnSettingsChanged?.Invoke();
     }
+
+    // Phase 2-B-5 추가 메서드들 (2025-10-27)
+
+    public void SetSFXVolume(float volume)
+    {
+        gameSettings.sfxVolume = Mathf.Clamp01(volume);
+        OnSettingsChanged?.Invoke();
+    }
+
+    public void SetDefaultJudgmentMode(int mode)
+    {
+        gameSettings.defaultJudgmentMode = Mathf.Clamp(mode, 0, 2); // 0: Normal, 1: Hard, 2: Super
+        OnSettingsChanged?.Invoke();
+    }
+
+    public void SetShowJudgmentText(bool show)
+    {
+        gameSettings.showJudgmentText = show;
+        OnSettingsChanged?.Invoke();
+    }
+
+    public void SetShowOffsetText(bool show)
+    {
+        gameSettings.showOffsetText = show;
+        OnSettingsChanged?.Invoke();
+    }
 }
