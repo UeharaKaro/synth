@@ -141,6 +141,16 @@ namespace ChartSystem
         private GameObject previewNoteObject = null;
         private List<NoteData> selectedNotes = new List<NoteData>();
 
+        // 드래그 박스 선택
+        private bool isDraggingSelectionBox = false;
+        private Vector2 selectionBoxStartPos;
+        private GameObject selectionBoxObject = null;
+        
+        // 연속 배치 모드
+        private bool isContinuousPlacement = false;
+        private double lastPlacementTime = 0;
+        private const double CONTINUOUS_PLACEMENT_INTERVAL = 0.1; // 0.1초마다 노트 배치
+
         // 복사/붙여넣기
         private List<NoteData> clipboard = new List<NoteData>();
         #endregion
@@ -435,6 +445,21 @@ namespace ChartSystem
             {
                 // Ctrl+R: 녹음 모드 토글
                 ToggleRecording();
+            }
+            else if (Input.GetKeyDown(KeyCode.A) && Input.GetKey(KeyCode.LeftControl))
+            {
+                // Ctrl+A: 전체 선택
+                SelectAllNotes();
+            }
+            else if (Input.GetKeyDown(KeyCode.D) && Input.GetKey(KeyCode.LeftControl))
+            {
+                // Ctrl+D: 연속 배치 모드 토글
+                ToggleContinuousPlacement();
+            }
+            else if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                // ESC: 선택 해제
+                ClearSelection();
             }
 
             // 실제 플레이 환경과 동일한 노트 입력 (녹음 모드)
@@ -788,8 +813,13 @@ namespace ChartSystem
                 Vector2 mousePos = Input.mousePosition;
                 if (IsMouseOverTimeline(mousePos))
                 {
-                    // Shift 키가 눌려있으면 노트 선택 모드
-                    if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                    // Ctrl 키가 눌려있으면 드래그 박스 선택 모드
+                    if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+                    {
+                        StartSelectionBoxDrag(mousePos);
+                    }
+                    // Shift 키가 눌려있으면 노트 선택 모드 (단일 클릭)
+                    else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
                     {
                         TrySelectNoteAtPosition(mousePos);
                     }
@@ -802,15 +832,40 @@ namespace ChartSystem
             }
 
             // 마우스 드래그 중
-            if (Input.GetMouseButton(0) && isDraggingNewNote)
+            if (Input.GetMouseButton(0))
             {
-                UpdateNoteDrag(Input.mousePosition);
+                if (isDraggingSelectionBox)
+                {
+                    UpdateSelectionBoxDrag(Input.mousePosition);
+                }
+                else if (isDraggingNewNote)
+                {
+                    UpdateNoteDrag(Input.mousePosition);
+                    
+                    // 연속 배치 모드: 드래그하면서 일정 간격으로 노트 배치
+                    if (isContinuousPlacement && currentNoteMode == NoteInputMode.Normal)
+                    {
+                        double currentTime = GetTimeFromMousePosition(Input.mousePosition);
+                        if (currentTime - lastPlacementTime >= CONTINUOUS_PLACEMENT_INTERVAL)
+                        {
+                            PlaceNoteAtCurrentDrag();
+                            lastPlacementTime = currentTime;
+                        }
+                    }
+                }
             }
 
-            // 마우스 버튼을 뗌 (노트 배치 완료)
-            if (Input.GetMouseButtonUp(0) && isDraggingNewNote)
+            // 마우스 버튼을 뗌
+            if (Input.GetMouseButtonUp(0))
             {
-                FinishNoteDrag(Input.mousePosition);
+                if (isDraggingSelectionBox)
+                {
+                    FinishSelectionBoxDrag(Input.mousePosition);
+                }
+                else if (isDraggingNewNote)
+                {
+                    FinishNoteDrag(Input.mousePosition);
+                }
             }
         }
 
@@ -1211,6 +1266,186 @@ namespace ChartSystem
             ShowStatus($"{pastedCount}개 노트 붙여넣기 완료 ({currentTime:F2}초)");
             Debug.Log($"{pastedCount}개 노트를 {currentTime:F2}초 위치에 붙여넣기");
         }
+        
+        /// <summary>
+        /// 드래그 박스 선택을 시작합니다 (Ctrl + 드래그)
+        /// </summary>
+        void StartSelectionBoxDrag(Vector2 mousePos)
+        {
+            isDraggingSelectionBox = true;
+            selectionBoxStartPos = mousePos;
+            
+            // 선택 박스 시각화 오브젝트 생성
+            if (selectionBoxObject == null && timelineContainer != null)
+            {
+                selectionBoxObject = new GameObject("SelectionBox");
+                selectionBoxObject.transform.SetParent(timelineContainer, false);
+                
+                Image img = selectionBoxObject.AddComponent<Image>();
+                img.color = new Color(0.3f, 0.6f, 1f, 0.3f); // 반투명 파란색
+                
+                RectTransform rt = selectionBoxObject.GetComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.zero;
+                rt.pivot = Vector2.zero;
+            }
+            
+            ShowStatus("드래그 박스 선택 모드");
+        }
+        
+        /// <summary>
+        /// 드래그 박스를 업데이트합니다
+        /// </summary>
+        void UpdateSelectionBoxDrag(Vector2 currentMousePos)
+        {
+            if (selectionBoxObject == null || timelineContainer == null)
+                return;
+            
+            // 시작 위치와 현재 위치를 로컬 좌표로 변환
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                selectionBoxStartPos,
+                null,
+                out Vector2 localStartPos
+            );
+            
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                currentMousePos,
+                null,
+                out Vector2 localCurrentPos
+            );
+            
+            // 선택 박스 크기 및 위치 설정
+            RectTransform rt = selectionBoxObject.GetComponent<RectTransform>();
+            Vector2 min = new Vector2(
+                Mathf.Min(localStartPos.x, localCurrentPos.x),
+                Mathf.Min(localStartPos.y, localCurrentPos.y)
+            );
+            Vector2 max = new Vector2(
+                Mathf.Max(localStartPos.x, localCurrentPos.x),
+                Mathf.Max(localStartPos.y, localCurrentPos.y)
+            );
+            
+            rt.anchoredPosition = min;
+            rt.sizeDelta = max - min;
+        }
+        
+        /// <summary>
+        /// 드래그 박스 선택을 완료하고 범위 내 노트들을 선택합니다
+        /// </summary>
+        void FinishSelectionBoxDrag(Vector2 endMousePos)
+        {
+            isDraggingSelectionBox = false;
+            
+            if (timelineContainer == null)
+                return;
+            
+            // 시작 위치와 끝 위치를 로컬 좌표로 변환
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                selectionBoxStartPos,
+                null,
+                out Vector2 localStartPos
+            );
+            
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                endMousePos,
+                null,
+                out Vector2 localEndPos
+            );
+            
+            // 선택 영역 계산
+            double minTime = Mathf.Min(localStartPos.x, localEndPos.x) / pixelsPerSecond;
+            double maxTime = Mathf.Max(localStartPos.x, localEndPos.x) / pixelsPerSecond;
+            
+            int minTrack = CalculateTrackFromYPosition(Mathf.Min(localStartPos.y, localEndPos.y));
+            int maxTrack = CalculateTrackFromYPosition(Mathf.Max(localStartPos.y, localEndPos.y));
+            
+            // 기존 선택 초기화 (Shift 키를 누르고 있지 않은 경우)
+            if (!Input.GetKey(KeyCode.LeftShift) && !Input.GetKey(KeyCode.RightShift))
+            {
+                selectedNotes.Clear();
+            }
+            
+            // 범위 내 노트 선택
+            int selectCount = 0;
+            foreach (NoteData note in currentChart.notes)
+            {
+                if (note.timing >= minTime && note.timing <= maxTime &&
+                    note.track >= minTrack && note.track <= maxTrack)
+                {
+                    if (!selectedNotes.Contains(note))
+                    {
+                        selectedNotes.Add(note);
+                        selectCount++;
+                    }
+                }
+            }
+            
+            // 선택 박스 제거
+            if (selectionBoxObject != null)
+            {
+                Destroy(selectionBoxObject);
+                selectionBoxObject = null;
+            }
+            
+            // 선택된 노트 하이라이트
+            RefreshNoteSelection();
+            
+            ShowStatus($"드래그 박스 선택 완료: {selectCount}개 노트 추가 (총 {selectedNotes.Count}개 선택)");
+            Debug.Log($"드래그 박스로 {selectCount}개 노트 선택 (시간: {minTime:F2}~{maxTime:F2}초, 트랙: {minTrack}~{maxTrack})");
+        }
+        
+        /// <summary>
+        /// 마우스 위치로부터 시간을 계산합니다
+        /// </summary>
+        double GetTimeFromMousePosition(Vector2 mousePos)
+        {
+            if (timelineContainer == null)
+                return 0;
+            
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                timelineContainer,
+                mousePos,
+                null,
+                out Vector2 localPoint
+            );
+            
+            return localPoint.x / pixelsPerSecond;
+        }
+        
+        /// <summary>
+        /// 현재 드래그 위치에 노트를 배치합니다 (연속 배치 모드용)
+        /// </summary>
+        void PlaceNoteAtCurrentDrag()
+        {
+            if (dragCurrentTrack < 0 || dragCurrentTrack >= keyCount)
+                return;
+            
+            double currentTime = dragStartTime;
+            if (gridSnapEnabled)
+            {
+                currentTime = SnapToGrid(currentTime);
+            }
+            
+            // 중복 체크: 같은 시간, 같은 트랙에 노트가 이미 있는지 확인
+            bool isDuplicate = false;
+            foreach (NoteData existing in currentChart.notes)
+            {
+                if (System.Math.Abs(existing.timing - currentTime) < 0.01 && existing.track == dragCurrentTrack)
+                {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            
+            if (!isDuplicate)
+            {
+                AddNormalNote(currentTime, dragCurrentTrack);
+            }
+        }
         #endregion
 
         #region Grid System
@@ -1277,6 +1512,50 @@ namespace ChartSystem
             {
                 subdivisionSlider.value = currentSubdivision;
             }
+        }
+        
+        /// <summary>
+        /// 모든 노트를 선택합니다 (Ctrl+A)
+        /// </summary>
+        void SelectAllNotes()
+        {
+            selectedNotes.Clear();
+            selectedNotes.AddRange(currentChart.notes);
+            
+            RefreshNoteSelection();
+            ShowStatus($"전체 선택: {selectedNotes.Count}개 노트");
+            Debug.Log($"전체 {selectedNotes.Count}개 노트 선택");
+        }
+        
+        /// <summary>
+        /// 선택을 해제합니다 (ESC)
+        /// </summary>
+        void ClearSelection()
+        {
+            int count = selectedNotes.Count;
+            selectedNotes.Clear();
+            
+            RefreshNoteSelection();
+            
+            if (count > 0)
+            {
+                ShowStatus("선택 해제");
+                Debug.Log($"{count}개 노트 선택 해제");
+            }
+        }
+        
+        /// <summary>
+        /// 연속 배치 모드를 토글합니다 (Ctrl+D)
+        /// </summary>
+        void ToggleContinuousPlacement()
+        {
+            isContinuousPlacement = !isContinuousPlacement;
+            lastPlacementTime = 0;
+            
+            ShowStatus(isContinuousPlacement ? 
+                "연속 배치 모드 ON - 드래그하면서 노트 자동 배치" : 
+                "연속 배치 모드 OFF");
+            Debug.Log($"연속 배치 모드: {(isContinuousPlacement ? "ON" : "OFF")}");
         }
         #endregion
 
