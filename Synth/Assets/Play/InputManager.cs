@@ -70,6 +70,23 @@ public class InputManager : MonoBehaviour
             return;
         }
 
+        // SettingsManager에서 커스텀 키 바인딩 확인
+        KeyCode[] customKeys = GetCustomKeyBindings();
+        if (customKeys != null && customKeys.Length > 0)
+        {
+            // 5+1K 모드는 특수 처리
+            if (settings.lineCount == -5)
+            {
+                Setup5Plus1KeysWithCustom(customKeys);
+            }
+            else
+            {
+                SetupKeys(customKeys);
+            }
+            Debug.Log($"InputManager: 커스텀 키 바인딩 적용 ({settings.lineCount}K)");
+            return;
+        }
+
         // 라인 개수에 따른 기본 키 설정
         switch (settings.lineCount)
         {
@@ -169,7 +186,77 @@ public class InputManager : MonoBehaviour
 
         Debug.Log("InputManager: 5+1K 모드 설정 완료 (S, D, F/J, K, L)");
     }
-    
+
+    /// <summary>
+    /// 5+1K 모드 키 설정 (커스텀 키 바인딩 사용)
+    /// customKeys는 6개의 키를 포함해야 함: [0]=S, [1]=D, [2]=F, [3]=J, [4]=K, [5]=L
+    /// </summary>
+    void Setup5Plus1KeysWithCustom(KeyCode[] customKeys)
+    {
+        if (customKeys.Length != 6)
+        {
+            Debug.LogWarning($"InputManager: 5+1K 모드는 6개의 키가 필요하지만 {customKeys.Length}개가 제공됨. 기본값 사용.");
+            Setup5Plus1Keys();
+            return;
+        }
+
+        lineKeys.Clear();
+        keyBindings.Clear();
+        keyToLineMapping.Clear();
+        keyPressed.Clear();
+        keyPressTime.Clear();
+
+        // 라인 0: customKeys[0]
+        lineKeys.Add(customKeys[0]);
+        keyBindings[0] = customKeys[0];
+        keyToLineMapping[customKeys[0]] = 0;
+        keyPressed[0] = false;
+        keyPressTime[0] = 0f;
+
+        // 라인 1: customKeys[1]
+        lineKeys.Add(customKeys[1]);
+        keyBindings[1] = customKeys[1];
+        keyToLineMapping[customKeys[1]] = 1;
+        keyPressed[1] = false;
+        keyPressTime[1] = 0f;
+
+        // 라인 2: customKeys[2], customKeys[3] (두 키 모두 이 라인을 트리거)
+        lineKeys.Add(customKeys[2]);
+        lineKeys.Add(customKeys[3]);
+        keyBindings[2] = customKeys[2]; // 기본 키
+        keyToLineMapping[customKeys[2]] = 2;
+        keyToLineMapping[customKeys[3]] = 2; // 두 키 모두 라인 2로 매핑
+        keyPressed[2] = false;
+        keyPressTime[2] = 0f;
+
+        // 라인 3: customKeys[4]
+        lineKeys.Add(customKeys[4]);
+        keyBindings[3] = customKeys[4];
+        keyToLineMapping[customKeys[4]] = 3;
+        keyPressed[3] = false;
+        keyPressTime[3] = 0f;
+
+        // 라인 4: customKeys[5]
+        lineKeys.Add(customKeys[5]);
+        keyBindings[4] = customKeys[5];
+        keyToLineMapping[customKeys[5]] = 4;
+        keyPressed[4] = false;
+        keyPressTime[4] = 0f;
+
+        Debug.Log($"InputManager: 5+1K 커스텀 키 바인딩 설정 완료 ({string.Join(", ", customKeys)})");
+    }
+
+    /// <summary>
+    /// SettingsManager에서 커스텀 키 바인딩 가져오기
+    /// </summary>
+    KeyCode[] GetCustomKeyBindings()
+    {
+        if (SettingsManager.Instance == null)
+            return null;
+
+        return SettingsManager.Instance.GetKeyBindings(settings.lineCount);
+    }
+
     void Update()
     {
         ProcessInput();
