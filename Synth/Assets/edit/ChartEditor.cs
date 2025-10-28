@@ -226,6 +226,10 @@ namespace ChartSystem
                 case 5:
                     trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K };
                     break;
+                case -5: // 5B 모드 (5 Button - DJMAX 스타일)
+                    trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L };
+                    Setup5BMode();
+                    break;
                 case 6:
                     trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L };
                     break;
@@ -236,7 +240,7 @@ namespace ChartSystem
                     trackKeys = new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon };
                     break;
                 case 10:
-                    trackKeys = new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, 
+                    trackKeys = new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G,
                                                  KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon };
                     break;
                 default:
@@ -245,8 +249,33 @@ namespace ChartSystem
                     trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K };
                     break;
             }
-            
+
             Debug.Log($"ChartEditor: {keyCount}K 게임플레이 키 바인딩 설정 완료 - {string.Join(", ", trackKeys)}");
+        }
+
+        /// <summary>
+        /// 5B 모드 특수 설정 (키-트랙 매핑)
+        /// </summary>
+        private Dictionary<KeyCode, int> keyToTrackMapping = new Dictionary<KeyCode, int>();
+
+        void Setup5BMode()
+        {
+            keyToTrackMapping.Clear();
+
+            // 5B 모드: 5개 트랙, 6개 키
+            // 트랙 0: S
+            // 트랙 1: D
+            // 트랙 2: F, J (두 키 모두 트랙 2)
+            // 트랙 3: K
+            // 트랙 4: L
+            keyToTrackMapping[KeyCode.S] = 0;
+            keyToTrackMapping[KeyCode.D] = 1;
+            keyToTrackMapping[KeyCode.F] = 2;
+            keyToTrackMapping[KeyCode.J] = 2; // F와 J 모두 트랙 2
+            keyToTrackMapping[KeyCode.K] = 3;
+            keyToTrackMapping[KeyCode.L] = 4;
+
+            Debug.Log("ChartEditor: 5B 모드 설정 완료 (트랙 0:S, 1:D, 2:F/J, 3:K, 4:L)");
         }
 
         GameObject CreateDefaultNotePrefab()
@@ -480,26 +509,58 @@ namespace ChartSystem
         /// </summary>
         void HandleRealtimeNoteInput()
         {
-            for (int i = 0; i < trackKeys.Length && i < keyCount; i++)
+            // 5B 모드인 경우 keyToTrackMapping 사용
+            if (keyCount == -5 && keyToTrackMapping.Count > 0)
             {
-                KeyCode key = trackKeys[i];
-                
-                // 키 눌림 (노트 시작)
-                if (Input.GetKeyDown(key))
+                foreach (var kvp in keyToTrackMapping)
                 {
-                    OnTrackKeyPressed(i);
+                    KeyCode key = kvp.Key;
+                    int track = kvp.Value;
+
+                    // 키 눌림 (노트 시작)
+                    if (Input.GetKeyDown(key))
+                    {
+                        OnTrackKeyPressed(track);
+                    }
+
+                    // 키 뗌 (롱노트 끝)
+                    if (Input.GetKeyUp(key))
+                    {
+                        OnTrackKeyReleased(track);
+                    }
+
+                    // 키 홀드 중 (롱노트 유지)
+                    if (Input.GetKey(key))
+                    {
+                        OnTrackKeyHold(track);
+                    }
                 }
-                
-                // 키 뗌 (롱노트 끝)
-                if (Input.GetKeyUp(key))
+            }
+            else
+            {
+                // 일반 모드
+                int trackCount = System.Math.Abs(keyCount);
+                for (int i = 0; i < trackKeys.Length && i < trackCount; i++)
                 {
-                    OnTrackKeyReleased(i);
-                }
-                
-                // 키 홀드 중 (롱노트 유지)
-                if (Input.GetKey(key))
-                {
-                    OnTrackKeyHold(i);
+                    KeyCode key = trackKeys[i];
+
+                    // 키 눌림 (노트 시작)
+                    if (Input.GetKeyDown(key))
+                    {
+                        OnTrackKeyPressed(i);
+                    }
+
+                    // 키 뗌 (롱노트 끝)
+                    if (Input.GetKeyUp(key))
+                    {
+                        OnTrackKeyReleased(i);
+                    }
+
+                    // 키 홀드 중 (롱노트 유지)
+                    if (Input.GetKey(key))
+                    {
+                        OnTrackKeyHold(i);
+                    }
                 }
             }
         }
@@ -509,11 +570,30 @@ namespace ChartSystem
         /// </summary>
         void HandleManualNoteInput()
         {
-            for (int i = 0; i < trackKeys.Length && i < keyCount; i++)
+            // 5B 모드인 경우 keyToTrackMapping 사용
+            if (keyCount == -5 && keyToTrackMapping.Count > 0)
             {
-                if (Input.GetKeyDown(trackKeys[i]))
+                foreach (var kvp in keyToTrackMapping)
                 {
-                    HandleNoteInputForTrack(i);
+                    KeyCode key = kvp.Key;
+                    int track = kvp.Value;
+
+                    if (Input.GetKeyDown(key))
+                    {
+                        HandleNoteInputForTrack(track);
+                    }
+                }
+            }
+            else
+            {
+                // 일반 모드
+                int trackCount = System.Math.Abs(keyCount);
+                for (int i = 0; i < trackKeys.Length && i < trackCount; i++)
+                {
+                    if (Input.GetKeyDown(trackKeys[i]))
+                    {
+                        HandleNoteInputForTrack(i);
+                    }
                 }
             }
         }

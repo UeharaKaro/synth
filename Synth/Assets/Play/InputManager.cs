@@ -11,8 +11,9 @@ public class InputManager : MonoBehaviour
     
     [Header("Key Bindings")]
     public List<KeyCode> lineKeys = new List<KeyCode>();
-    
+
     private Dictionary<int, KeyCode> keyBindings = new Dictionary<int, KeyCode>();
+    private Dictionary<KeyCode, int> keyToLineMapping = new Dictionary<KeyCode, int>(); // 역방향 매핑: 키 -> 라인
     private Dictionary<int, bool> keyPressed = new Dictionary<int, bool>();
     private Dictionary<int, float> keyPressTime = new Dictionary<int, float>();
     
@@ -68,7 +69,7 @@ public class InputManager : MonoBehaviour
             Debug.LogWarning("InputManager: settings가 null입니다. 키 바인딩을 설정할 수 없습니다.");
             return;
         }
-        
+
         // 라인 개수에 따른 기본 키 설정
         switch (settings.lineCount)
         {
@@ -77,6 +78,9 @@ public class InputManager : MonoBehaviour
                 break;
             case 5:
                 SetupKeys(new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K });
+                break;
+            case -5: // 5B 모드 (5 Button - DJMAX 스타일)
+                Setup5BKeys();
                 break;
             case 6:
                 SetupKeys(new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L });
@@ -88,7 +92,7 @@ public class InputManager : MonoBehaviour
                 SetupKeys(new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon });
                 break;
             case 10:
-                SetupKeys(new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, 
+                SetupKeys(new KeyCode[] { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G,
                                          KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon });
                 break;
         }
@@ -98,16 +102,72 @@ public class InputManager : MonoBehaviour
     {
         lineKeys.Clear();
         keyBindings.Clear();
+        keyToLineMapping.Clear();
         keyPressed.Clear();
         keyPressTime.Clear();
-        
-        for (int i = 0; i < keys.Length && i < settings.lineCount; i++)
+
+        int lineCount = System.Math.Abs(settings.lineCount); // 음수 처리 (5B 모드 등)
+
+        for (int i = 0; i < keys.Length && i < lineCount; i++)
         {
             lineKeys.Add(keys[i]);
             keyBindings[i] = keys[i];
+            keyToLineMapping[keys[i]] = i;
             keyPressed[i] = false;
             keyPressTime[i] = 0f;
         }
+    }
+
+    /// <summary>
+    /// 5B 모드 키 설정 (DJMAX 스타일)
+    /// 5개 트랙, 6개 키: S, D, F/J, K, L
+    /// </summary>
+    void Setup5BKeys()
+    {
+        lineKeys.Clear();
+        keyBindings.Clear();
+        keyToLineMapping.Clear();
+        keyPressed.Clear();
+        keyPressTime.Clear();
+
+        // 라인 0: S
+        lineKeys.Add(KeyCode.S);
+        keyBindings[0] = KeyCode.S;
+        keyToLineMapping[KeyCode.S] = 0;
+        keyPressed[0] = false;
+        keyPressTime[0] = 0f;
+
+        // 라인 1: D
+        lineKeys.Add(KeyCode.D);
+        keyBindings[1] = KeyCode.D;
+        keyToLineMapping[KeyCode.D] = 1;
+        keyPressed[1] = false;
+        keyPressTime[1] = 0f;
+
+        // 라인 2: F, J (두 키 모두 이 라인을 트리거)
+        lineKeys.Add(KeyCode.F);
+        lineKeys.Add(KeyCode.J);
+        keyBindings[2] = KeyCode.F; // 기본 키
+        keyToLineMapping[KeyCode.F] = 2;
+        keyToLineMapping[KeyCode.J] = 2; // F와 J 모두 라인 2로 매핑
+        keyPressed[2] = false;
+        keyPressTime[2] = 0f;
+
+        // 라인 3: K
+        lineKeys.Add(KeyCode.K);
+        keyBindings[3] = KeyCode.K;
+        keyToLineMapping[KeyCode.K] = 3;
+        keyPressed[3] = false;
+        keyPressTime[3] = 0f;
+
+        // 라인 4: L
+        lineKeys.Add(KeyCode.L);
+        keyBindings[4] = KeyCode.L;
+        keyToLineMapping[KeyCode.L] = 4;
+        keyPressed[4] = false;
+        keyPressTime[4] = 0f;
+
+        Debug.Log("InputManager: 5B 모드 설정 완료 (S, D, F/J, K, L)");
     }
     
     void Update()
@@ -121,33 +181,32 @@ public class InputManager : MonoBehaviour
         {
             return;
         }
-        
-        for (int i = 0; i < settings.lineCount; i++)
+
+        // keyToLineMapping을 사용하여 모든 키를 체크
+        foreach (var kvp in keyToLineMapping)
         {
-            if (!keyBindings.ContainsKey(i))
-                continue;
-            
-            KeyCode key = keyBindings[i];
-            
+            KeyCode key = kvp.Key;
+            int lineIndex = kvp.Value;
+
             // 키 눌림 체크
             if (Input.GetKeyDown(key))
             {
-                OnKeyPressed(i);
+                OnKeyPressed(lineIndex);
             }
-            
+
             // 키 뗌 체크
             if (Input.GetKeyUp(key))
             {
-                OnKeyReleased(i);
+                OnKeyReleased(lineIndex);
             }
-            
+
             // 키 홀드 체크 (롱노트용)
             if (Input.GetKey(key))
             {
-                OnKeyHold(i);
+                OnKeyHold(lineIndex);
             }
         }
-        
+
         // 추가 입력 처리 (ESC, 일시정지 등)
         ProcessSystemInput();
     }
