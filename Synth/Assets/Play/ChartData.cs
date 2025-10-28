@@ -4,22 +4,55 @@ using System.Collections.Generic;
 /// <summary>
 /// 게임플레이용 차트 데이터 클래스
 /// JSON 직렬화/역직렬화 지원
+/// ChartDataNew와 호환 가능
 /// </summary>
 [System.Serializable]
 public class ChartData
 {
-    [Header("곡 메타데이터")]
+    [Header("기본 음악 정보")]
     public string songName = "";
     public string artistName = "";
     public string audioFileName = "";
-    public string coverImageFileName = ""; // 커버 이미지 파일명 (예: "sample_audio.png")
+    public string coverImageFileName = "";
     public float bpm = 120f;
     public float offset = 0f; // 오디오 오프셋 (초)
+
+    [Header("음악 상세 정보 (선택)")]
+    public float duration = 0f; // 곡 길이 (초)
+    public float previewStart = 0f; // 미리듣기 시작 시간 (초)
+    public float previewDuration = 15f; // 미리듣기 길이 (초)
+    public string composer = ""; // 작곡가
+    public string arranger = ""; // 편곡자
 
     [Header("난이도 정보")]
     public string difficulty = "Normal"; // Easy, Normal, Hard, Expert, Master, Special
     public int keyCount = 4; // 4K, 5K, 6K, 7K, 8K, 10K
-    public int level = 1; // 난이도 레벨 (1-20)
+    public float level = 1.0f; // 난이도 레벨 (1-20, 소수점 1자리)
+
+    [Header("차트 제작 정보 (선택)")]
+    public string chartAuthor = ""; // 차트 제작자
+    public string createdDate = ""; // 제작일
+    public string modifiedDate = ""; // 수정일
+    public string version = "1.0"; // 차트 버전
+    public string description = ""; // 차트 설명
+
+    [Header("차트 통계 (자동 계산)")]
+    public int noteCount = 0; // 총 노트 수
+    public int longNoteCount = 0; // 롱노트 수
+    public int maxCombo = 0; // 최대 콤보
+    public float density = 0f; // 노트 밀도 (notes per second)
+
+    [Header("비주얼 설정 (선택)")]
+    public string backgroundImage = ""; // 배경 이미지 파일명
+    public string backgroundVideo = ""; // 배경 비디오 파일명
+    public string storyboardFile = ""; // 스토리보드 파일명
+    public string skinOverride = ""; // 전용 스킨 경로
+
+    [Header("메타/분류 (선택)")]
+    public string tags = ""; // 태그 (쉼표로 구분)
+    public string source = ""; // 출처
+    public string copyright = ""; // 저작권 정보
+    public string beatmapId = ""; // 온라인 차트 ID
 
     [Header("차트 데이터")]
     public List<NoteData> notes = new List<NoteData>();
@@ -66,14 +99,77 @@ public class ChartData
     public void Clear()
     {
         notes.Clear();
+
+        // 기본 음악 정보
         songName = "";
         artistName = "";
         audioFileName = "";
+        coverImageFileName = "";
         bpm = 120f;
         offset = 0f;
+
+        // 음악 상세 정보
+        duration = 0f;
+        previewStart = 0f;
+        previewDuration = 15f;
+        composer = "";
+        arranger = "";
+
+        // 난이도 정보
         difficulty = "Normal";
         keyCount = 4;
-        level = 1;
+        level = 1.0f;
+
+        // 차트 제작 정보
+        chartAuthor = "";
+        createdDate = "";
+        modifiedDate = "";
+        version = "1.0";
+        description = "";
+
+        // 차트 통계
+        noteCount = 0;
+        longNoteCount = 0;
+        maxCombo = 0;
+        density = 0f;
+
+        // 비주얼 설정
+        backgroundImage = "";
+        backgroundVideo = "";
+        storyboardFile = "";
+        skinOverride = "";
+
+        // 메타/분류
+        tags = "";
+        source = "";
+        copyright = "";
+        beatmapId = "";
+    }
+
+    /// <summary>
+    /// 차트 통계를 자동으로 계산하여 업데이트합니다
+    /// </summary>
+    public void UpdateStatistics()
+    {
+        noteCount = notes.Count;
+
+        // 롱노트 개수 계산
+        longNoteCount = 0;
+        foreach (var note in notes)
+        {
+            if (note.isLongNote)
+                longNoteCount++;
+        }
+
+        // 최대 콤보 = 총 노트 수
+        maxCombo = noteCount;
+
+        // 노트 밀도 계산 (notes per second)
+        double chartDuration = GetChartDuration();
+        if (chartDuration > 0)
+            density = (float)(noteCount / chartDuration);
+        else
+            density = 0f;
     }
 
     /// <summary>

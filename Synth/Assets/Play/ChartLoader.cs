@@ -55,6 +55,7 @@ public class ChartLoader : MonoBehaviour
 
     /// <summary>
     /// 차트 파일 로드 (StreamingAssets 또는 외부 경로에서)
+    /// JSON 또는 .synth 형식 자동 감지
     /// </summary>
     /// <param name="filePath">차트 파일 전체 경로</param>
     public ChartData LoadChartFromFile(string filePath)
@@ -67,14 +68,132 @@ public class ChartLoader : MonoBehaviour
 
         try
         {
-            string jsonContent = File.ReadAllText(filePath);
-            return ParseChartJson(jsonContent);
+            string extension = Path.GetExtension(filePath).ToLower();
+
+            // .synth 파일인 경우
+            if (extension == ".synth")
+            {
+                return LoadChartFromSynthFile(filePath);
+            }
+            // JSON 파일인 경우
+            else if (extension == ".json")
+            {
+                string jsonContent = File.ReadAllText(filePath);
+                return ParseChartJson(jsonContent);
+            }
+            // 확장자가 없거나 다른 경우, JSON으로 시도
+            else
+            {
+                Debug.LogWarning($"ChartLoader: 알 수 없는 파일 형식 ({extension}), JSON으로 시도합니다");
+                string jsonContent = File.ReadAllText(filePath);
+                return ParseChartJson(jsonContent);
+            }
         }
         catch (System.Exception e)
         {
             Debug.LogError($"ChartLoader: 차트 파일 읽기 실패 - {e.Message}");
             return null;
         }
+    }
+
+    /// <summary>
+    /// .synth 파일을 로드하여 ChartData로 변환합니다
+    /// </summary>
+    private ChartData LoadChartFromSynthFile(string filePath)
+    {
+        try
+        {
+            // CustomChartParser를 사용하여 .synth 파일 파싱
+            ChartSystem.ChartDataNew chartDataNew = CustomChartParser.ParseFromFile(filePath);
+
+            if (chartDataNew == null)
+            {
+                Debug.LogError("ChartLoader: .synth 파일 파싱 실패");
+                return null;
+            }
+
+            // ChartDataNew를 ChartData로 변환
+            ChartData chart = ConvertFromChartDataNew(chartDataNew);
+
+            if (chart == null || !chart.IsValid())
+            {
+                Debug.LogError("ChartLoader: 유효하지 않은 차트 데이터");
+                return null;
+            }
+
+            chart.SortNotesByTime();
+
+            Debug.Log($"ChartLoader: .synth 차트 로드 성공 - {chart.songName} ({chart.notes.Count}개 노트)");
+
+            currentChart = chart;
+            OnChartLoaded?.Invoke(chart);
+
+            return chart;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"ChartLoader: .synth 파일 로드 실패 - {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// ChartDataNew를 ChartData로 변환합니다
+    /// </summary>
+    private ChartData ConvertFromChartDataNew(ChartSystem.ChartDataNew source)
+    {
+        ChartData chart = new ChartData
+        {
+            // 기본 음악 정보
+            songName = source.songName,
+            artistName = source.artistName,
+            audioFileName = source.audioFileName,
+            coverImageFileName = source.coverImageFileName,
+            bpm = source.bpm,
+            offset = source.offset,
+
+            // 음악 상세 정보
+            duration = source.duration,
+            previewStart = source.previewStart,
+            previewDuration = source.previewDuration,
+            composer = source.composer,
+            arranger = source.arranger,
+
+            // 난이도 정보
+            difficulty = source.difficulty,
+            keyCount = source.keyCount,
+            level = source.level,
+
+            // 차트 제작 정보
+            chartAuthor = source.chartAuthor,
+            createdDate = source.createdDate,
+            modifiedDate = source.modifiedDate,
+            version = source.version,
+            description = source.description,
+
+            // 차트 통계
+            noteCount = source.noteCount,
+            longNoteCount = source.longNoteCount,
+            maxCombo = source.maxCombo,
+            density = source.density,
+
+            // 비주얼 설정
+            backgroundImage = source.backgroundImage,
+            backgroundVideo = source.backgroundVideo,
+            storyboardFile = source.storyboardFile,
+            skinOverride = source.skinOverride,
+
+            // 메타/분류
+            tags = source.tags,
+            source = source.source,
+            copyright = source.copyright,
+            beatmapId = source.beatmapId,
+
+            // 노트 데이터
+            notes = new List<NoteData>(source.notes)
+        };
+
+        return chart;
     }
 
     /// <summary>
@@ -153,7 +272,10 @@ public class ChartLoader : MonoBehaviour
     /// <summary>
     /// 차트 저장 (에디터용 또는 런타임 생성 차트)
     /// </summary>
-    public void SaveChart(ChartData chart, string fileName)
+    /// <param name="chart">저장할 차트 데이터</param>
+    /// <param name="fileName">파일 이름 (확장자 제외)</param>
+    /// <param name="useSynthFormat">true면 .synth 형식, false면 .json 형식 (기본값: false)</param>
+    public void SaveChart(ChartData chart, string fileName, bool useSynthFormat = false)
     {
         if (chart == null)
         {
@@ -163,12 +285,12 @@ public class ChartLoader : MonoBehaviour
 
         try
         {
-            string json = chart.ToJson();
+            string extension = useSynthFormat ? ".synth" : ".json";
             string savePath;
 
             if (useStreamingAssets)
             {
-                savePath = Path.Combine(Application.streamingAssetsPath, chartsFolderPath, $"{fileName}.json");
+                savePath = Path.Combine(Application.streamingAssetsPath, chartsFolderPath, $"{fileName}{extension}");
             }
             else
             {
@@ -178,16 +300,84 @@ public class ChartLoader : MonoBehaviour
                 {
                     Directory.CreateDirectory(chartDir);
                 }
-                savePath = Path.Combine(chartDir, $"{fileName}.json");
+                savePath = Path.Combine(chartDir, $"{fileName}{extension}");
             }
 
-            File.WriteAllText(savePath, json);
+            if (useSynthFormat)
+            {
+                // ChartData를 ChartDataNew로 변환 후 .synth 형식으로 저장
+                ChartSystem.ChartDataNew chartDataNew = ConvertToChartDataNew(chart);
+                CustomChartWriter.SaveToFile(chartDataNew, savePath);
+            }
+            else
+            {
+                // JSON 형식으로 저장
+                string json = chart.ToJson();
+                File.WriteAllText(savePath, json);
+            }
+
             Debug.Log($"ChartLoader: 차트 저장 성공 - {savePath}");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"ChartLoader: 차트 저장 실패 - {e.Message}");
         }
+    }
+
+    /// <summary>
+    /// ChartData를 ChartDataNew로 변환합니다
+    /// </summary>
+    private ChartSystem.ChartDataNew ConvertToChartDataNew(ChartData source)
+    {
+        ChartSystem.ChartDataNew chart = new ChartSystem.ChartDataNew
+        {
+            // 기본 음악 정보
+            songName = source.songName,
+            artistName = source.artistName,
+            audioFileName = source.audioFileName,
+            coverImageFileName = source.coverImageFileName,
+            bpm = source.bpm,
+            offset = source.offset,
+
+            // 음악 상세 정보
+            duration = source.duration,
+            previewStart = source.previewStart,
+            previewDuration = source.previewDuration,
+            composer = source.composer,
+            arranger = source.arranger,
+
+            // 난이도 정보
+            difficulty = source.difficulty,
+            keyCount = source.keyCount,
+            level = source.level,
+
+            // 차트 제작 정보
+            chartAuthor = source.chartAuthor,
+            createdDate = source.createdDate,
+            modifiedDate = source.modifiedDate,
+            version = source.version,
+            description = source.description,
+
+            // 비주얼 설정
+            backgroundImage = source.backgroundImage,
+            backgroundVideo = source.backgroundVideo,
+            storyboardFile = source.storyboardFile,
+            skinOverride = source.skinOverride,
+
+            // 메타/분류
+            tags = source.tags,
+            source = source.source,
+            copyright = source.copyright,
+            beatmapId = source.beatmapId,
+
+            // 노트 데이터
+            notes = new List<NoteData>(source.notes)
+        };
+
+        // 통계 자동 계산
+        chart.UpdateStatistics();
+
+        return chart;
     }
 
     /// <summary>

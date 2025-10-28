@@ -1709,15 +1709,42 @@ namespace ChartSystem
             currentChart.songName = songName;
             currentChart.artistName = artistName;
             currentChart.bpm = bpm;
+            currentChart.offset = offset;
+            currentChart.keyCount = keyCount;
+
+            // 수정일 자동 설정
+            currentChart.modifiedDate = System.DateTime.Now.ToString("yyyy-MM-dd");
+
+            // 제작일이 없으면 자동 설정
+            if (string.IsNullOrEmpty(currentChart.createdDate))
+            {
+                currentChart.createdDate = currentChart.modifiedDate;
+            }
+
+            // 통계 자동 계산
+            currentChart.UpdateStatistics();
 
             try
             {
-                string json = JsonUtility.ToJson(currentChart, true);
-                string path = Path.Combine(Application.persistentDataPath, "chart.json");
-                File.WriteAllText(path, json);
+                // .synth 형식으로 저장
+                string path = Path.Combine(Application.persistentDataPath, $"{songName}_chart.synth");
+                bool success = CustomChartWriter.SaveToFile(currentChart, path);
 
-                ShowStatus($"차트 저장 완료: {currentChart.GetNoteCount()}개 노트");
-                Debug.Log($"차트 저장: {path} ({currentChart.GetNoteCount()}개 노트)");
+                if (success)
+                {
+                    ShowStatus($"차트 저장 완료: {currentChart.GetNoteCount()}개 노트 (.synth)");
+                    Debug.Log($"차트 저장: {path} ({currentChart.GetNoteCount()}개 노트)");
+                }
+                else
+                {
+                    ShowStatus("차트 저장 실패");
+                }
+
+                // JSON 백업도 함께 저장
+                string jsonPath = Path.Combine(Application.persistentDataPath, $"{songName}_chart.json");
+                string json = JsonUtility.ToJson(currentChart, true);
+                File.WriteAllText(jsonPath, json);
+                Debug.Log($"JSON 백업 저장: {jsonPath}");
             }
             catch (System.Exception e)
             {
@@ -1730,32 +1757,54 @@ namespace ChartSystem
         {
             try
             {
-                string path = Path.Combine(Application.persistentDataPath, "chart.json");
+                // .synth 파일 우선 시도
+                string synthPath = Path.Combine(Application.persistentDataPath, $"{songName}_chart.synth");
+                string jsonPath = Path.Combine(Application.persistentDataPath, $"{songName}_chart.json");
 
-                if (!File.Exists(path))
+                if (File.Exists(synthPath))
+                {
+                    // .synth 파일 로드
+                    currentChart = CustomChartParser.ParseFromFile(synthPath);
+
+                    if (currentChart == null)
+                    {
+                        ShowStatus("차트 파일 파싱 실패");
+                        return;
+                    }
+
+                    ShowStatus($"차트 로드 완료: {currentChart.GetNoteCount()}개 노트 (.synth)");
+                    Debug.Log($"차트 로드: {currentChart.GetNoteCount()}개 노트 (.synth)");
+                }
+                else if (File.Exists(jsonPath))
+                {
+                    // JSON 파일 로드
+                    string json = File.ReadAllText(jsonPath);
+                    currentChart = JsonUtility.FromJson<ChartDataNew>(json);
+
+                    ShowStatus($"차트 로드 완료: {currentChart.GetNoteCount()}개 노트 (.json)");
+                    Debug.Log($"차트 로드: {currentChart.GetNoteCount()}개 노트 (.json)");
+                }
+                else
                 {
                     ShowStatus("차트 파일을 찾을 수 없습니다");
                     return;
                 }
 
-                string json = File.ReadAllText(path);
-                currentChart = JsonUtility.FromJson<ChartDataNew>(json);
-
                 // 에디터 설정 업데이트
                 songName = currentChart.songName;
                 artistName = currentChart.artistName;
                 bpm = currentChart.bpm;
+                offset = currentChart.offset;
+                keyCount = currentChart.keyCount;
 
                 // UI 업데이트
                 if (songNameInput != null) songNameInput.text = songName;
                 if (artistNameInput != null) artistNameInput.text = artistName;
                 if (bpmInput != null) bpmInput.text = bpm.ToString();
+                if (offsetInput != null) offsetInput.text = (offset * 1000f).ToString(); // 초를 ms로 변환
 
                 // 타임라인 새로고침
                 RequestTimelineRefresh();
-
-                ShowStatus($"차트 로드 완료: {currentChart.GetNoteCount()}개 노트");
-                Debug.Log($"차트 로드: {currentChart.GetNoteCount()}개 노트");
             }
             catch (System.Exception e)
             {
