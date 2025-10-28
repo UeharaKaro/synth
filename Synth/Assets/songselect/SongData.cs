@@ -101,10 +101,10 @@ public class DifficultyInfo
     [Tooltip("난이도 이름 (Easy, Normal, Hard, Expert, Master, Special 등)")]
     public string difficultyName = "Normal";
 
-    [Tooltip("난이도 레벨 (1~10 등)")]
-    public int level = 1;
+    [Tooltip("난이도 레벨 (1.0~ 20.0 등)")]
+    public float level = 1.0f;
 
-    [Tooltip("키 개수 (4, 5, 6, 7, 8, 10)")]
+    [Tooltip("키 개수 (4, 5, 5+1,  6, 7, 8, 10)")]
     public int keyCount = 4;
 
     [Tooltip("총 노트 수")]

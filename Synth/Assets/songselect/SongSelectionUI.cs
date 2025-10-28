@@ -432,7 +432,7 @@ public class SongSelectionUI : MonoBehaviour
             if (currentDifficulty != null)
             {
                 if (difficultyLevelText != null)
-                    difficultyLevelText.text = $"Lv.{currentDifficulty.level}";
+                    difficultyLevelText.text = $"Lv.{currentDifficulty.level:F1}";
 
                 if (totalNotesText != null)
                     totalNotesText.text = $"Notes: {currentDifficulty.totalNotes}";

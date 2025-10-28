@@ -93,8 +93,8 @@ public class SongListItem : MonoBehaviour
         // 난이도 범위 계산
         if (levelRangeText != null && songData.difficulties != null && songData.difficulties.Count > 0)
         {
-            int minLevel = int.MaxValue;
-            int maxLevel = int.MinValue;
+            float minLevel = float.MaxValue;
+            float maxLevel = float.MinValue;
 
             foreach (var diff in songData.difficulties)
             {
@@ -102,13 +102,13 @@ public class SongListItem : MonoBehaviour
                 if (diff.level > maxLevel) maxLevel = diff.level;
             }
 
-            if (minLevel == maxLevel)
+            if (Mathf.Approximately(minLevel, maxLevel))
             {
-                levelRangeText.text = $"Lv. {minLevel}";
+                levelRangeText.text = $"Lv. {minLevel:F1}";
             }
             else
             {
-                levelRangeText.text = $"Lv. {minLevel}~{maxLevel}";
+                levelRangeText.text = $"Lv. {minLevel:F1}~{maxLevel:F1}";
             }
         }
 

@@ -550,8 +550,8 @@ public class SongSelectionUIAdvanced : MonoBehaviour
         }
 
         // 레벨 범위 필터
-        int minLevel = song.difficulties.Min(d => d.level);
-        int maxLevel = song.difficulties.Max(d => d.level);
+        float minLevel = song.difficulties.Min(d => d.level);
+        float maxLevel = song.difficulties.Max(d => d.level);
 
         if (maxLevel < minLevelFilter || minLevel > maxLevelFilter)
         {
@@ -957,7 +957,7 @@ public class SongSelectionUIAdvanced : MonoBehaviour
             difficultyText.text = currentDifficulty.difficultyName;
 
         if (difficultyLevelText != null)
-            difficultyLevelText.text = $"Lv. {currentDifficulty.level}";
+            difficultyLevelText.text = $"Lv. {currentDifficulty.level:F1}";
 
         if (totalNotesText != null)
             totalNotesText.text = $"{currentDifficulty.totalNotes} Notes";
