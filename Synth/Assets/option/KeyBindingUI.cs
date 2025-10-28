@@ -31,10 +31,7 @@ public class KeyBindingUI : MonoBehaviour
     private static readonly HashSet<KeyCode> ForbiddenKeys = new HashSet<KeyCode>
     {
         KeyCode.Escape, // ESC는 키 할당 모드 종료용
-        KeyCode.Return, // Enter
         KeyCode.Tab,
-        KeyCode.LeftShift,
-        KeyCode.RightShift,
         KeyCode.LeftControl,
         KeyCode.RightControl,
         KeyCode.LeftAlt,

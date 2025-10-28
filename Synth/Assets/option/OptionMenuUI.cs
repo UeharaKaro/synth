@@ -26,10 +26,14 @@ public class OptionMenuUI : MonoBehaviour
     [Tooltip("게임플레이 설정 패널")]
     public GameObject gameplayPanel;
 
+    [Tooltip("키 바인딩 설정 패널")]
+    public GameObject keyBindingPanel;
+
     [Tooltip("탭 버튼들")]
     public Button audioTabButton;
     public Button visualTabButton;
     public Button gameplayTabButton;
+    public Button keyBindingTabButton;
 
     [Header("오디오 설정")]
     [Tooltip("음악 볼륨 슬라이더 (0.0 ~ 1.0)")]
@@ -99,7 +103,7 @@ public class OptionMenuUI : MonoBehaviour
 
     private SettingsManager settingsManager;
     private AudioManager audioManager;
-    private int currentTabIndex = 0; // 0: Audio, 1: Visual, 2: Gameplay
+    private int currentTabIndex = 0; // 0: Audio, 1: Visual, 2: Gameplay, 3: KeyBinding
 
     void Start()
     {
@@ -145,6 +149,9 @@ public class OptionMenuUI : MonoBehaviour
 
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.AddListener(() => ShowTab(2));
+
+        if (keyBindingTabButton != null)
+            keyBindingTabButton.onClick.AddListener(() => ShowTab(3));
     }
 
     /// <summary>
@@ -163,6 +170,9 @@ public class OptionMenuUI : MonoBehaviour
 
         if (gameplayPanel != null)
             gameplayPanel.SetActive(tabIndex == 2);
+
+        if (keyBindingPanel != null)
+            keyBindingPanel.SetActive(tabIndex == 3);
 
         // 탭 버튼 색상 변경 (선택된 탭 강조)
         UpdateTabButtonColors();
@@ -195,6 +205,13 @@ public class OptionMenuUI : MonoBehaviour
             var colors = gameplayTabButton.colors;
             colors.normalColor = currentTabIndex == 2 ? selectedColor : normalColor;
             gameplayTabButton.colors = colors;
+        }
+
+        if (keyBindingTabButton != null)
+        {
+            var colors = keyBindingTabButton.colors;
+            colors.normalColor = currentTabIndex == 3 ? selectedColor : normalColor;
+            keyBindingTabButton.colors = colors;
         }
     }
 
@@ -626,5 +643,8 @@ public class OptionMenuUI : MonoBehaviour
 
         if (gameplayTabButton != null)
             gameplayTabButton.onClick.RemoveAllListeners();
+
+        if (keyBindingTabButton != null)
+            keyBindingTabButton.onClick.RemoveAllListeners();
     }
 }
