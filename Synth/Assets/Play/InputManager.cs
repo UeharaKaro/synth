@@ -76,11 +76,11 @@ public class InputManager : MonoBehaviour
             case 4:
                 SetupKeys(new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K });
                 break;
-            case 5:
+            case 5: // 5K Standard
                 SetupKeys(new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K });
                 break;
-            case -5: // 5B 모드 (5 Button - DJMAX 스타일)
-                Setup5BKeys();
+            case -5: // 5+1K 모드 (DJMAX 스타일)
+                Setup5Plus1Keys();
                 break;
             case 6:
                 SetupKeys(new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L });
@@ -119,10 +119,10 @@ public class InputManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 5B 모드 키 설정 (DJMAX 스타일)
+    /// 5+1K 모드 키 설정 (DJMAX 스타일)
     /// 5개 트랙, 6개 키: S, D, F/J, K, L
     /// </summary>
-    void Setup5BKeys()
+    void Setup5Plus1Keys()
     {
         lineKeys.Clear();
         keyBindings.Clear();
@@ -167,7 +167,7 @@ public class InputManager : MonoBehaviour
         keyPressed[4] = false;
         keyPressTime[4] = 0f;
 
-        Debug.Log("InputManager: 5B 모드 설정 완료 (S, D, F/J, K, L)");
+        Debug.Log("InputManager: 5+1K 모드 설정 완료 (S, D, F/J, K, L)");
     }
     
     void Update()

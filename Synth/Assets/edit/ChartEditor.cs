@@ -223,12 +223,12 @@ namespace ChartSystem
                 case 4:
                     trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K };
                     break;
-                case 5:
+                case 5: // 5K Standard
                     trackKeys = new KeyCode[] { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K };
                     break;
-                case -5: // 5B 모드 (5 Button - DJMAX 스타일)
+                case -5: // 5+1K 모드 (DJMAX 스타일)
                     trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L };
-                    Setup5BMode();
+                    Setup5Plus1Mode();
                     break;
                 case 6:
                     trackKeys = new KeyCode[] { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L };
@@ -254,15 +254,15 @@ namespace ChartSystem
         }
 
         /// <summary>
-        /// 5B 모드 특수 설정 (키-트랙 매핑)
+        /// 5+1K 모드 특수 설정 (키-트랙 매핑)
         /// </summary>
         private Dictionary<KeyCode, int> keyToTrackMapping = new Dictionary<KeyCode, int>();
 
-        void Setup5BMode()
+        void Setup5Plus1Mode()
         {
             keyToTrackMapping.Clear();
 
-            // 5B 모드: 5개 트랙, 6개 키
+            // 5+1K 모드: 5개 트랙, 6개 키
             // 트랙 0: S
             // 트랙 1: D
             // 트랙 2: F, J (두 키 모두 트랙 2)
@@ -275,7 +275,7 @@ namespace ChartSystem
             keyToTrackMapping[KeyCode.K] = 3;
             keyToTrackMapping[KeyCode.L] = 4;
 
-            Debug.Log("ChartEditor: 5B 모드 설정 완료 (트랙 0:S, 1:D, 2:F/J, 3:K, 4:L)");
+            Debug.Log("ChartEditor: 5+1K 모드 설정 완료 (트랙 0:S, 1:D, 2:F/J, 3:K, 4:L)");
         }
 
         GameObject CreateDefaultNotePrefab()
@@ -509,7 +509,7 @@ namespace ChartSystem
         /// </summary>
         void HandleRealtimeNoteInput()
         {
-            // 5B 모드인 경우 keyToTrackMapping 사용
+            // 5+1K 모드인 경우 keyToTrackMapping 사용
             if (keyCount == -5 && keyToTrackMapping.Count > 0)
             {
                 foreach (var kvp in keyToTrackMapping)
@@ -570,7 +570,7 @@ namespace ChartSystem
         /// </summary>
         void HandleManualNoteInput()
         {
-            // 5B 모드인 경우 keyToTrackMapping 사용
+            // 5+1K 모드인 경우 keyToTrackMapping 사용
             if (keyCount == -5 && keyToTrackMapping.Count > 0)
             {
                 foreach (var kvp in keyToTrackMapping)
