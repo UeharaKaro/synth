@@ -24,7 +24,7 @@ def create_radar_chart(values, labels, title="Pattern Radar Chart", filename="ra
     레이더 차트 생성
 
     Args:
-        values: 각 패턴의 값 리스트 (0-20)
+        values: 각 패턴의 값 리스트 (0-20, 소수점 1자리 지원)
         labels: 패턴 이름 리스트
         title: 차트 제목
         filename: 저장할 파일명
@@ -104,18 +104,18 @@ def main():
     patterns_eng = ["Trill", "Stairs", "Chord", "Denim", "Jacks", "LN Hybrid", "Burst", "Offbeat"]
     patterns_kr = ["트릴", "계단", "동치", "데님", "따닥이", "롱잡", "폭타", "즈레"]
 
-    # 예시 1: 모든 패턴이 15점인 경우
-    values_15 = [15, 15, 15, 15, 15, 15, 15, 15]
+    # 예시 1: 모든 패턴이 15.0점인 경우
+    values_15 = [15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0]
 
     create_radar_chart(
         values=values_15,
         labels=patterns_eng,
-        title="Pattern Radar - All 15/20",
+        title="Pattern Radar - All 15.0/20.0",
         filename="pattern_radar_15_en.png"
     )
 
-    # 예시 2: 다양한 값 (테스트용)
-    values_varied = [18, 12, 16, 10, 19, 14, 17, 11]
+    # 예시 2: 다양한 값 (소수점 포함)
+    values_varied = [18.5, 12.0, 16.5, 10.5, 19.0, 14.5, 17.0, 11.5]
 
     create_radar_chart(
         values=values_varied,
@@ -124,20 +124,20 @@ def main():
         filename="pattern_radar_varied_en.png"
     )
 
-    # 예시 3: 최대값 (20점)
-    values_max = [20, 20, 20, 20, 20, 20, 20, 20]
+    # 예시 3: 최대값 (20.0점)
+    values_max = [20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0, 20.0]
 
     create_radar_chart(
         values=values_max,
         labels=patterns_eng,
-        title="Pattern Radar - Perfect 20/20",
+        title="Pattern Radar - Perfect 20.0/20.0",
         filename="pattern_radar_max_en.png"
     )
 
     print("\n✓ 모든 레이더 차트 생성 완료!")
-    print("  - pattern_radar_15_en.png (평균 15점)")
-    print("  - pattern_radar_varied_en.png (다양한 점수)")
-    print("  - pattern_radar_max_en.png (만점 20점)")
+    print("  - pattern_radar_15_en.png (평균 15.0점)")
+    print("  - pattern_radar_varied_en.png (다양한 점수, 소수점 포함)")
+    print("  - pattern_radar_max_en.png (만점 20.0점)")
     print("\n패턴 타입 (Pattern Types):")
     for eng, kor in zip(patterns_eng, patterns_kr):
         print(f"  {eng:12} - {kor}")

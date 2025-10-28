@@ -276,28 +276,28 @@ public class CustomChartWriter
 [System.Serializable]
 public class PatternDifficulty
 {
-    [Header("패턴별 난이도 (0-10 스케일)")]
+    [Header("패턴별 난이도 (0-20 스케일, 소수점 1자리)")]
 
     [Tooltip("트릴: 두 트랙에 배치된 노트가 일정 간격으로 번갈아 나오는 구조")]
-    [Range(0, 10)] public int trill = 0;
+    [Range(0, 20)] public float trill = 0f;
 
     // ... 기존 패턴들 ...
 
     // ✅ 새로운 패턴 추가
     [Tooltip("스크래치: DJ 스타일의 스크래치 패턴")]
-    [Range(0, 10)] public int scratch = 0;
+    [Range(0, 20)] public float scratch = 0f;
 
     // 생성자
     public PatternDifficulty()
     {
         // ...
-        scratch = 0; // ✅ 추가
+        scratch = 0f; // ✅ 추가
     }
 
     public void Clear()
     {
         // ...
-        scratch = 0; // ✅ 추가
+        scratch = 0f; // ✅ 추가
     }
 
     public float GetAverageDifficulty()
@@ -307,7 +307,7 @@ public class PatternDifficulty
                 longNoteHybrid + burst + offbeat + scratch) / 9f;
     }
 
-    public int GetMaxDifficulty()
+    public float GetMaxDifficulty()
     {
         // ✅ 추가
         return Mathf.Max(trill, stairs, chord, denim, jacks,
@@ -317,9 +317,9 @@ public class PatternDifficulty
     public string ToSynthFormat()
     {
         string result = "[PATTERN_DIFFICULTY]\n";
-        result += $"Trill: {trill}\n";
+        result += $"Trill: {trill:F1}\n";
         // ... 기존 패턴들 ...
-        result += $"Scratch: {scratch}\n"; // ✅ 추가
+        result += $"Scratch: {scratch:F1}\n"; // ✅ 추가
         return result;
     }
 
@@ -331,7 +331,7 @@ public class PatternDifficulty
         {
             // ... 기존 패턴들 ...
             else if (line.StartsWith("Scratch:")) // ✅ 추가
-                int.TryParse(line.Split(':')[1].Trim(), out pd.scratch);
+                float.TryParse(line.Split(':')[1].Trim(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out pd.scratch);
         }
 
         return pd;
@@ -346,15 +346,15 @@ public class PatternDifficulty
 **결과 .synth 파일:**
 ```
 [PATTERN_DIFFICULTY]
-Trill: 7
-Stairs: 5
-Chord: 8
-Denim: 6
-Jacks: 9
-LongNoteHybrid: 4
-Burst: 7
-Offbeat: 5
-Scratch: 8  ← 새로 추가됨!
+Trill: 7.0
+Stairs: 5.5
+Chord: 8.0
+Denim: 6.5
+Jacks: 9.0
+LongNoteHybrid: 4.0
+Burst: 7.5
+Offbeat: 5.0
+Scratch: 8.5  ← 새로 추가됨!
 ```
 
 ---
