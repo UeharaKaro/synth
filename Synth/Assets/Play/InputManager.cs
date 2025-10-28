@@ -16,11 +16,72 @@ public class InputManager : MonoBehaviour
     private Dictionary<KeyCode, int> keyToLineMapping = new Dictionary<KeyCode, int>(); // 역방향 매핑: 키 -> 라인
     private Dictionary<int, bool> keyPressed = new Dictionary<int, bool>();
     private Dictionary<int, float> keyPressTime = new Dictionary<int, float>();
+    private Dictionary<int, KeyCode> lastPressedKey = new Dictionary<int, KeyCode>(); // 각 라인에서 마지막으로 눌린 키
+
+    [Header("Statistics")]
+    private KeyStatistics keyStatistics;
     
     void Start()
     {
         FindReferences();
         SetupDefaultKeyBindings();
+        LoadStatistics();
+        SubscribeToEvents();
+    }
+
+    void OnDestroy()
+    {
+        SaveStatistics();
+        UnsubscribeFromEvents();
+    }
+
+    void LoadStatistics()
+    {
+        string json = PlayerPrefs.GetString("KeyStatistics", "");
+        if (!string.IsNullOrEmpty(json))
+        {
+            keyStatistics = KeyStatistics.FromJson(json);
+        }
+        else
+        {
+            keyStatistics = new KeyStatistics();
+        }
+    }
+
+    void SaveStatistics()
+    {
+        if (keyStatistics != null)
+        {
+            string json = keyStatistics.ToJson();
+            PlayerPrefs.SetString("KeyStatistics", json);
+            PlayerPrefs.Save();
+        }
+    }
+
+    void SubscribeToEvents()
+    {
+        if (noteManager != null)
+        {
+            noteManager.OnNoteJudged += HandleNoteJudgment;
+        }
+    }
+
+    void UnsubscribeFromEvents()
+    {
+        if (noteManager != null)
+        {
+            noteManager.OnNoteJudged -= HandleNoteJudgment;
+        }
+    }
+
+    void HandleNoteJudgment(int lineIndex, JudgmentType judgment, float timingOffset)
+    {
+        // 해당 라인에서 마지막으로 눌린 키를 가져와서 통계에 기록
+        if (lastPressedKey.ContainsKey(lineIndex) && keyStatistics != null)
+        {
+            KeyCode pressedKey = lastPressedKey[lineIndex];
+            keyStatistics.RecordKeyHit(pressedKey, judgment, timingOffset);
+        }
     }
     
     void FindReferences()
@@ -278,6 +339,7 @@ public class InputManager : MonoBehaviour
             // 키 눌림 체크
             if (Input.GetKeyDown(key))
             {
+                lastPressedKey[lineIndex] = key; // 눌린 키 기록
                 OnKeyPressed(lineIndex);
             }
 

@@ -56,6 +56,9 @@ public class GameSettings
     // 키 모드별 커스텀 키 바인딩 리스트 (JsonUtility가 Dictionary를 지원하지 않음)
     public List<KeyBindingEntry> customKeyBindings = new List<KeyBindingEntry>();
 
+    // 키 바인딩 프리셋 (최대 5개)
+    public List<KeyBindingPreset> keyBindingPresets = new List<KeyBindingPreset>();
+
     // 기본값으로 초기화하는 메서드
     public void ResetToDefault()
     {
@@ -146,6 +149,52 @@ public class GameSettings
         }
         return keys.ToArray();
     }
+
+    /// <summary>
+    /// 프리셋 저장
+    /// </summary>
+    public void SavePreset(string presetName, int lineCount, KeyCode[] keys)
+    {
+        // 같은 이름의 프리셋 제거
+        keyBindingPresets.RemoveAll(p => p.presetName == presetName && p.lineCount == lineCount);
+
+        // 새 프리셋 추가
+        keyBindingPresets.Add(new KeyBindingPreset
+        {
+            presetName = presetName,
+            lineCount = lineCount,
+            keyBindings = SerializeKeyBindings(keys)
+        });
+    }
+
+    /// <summary>
+    /// 프리셋 로드
+    /// </summary>
+    public KeyCode[] LoadPreset(string presetName, int lineCount)
+    {
+        var preset = keyBindingPresets.Find(p => p.presetName == presetName && p.lineCount == lineCount);
+        if (preset != null)
+        {
+            return ParseKeyBindings(preset.keyBindings);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 특정 키 모드의 모든 프리셋 가져오기
+    /// </summary>
+    public List<KeyBindingPreset> GetPresetsForMode(int lineCount)
+    {
+        return keyBindingPresets.FindAll(p => p.lineCount == lineCount);
+    }
+
+    /// <summary>
+    /// 프리셋 삭제
+    /// </summary>
+    public void DeletePreset(string presetName, int lineCount)
+    {
+        keyBindingPresets.RemoveAll(p => p.presetName == presetName && p.lineCount == lineCount);
+    }
 }
 
 /// <summary>
@@ -156,4 +205,15 @@ public class KeyBindingEntry
 {
     public int lineCount; // 4, 5, -5, 6, 7, 8, 10
     public string keyBindings; // "100,102,106,107" (KeyCode enum 값들의 문자열)
+}
+
+/// <summary>
+/// 키 바인딩 프리셋
+/// </summary>
+[System.Serializable]
+public class KeyBindingPreset
+{
+    public string presetName; // 프리셋 이름
+    public int lineCount; // 키 모드
+    public string keyBindings; // 키 바인딩
 }
