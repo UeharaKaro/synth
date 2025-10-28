@@ -1,117 +1,222 @@
 using UnityEngine;
-using UnityEngine.UI; // UI 요소를 사용하기 위해 필요
-using System.Collections.Generic; // List 사용을 위해 필요
-using UnityEngine.SceneManagement; // 씬 잔환을 위해 필요
+using UnityEngine.UI;
+using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
+/// <summary>
+/// 메인 메뉴 관리 스크립트
+/// PLAY, OPTIONS, EXIT 버튼으로 구성된 시작 화면을 관리합니다.
+/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
-    [Header("메뉴 버튼 리스트")] [Tooltip("상호작용할 버튼들을 순서대로 여기에 등록합니다")]
-    public List<Button> menuButtons; // 메뉴 버튼들을 저장할 리스트
+    [Header("메뉴 버튼")]
+    [Tooltip("PLAY 버튼 - 일반 플레이 모드")]
+    public Button playButton;
 
-    [Header("선택 시 시각적 효과")] [Tooltip("선택된 버튼의 색상")]
-    public Color selectedColor = Color.yellow; // 선택된 버튼의 색상
+    [Tooltip("COURSE 버튼 - 코스 모드")]
+    public Button courseButton;
 
-    [Tooltip("기본 버튼 색상")] public Color normalColor = Color.white; // 기본 버튼 색상
+    [Tooltip("OPTION 버튼 - 설정 화면으로 이동")]
+    public Button optionButton;
 
-    private int currentButtonIndex = 0; // 현재 선택된 버튼 인덱스
+    [Tooltip("EXIT 버튼 - 게임 종료")]
+    public Button exitButton;
+
+    [Header("메뉴 버튼 리스트")]
+    [Tooltip("상호작용할 버튼들을 순서대로 여기에 등록합니다 (Play, Course, Option, Exit)")]
+    public List<Button> menuButtons;
+
+    [Header("선택 시 시각적 효과")]
+    [Tooltip("선택된 버튼의 색상")]
+    public Color selectedColor = Color.yellow;
+
+    [Tooltip("기본 버튼 색상")]
+    public Color normalColor = Color.white;
+
+    [Header("기본 설정")]
+    [Tooltip("기본 판정 모드 (Play 버튼 클릭 시 사용)")]
+    public JudgmentMode defaultJudgmentMode = JudgmentMode.Normal;
+
+    private int currentButtonIndex = 0;
 
     void Start()
     {
-        // 게임 시작 시 첫 번째 버튼을 선택된 상태로 만듬
-        SelectButton(currentButtonIndex);
+        // 버튼 클릭 이벤트 등록
+        if (playButton != null)
+        {
+            playButton.onClick.AddListener(OnPlayButtonClicked);
+        }
+
+        if (courseButton != null)
+        {
+            courseButton.onClick.AddListener(OnCourseButtonClicked);
+        }
+
+        if (optionButton != null)
+        {
+            optionButton.onClick.AddListener(OnOptionButtonClicked);
+        }
+
+        if (exitButton != null)
+        {
+            exitButton.onClick.AddListener(OnExitButtonClicked);
+        }
+
+        // 메뉴 버튼 리스트가 비어있으면 자동으로 채우기 (순서: Play, Course, Option, Exit)
+        if (menuButtons == null || menuButtons.Count == 0)
+        {
+            menuButtons = new List<Button>();
+            if (playButton != null) menuButtons.Add(playButton);
+            if (courseButton != null) menuButtons.Add(courseButton);
+            if (optionButton != null) menuButtons.Add(optionButton);
+            if (exitButton != null) menuButtons.Add(exitButton);
+        }
+
+        // 첫 번째 버튼 선택
+        if (menuButtons.Count > 0)
+        {
+            SelectButton(currentButtonIndex);
+        }
     }
 
     void Update()
     {
-        // 방향키 입력 처리
-        // 아래 방향키를 눌렀을 때
-        if (Input.GetKeyDown(KeyCode.DownArrow))
+        HandleKeyboardNavigation();
+    }
+
+    /// <summary>
+    /// 키보드 입력을 처리하여 메뉴를 네비게이션합니다.
+    /// </summary>
+    private void HandleKeyboardNavigation()
+    {
+        if (menuButtons == null || menuButtons.Count == 0) return;
+
+        // 아래 방향키 또는 S키: 다음 버튼으로 이동
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
         {
-            // 다음 버튼으로 이동
             currentButtonIndex++;
-            // 만약 마지막 버튼을 넘어갔다면 첫 번째 버튼으로 순환
             if (currentButtonIndex >= menuButtons.Count)
             {
-                currentButtonIndex = 0;
+                currentButtonIndex = 0; // 순환
             }
-
             SelectButton(currentButtonIndex);
         }
-        // 위 방향키를 눌렀을 때
-        else if (Input.GetKeyDown(KeyCode.UpArrow))
+        // 위 방향키 또는 W키: 이전 버튼으로 이동
+        else if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W))
         {
-            // 이전 버튼으로 이동
             currentButtonIndex--;
-            // 만약 첫 번째 버튼을 넘어갔다면 마지막 버튼으로 순환
             if (currentButtonIndex < 0)
             {
-                currentButtonIndex = menuButtons.Count - 1;
+                currentButtonIndex = menuButtons.Count - 1; // 순환
             }
-
             SelectButton(currentButtonIndex);
         }
 
-        // 선택 및 실행 처리
-        // Enter 키 or 마우스 왼쪽 클릭을 눌렀을 때
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetMouseButtonDown(0))
+        // Enter 키 또는 스페이스바: 현재 선택된 버튼 클릭
+        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Space))
         {
-            // 현재 선택된 버튼의 기능을 실행
-            menuButtons[currentButtonIndex].onClick.Invoke();
+            if (currentButtonIndex >= 0 && currentButtonIndex < menuButtons.Count)
+            {
+                menuButtons[currentButtonIndex].onClick.Invoke();
+            }
         }
     }
 
-    // 특정 인덱스의 버튼을 선택하고 시각적으로 표시하는 함수
-    void SelectButton(int index)
+    /// <summary>
+    /// 특정 인덱스의 버튼을 선택하고 시각적으로 표시합니다.
+    /// </summary>
+    private void SelectButton(int index)
     {
-        // 1. 모든 버튼을 기본 색상으로 설정
+        if (menuButtons == null || index < 0 || index >= menuButtons.Count) return;
+
+        // 모든 버튼을 기본 색상으로 설정
         for (int i = 0; i < menuButtons.Count; i++)
         {
-            // Selectable 컴포넌트를 통헤 색상 제어
-            var colors = menuButtons[i].colors;
-            colors.normalColor = normalColor; // 기본 색상으로 설정
-            menuButtons[i].colors = colors;
+            if (menuButtons[i] != null)
+            {
+                var colors = menuButtons[i].colors;
+                colors.normalColor = normalColor;
+                menuButtons[i].colors = colors;
+            }
         }
 
-        // 2. 선택된 버튼만 강조 색상으로 변경
-        var selectedColors = menuButtons[index].colors;
-        selectedColors.normalColor = selectedColor; // 선택된 색상으로 설정
-        menuButtons[index].colors = selectedColors;
+        // 선택된 버튼만 강조 색상으로 변경
+        if (menuButtons[index] != null)
+        {
+            var selectedColors = menuButtons[index].colors;
+            selectedColors.normalColor = selectedColor;
+            menuButtons[index].colors = selectedColors;
+        }
 
         currentButtonIndex = index;
     }
-    // 각 버튼에 연결될 함수들
-    // 이 함수들은 Unity Editor에서 버튼의 OnClick 이벤트에 연결할 예정
+    // ===========================================
+    // 버튼 클릭 이벤트 핸들러
+    // ===========================================
 
-    public void OnNormalModeClicked()
+    /// <summary>
+    /// PLAY 버튼 클릭 시 호출됩니다.
+    /// 기본 판정 모드를 설정하고 곡 선택 화면으로 이동합니다.
+    /// </summary>
+    public void OnPlayButtonClicked()
     {
-        Debug.Log("Normal 모드 선택됨");
-        JudgmentModeManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Normal;
-        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡선택 씬으로 전환
+        Debug.Log($"PLAY 버튼 클릭 - 판정 모드: {defaultJudgmentMode}");
+
+        // 기본 판정 모드 설정
+        if (JudgmentModeManager.Instance != null)
+        {
+            JudgmentModeManager.Instance.CurrentMode = defaultJudgmentMode;
+        }
+        else
+        {
+            Debug.LogWarning("JudgmentModeManager가 존재하지 않습니다!");
+        }
+
+        // 곡 선택 씬으로 전환
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION);
     }
 
-    public void OnHardModeClicked()
+    /// <summary>
+    /// COURSE 버튼 클릭 시 호출됩니다.
+    /// 코스 모드로 곡 선택 화면으로 이동합니다.
+    /// </summary>
+    public void OnCourseButtonClicked()
     {
-        Debug.Log("Hard 모드 선택됨");
-        JudgmentModeManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Hard;
-        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡 선택 씬으로 전환
+        Debug.Log("COURSE 버튼 클릭 - 코스 모드");
+
+        // 코스 모드 설정 (추후 구현 예정)
+        // 현재는 기본 판정 모드로 곡 선택 씬으로 이동
+        if (JudgmentModeManager.Instance != null)
+        {
+            JudgmentModeManager.Instance.CurrentMode = defaultJudgmentMode;
+        }
+
+        // 곡 선택 씬으로 전환 (추후 코스 전용 씬으로 변경 가능)
+        SceneManager.LoadScene(SceneNames.SONG_SELECTION);
     }
 
-    /* public void OnSuperModeClicked()
+    /// <summary>
+    /// OPTION 버튼 클릭 시 호출됩니다.
+    /// 설정 화면으로 이동합니다.
+    /// </summary>
+    public void OnOptionButtonClicked()
     {
-        Debug.Log("Super 모드 선택됨");
-        GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Super;
-        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 곡 선택 씬으로 전환
-    } */ // 추후에 Super 모드 출시시 활성화
-    public void OnCourseModeClicked()
-    {
-        Debug.Log("Course 모드 선택됨");
-        // GameSettingsManager.Instance.CurrentMode = JudgmentMode.JudgmentMode_Course; // Course 모드가 추가되면  Course 전용 판정 추가예쩡
-        SceneManager.LoadScene(SceneNames.SONG_SELECTION); // 코스 모드 씬으로 전환
+        Debug.Log("OPTION 버튼 클릭 - 설정 화면으로 이동");
+        SceneManager.LoadScene(SceneNames.OPTIONS);
     }
 
-    public void OnOptionsClicked()
+    /// <summary>
+    /// EXIT 버튼 클릭 시 호출됩니다.
+    /// 게임을 종료합니다.
+    /// </summary>
+    public void OnExitButtonClicked()
     {
-        Debug.Log("Options 메뉴 선택됨");
-        SceneManager.LoadScene(SceneNames.OPTIONS); // 옵션 씬으로 전환
+        Debug.Log("EXIT 버튼 클릭 - 게임 종료");
+
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #else
+        Application.Quit();
+        #endif
     }
 }
