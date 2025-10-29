@@ -9,9 +9,8 @@ using System.Text;
 ///
 /// 기능:
 /// 1. 키 바인딩 테스트 모드
-/// 2. 키 스왑 기능
-/// 3. 프리셋 저장/로드
-/// 6. 내보내기/가져오기
+/// 2. 프리셋 저장/로드
+/// 3. 내보내기/가져오기
 /// </summary>
 public class KeyBindingUIAdvanced : MonoBehaviour
 {
@@ -26,10 +25,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
     public Button testModeButton;
     public Transform testTrackContainer;
     public GameObject testTrackPrefab;
-
-    [Header("UI References - Swap Mode")]
-    public Button swapModeButton;
-    public Text swapModeText;
 
     [Header("UI References - Presets")]
     public InputField presetNameInput;
@@ -57,10 +52,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
     private bool isWaitingForKey = false;
     private int waitingKeyIndex = -1;
     private Button waitingButton = null;
-
-    // 스왑 모드
-    private bool isSwapMode = false;
-    private int swapFirstIndex = -1;
 
     // 테스트 모드
     private bool isTestMode = false;
@@ -134,9 +125,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
 
         // 테스트 모드
         if (testModeButton != null) testModeButton.onClick.AddListener(ToggleTestMode);
-
-        // 스왑 모드
-        if (swapModeButton != null) swapModeButton.onClick.AddListener(ToggleSwapMode);
 
         // 프리셋
         if (savePresetButton != null) savePresetButton.onClick.AddListener(OnSavePreset);
@@ -252,12 +240,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
 
     void OnKeyButtonClicked(int index)
     {
-        if (isSwapMode)
-        {
-            HandleSwapSelection(index);
-            return;
-        }
-
         if (isWaitingForKey)
         {
             ShowStatus("이미 키 입력을 기다리고 있습니다. ESC를 눌러 취소하세요.");
@@ -443,58 +425,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
             return keyIndex - 1;
         }
         return keyIndex;
-    }
-
-    #endregion
-
-    #region Swap Mode
-
-    void ToggleSwapMode()
-    {
-        isSwapMode = !isSwapMode;
-        swapFirstIndex = -1;
-
-        if (swapModeText != null)
-        {
-            swapModeText.text = isSwapMode ? "스왑 모드: ON" : "스왑 모드: OFF";
-        }
-
-        if (isSwapMode)
-        {
-            ShowStatus("스왑 모드 활성화. 교환할 첫 번째 트랙을 선택하세요.");
-        }
-        else
-        {
-            ShowStatus("스왑 모드 비활성화");
-        }
-    }
-
-    void HandleSwapSelection(int index)
-    {
-        if (swapFirstIndex == -1)
-        {
-            swapFirstIndex = index;
-            ShowStatus($"트랙 {GetTrackNumber(index)} 선택됨. 교환할 두 번째 트랙을 선택하세요.");
-        }
-        else
-        {
-            // 스왑 실행
-            KeyCode temp = currentKeys[swapFirstIndex];
-            currentKeys[swapFirstIndex] = currentKeys[index];
-            currentKeys[index] = temp;
-
-            SaveKeyBindings();
-            RefreshUI();
-
-            ShowStatus($"트랙 {GetTrackNumber(swapFirstIndex)}와 트랙 {GetTrackNumber(index)}를 교환했습니다.");
-            swapFirstIndex = -1;
-            isSwapMode = false;
-
-            if (swapModeText != null)
-            {
-                swapModeText.text = "스왑 모드: OFF";
-            }
-        }
     }
 
     #endregion
@@ -702,7 +632,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
         if (resetButton != null) resetButton.onClick.RemoveAllListeners();
         if (resetAllButton != null) resetAllButton.onClick.RemoveAllListeners();
         if (testModeButton != null) testModeButton.onClick.RemoveAllListeners();
-        if (swapModeButton != null) swapModeButton.onClick.RemoveAllListeners();
         if (savePresetButton != null) savePresetButton.onClick.RemoveAllListeners();
         if (loadPresetButton != null) loadPresetButton.onClick.RemoveAllListeners();
         if (deletePresetButton != null) deletePresetButton.onClick.RemoveAllListeners();
