@@ -52,20 +52,49 @@ public class CoverArtLoader : MonoBehaviour
         }
 
         // 파일 경로 생성
-        string filePath = Path.Combine(Application.streamingAssetsPath, coverArtFolder, fileName);
-
-        // 파일 존재 확인
-        if (!File.Exists(filePath))
+        string basePath = Path.Combine(Application.streamingAssetsPath, coverArtFolder);
+        string filePath = Path.Combine(basePath, fileName);
+        
+        // 암호화된 파일(.eaw) 우선 확인
+        string encryptedPath = Path.ChangeExtension(filePath, ".eaw");
+        
+        byte[] fileData = null;
+        
+        if (File.Exists(encryptedPath))
         {
-            Debug.LogWarning($"CoverArtLoader: 커버 이미지를 찾을 수 없습니다 - {filePath}");
+            // 암호화된 이미지 로드
+            try
+            {
+                Debug.Log($"CoverArtLoader: 암호화된 이미지 로드 시도 - {encryptedPath}");
+                byte[] encryptedData = File.ReadAllBytes(encryptedPath);
+                fileData = SecureAssetLoader.DecryptImageData(encryptedData);
+                
+                if (fileData == null || fileData.Length == 0)
+                {
+                    Debug.LogError("CoverArtLoader: 복호화된 데이터가 비어있습니다");
+                    return defaultCoverArt;
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"CoverArtLoader: 암호화된 이미지 복호화 실패 - {e.Message}");
+                return defaultCoverArt;
+            }
+        }
+        else if (File.Exists(filePath))
+        {
+            // 일반 파일 로드
+            Debug.Log($"CoverArtLoader: 일반 이미지 로드 시도 - {filePath}");
+            fileData = File.ReadAllBytes(filePath);
+        }
+        else
+        {
+            Debug.LogWarning($"CoverArtLoader: 커버 이미지를 찾을 수 없습니다 - {fileName}");
             return defaultCoverArt;
         }
 
         try
         {
-            // 파일 읽기
-            byte[] fileData = File.ReadAllBytes(filePath);
-            
             // Texture2D 생성
             Texture2D texture = new Texture2D(2, 2);
             if (texture.LoadImage(fileData))

@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 using FMOD.Studio;
 using FMOD;// FMOD 라이브러리를 사용하기 위해 필요
@@ -258,9 +260,31 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         }
 
         // 배경음악 파일의 전체 경로 생성
-        string filePath = Application.streamingAssetsPath + "/Audio/BGM/" + fileName;
-        // FMOD에서 사운드 파일을 메모리에 로드
-        var result = system.createSound(filePath, FMOD.MODE.DEFAULT, out bgmSound);
+        string basePath = Application.streamingAssetsPath + "/Audio/BGM/";
+        string filePath = basePath + fileName;
+        
+        // 암호화된 파일(.eaw) 우선 확인
+        string encryptedPath = Path.ChangeExtension(filePath, ".eaw");
+        
+        FMOD.RESULT result;
+        
+        if (File.Exists(encryptedPath))
+        {
+            // 암호화된 파일 로드 및 복호화
+            UnityEngine.Debug.Log($"암호화된 BGM 로드 시도: {encryptedPath}");
+            result = LoadEncryptedSound(encryptedPath, out bgmSound);
+        }
+        else if (File.Exists(filePath))
+        {
+            // 일반 파일 로드
+            UnityEngine.Debug.Log($"일반 BGM 로드 시도: {filePath}");
+            result = system.createSound(filePath, FMOD.MODE.DEFAULT, out bgmSound);
+        }
+        else
+        {
+            UnityEngine.Debug.LogError($"BGM 파일을 찾을 수 없습니다: {fileName}");
+            return;
+        }
 
         if (result == FMOD.RESULT.OK)
         {
@@ -268,7 +292,45 @@ public class AudioManager : MonoBehaviour // AudioManager 클래스는 FMOD를 �
         }
         else
         {
-            UnityEngine.Debug.LogError($"BGM 로드 실패: {filePath} (결과: {result})");
+            UnityEngine.Debug.LogError($"BGM 로드 실패: {fileName} (결과: {result})");
+        }
+    }
+    
+    private FMOD.RESULT LoadEncryptedSound(string encryptedPath, out Sound sound)
+    {
+        sound = default(Sound);
+        
+        try
+        {
+            // 암호화된 파일 복호화
+            byte[] encryptedData = File.ReadAllBytes(encryptedPath);
+            byte[] decryptedData = SecureAssetLoader.DecryptAudioData(encryptedData);
+            
+            if (decryptedData == null || decryptedData.Length == 0)
+            {
+                UnityEngine.Debug.LogError("복호화 실패: 데이터가 비어있습니다.");
+                return FMOD.RESULT.ERR_FILE_BAD;
+            }
+            
+            // 복호화된 데이터를 임시 파일로 저장
+            string tempPath = Path.Combine(Application.temporaryCachePath, "temp_audio_" + Path.GetFileNameWithoutExtension(encryptedPath));
+            File.WriteAllBytes(tempPath, decryptedData);
+            
+            // FMOD로 로드 (임시 파일 사용)
+            var result = system.createSound(tempPath, FMOD.MODE.DEFAULT, out sound);
+            
+            // 임시 파일 삭제 (FMOD가 메모리에 로드한 후)
+            if (File.Exists(tempPath))
+            {
+                File.Delete(tempPath);
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError($"암호화된 사운드 로드 중 오류: {ex.Message}");
+            return FMOD.RESULT.ERR_FILE_BAD;
         }
     }
 

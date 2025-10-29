@@ -55,7 +55,7 @@ public class KeyStatistics
 
         switch (judgment)
         {
-            case JudgmentType.SPerfect:
+            case JudgmentType.S_Perfect:
             case JudgmentType.Perfect:
                 stat.perfectHits++;
                 break;
