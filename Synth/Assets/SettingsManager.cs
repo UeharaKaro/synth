@@ -171,4 +171,44 @@ public class SettingsManager : MonoBehaviour // 인게임 내 설정 메뉴
         gameSettings.showOffsetText = show;
         OnSettingsChanged?.Invoke();
     }
+
+    // 키 바인딩 관련 메서드들 (2025-10-28)
+
+    /// <summary>
+    /// 특정 키 모드의 키 바인딩을 가져옵니다
+    /// </summary>
+    public KeyCode[] GetKeyBindings(int lineCount)
+    {
+        return gameSettings.GetKeyBindings(lineCount);
+    }
+
+    /// <summary>
+    /// 특정 키 모드의 키 바인딩을 설정하고 저장합니다
+    /// </summary>
+    public void SetKeyBindings(int lineCount, KeyCode[] keys)
+    {
+        gameSettings.SetKeyBindings(lineCount, keys);
+        SaveSettings();
+        OnSettingsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 특정 키 모드의 키 바인딩을 기본값으로 리셋합니다
+    /// </summary>
+    public void ResetKeyBindings(int lineCount)
+    {
+        gameSettings.ResetKeyBindings(lineCount);
+        SaveSettings();
+        OnSettingsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// 모든 키 바인딩을 기본값으로 리셋합니다
+    /// </summary>
+    public void ResetAllKeyBindings()
+    {
+        gameSettings.customKeyBindings.Clear();
+        SaveSettings();
+        OnSettingsChanged?.Invoke();
+    }
 }

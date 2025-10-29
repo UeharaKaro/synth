@@ -4,6 +4,9 @@ using System.Collections;
 
 public class NoteManager : MonoBehaviour
 {
+    // 노트 판정 이벤트 (InputManager가 구독하여 통계 기록)
+    public event System.Action<int, JudgmentType, float> OnNoteJudged;
+
     [Header("References")]
     public GearController gearController;
     public GearSettings settings;
@@ -398,11 +401,11 @@ public class NoteManager : MonoBehaviour
     {
         // 판정 이펙트 생성
         CreateHitEffect(note.gameObject.transform.position, judgment);
-        
+
         // 점수 및 콤보 업데이트
         int score = GetScoreForJudgment(judgment);
         gearController.UpdateScore(score);
-        
+
         if (judgment != JudgmentType.Miss)
         {
             gearController.UpdateCombo(1);
@@ -411,10 +414,13 @@ public class NoteManager : MonoBehaviour
         {
             gearController.UpdateCombo(0);
         }
-        
+
         // 판정 오프셋 표시
         gearController.ShowJudgmentOffset(judgment, offsetMs);
-        
+
+        // 판정 이벤트 발생 (통계 기록용)
+        OnNoteJudged?.Invoke(note.lineIndex, judgment, offsetMs);
+
         // HP 업데이트
         float hpChange = GetHPChangeForJudgment(judgment);
         // HP 시스템과 연동 필요
@@ -424,6 +430,10 @@ public class NoteManager : MonoBehaviour
     {
         gearController.UpdateCombo(0);
         gearController.ShowJudgmentOffset(JudgmentType.Miss, 200f);
+
+        // 판정 이벤트 발생 (통계 기록용)
+        OnNoteJudged?.Invoke(note.lineIndex, JudgmentType.Miss, 200f);
+
         // HP 감소 처리
     }
     

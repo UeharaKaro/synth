@@ -6,6 +6,8 @@ public class GearSettings : ScriptableObject
     [Header("Line Configuration")]
     [Range(4, 10)]
     public int lineCount = 4;
+    // 참고: lineCount = 5는 5K Standard (5트랙, 5키: D, F, Space, J, K)
+    // 참고: lineCount = -5는 5+1K 모드 (5트랙, 6키: S, D, F/J, K, L)
     
     [Header("Gear Dimensions")]
     [Range(0.1f, 2f)]
@@ -66,13 +68,20 @@ public class GearSettings : ScriptableObject
         switch (lineCount)
         {
             case 4: return 4f;
-            case 5: return 5f;
+            case 5: return 5f; // 5K Standard
+            case -5: return 5f; // 5+1K 모드 (5트랙)
             case 6: return 6f;
             case 7: return 7f;
             case 8: return 8f;
             case 10: return 10f;
             default: return 4f;
         }
+    }
+
+    // 실제 트랙 개수 반환 (5+1K 모드는 5개 트랙)
+    public int GetActualLineCount()
+    {
+        return System.Math.Abs(lineCount);
     }
     
     public float GetTotalWidth()
