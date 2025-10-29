@@ -215,6 +215,7 @@ public class GearController : MonoBehaviour
         }
     }
     
+    
     void AddGradientEffect(GameObject obj)
     {
         // 그라데이션 효과를 위한 추가 쿼드 생성
