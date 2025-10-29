@@ -11,6 +11,7 @@ using System.Text;
 /// 1. 키 바인딩 테스트 모드
 /// 2. 프리셋 저장/로드
 /// 3. 내보내기/가져오기
+/// 4. 키보드 레이아웃 시각화
 /// </summary>
 public class KeyBindingUIAdvanced : MonoBehaviour
 {
@@ -39,6 +40,11 @@ public class KeyBindingUIAdvanced : MonoBehaviour
     public Button copyToClipboardButton;
     public InputField importTextField;
 
+    [Header("UI References - Keyboard Layout")]
+    public Transform keyboardLayoutContainer;
+    public GameObject keyboardKeyPrefab;
+    public Button toggleKeyboardLayoutButton;
+
     [Header("UI References - Reset")]
     public Button resetButton;
     public Button resetAllButton;
@@ -56,6 +62,10 @@ public class KeyBindingUIAdvanced : MonoBehaviour
     // 테스트 모드
     private bool isTestMode = false;
     private List<Image> testTracks = new List<Image>();
+
+    // 키보드 레이아웃
+    private bool isKeyboardLayoutVisible = false;
+    private Dictionary<KeyCode, GameObject> keyboardKeys = new Dictionary<KeyCode, GameObject>();
 
     // 금지된 키
     private static readonly HashSet<KeyCode> ForbiddenKeys = new HashSet<KeyCode>
@@ -136,6 +146,9 @@ public class KeyBindingUIAdvanced : MonoBehaviour
         if (importButton != null) importButton.onClick.AddListener(OnImportKeys);
         if (copyToClipboardButton != null) copyToClipboardButton.onClick.AddListener(OnCopyToClipboard);
 
+        // 키보드 레이아웃
+        if (toggleKeyboardLayoutButton != null) toggleKeyboardLayoutButton.onClick.AddListener(ToggleKeyboardLayout);
+        CreateKeyboardLayout();
     }
 
     #region Basic Functions
@@ -223,6 +236,9 @@ public class KeyBindingUIAdvanced : MonoBehaviour
                 }
             }
         }
+
+        // 키보드 레이아웃 업데이트
+        UpdateKeyboardLayout();
 
         ShowStatus($"{KeyModeNames[currentKeyMode]} 키 바인딩 로드 완료");
     }
@@ -617,6 +633,138 @@ public class KeyBindingUIAdvanced : MonoBehaviour
 
     #endregion
 
+    #region Keyboard Layout Visualization
+
+    void CreateKeyboardLayout()
+    {
+        if (keyboardLayoutContainer == null || keyboardKeyPrefab == null)
+            return;
+
+        keyboardKeys.Clear();
+
+        // QWERTY 키보드 레이아웃
+        string[][] keyboardLayout = new string[][]
+        {
+            new string[] { "`", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=" },
+            new string[] { "Tab", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "[", "]", "\\" },
+            new string[] { "CapsLock", "A", "S", "D", "F", "G", "H", "J", "K", "L", ";", "'" },
+            new string[] { "Shift", "Z", "X", "C", "V", "B", "N", "M", ",", ".", "/" },
+            new string[] { "Space" }
+        };
+
+        KeyCode[][] keyCodeLayout = new KeyCode[][]
+        {
+            new KeyCode[] { KeyCode.BackQuote, KeyCode.Alpha1, KeyCode.Alpha2, KeyCode.Alpha3, KeyCode.Alpha4, KeyCode.Alpha5, KeyCode.Alpha6, KeyCode.Alpha7, KeyCode.Alpha8, KeyCode.Alpha9, KeyCode.Alpha0, KeyCode.Minus, KeyCode.Equals },
+            new KeyCode[] { KeyCode.Tab, KeyCode.Q, KeyCode.W, KeyCode.E, KeyCode.R, KeyCode.T, KeyCode.Y, KeyCode.U, KeyCode.I, KeyCode.O, KeyCode.P, KeyCode.LeftBracket, KeyCode.RightBracket, KeyCode.Backslash },
+            new KeyCode[] { KeyCode.CapsLock, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon, KeyCode.Quote },
+            new KeyCode[] { KeyCode.LeftShift, KeyCode.Z, KeyCode.X, KeyCode.C, KeyCode.V, KeyCode.B, KeyCode.N, KeyCode.M, KeyCode.Comma, KeyCode.Period, KeyCode.Slash },
+            new KeyCode[] { KeyCode.Space }
+        };
+
+        for (int row = 0; row < keyboardLayout.Length; row++)
+        {
+            for (int col = 0; col < keyboardLayout[row].Length; col++)
+            {
+                GameObject keyObj = Instantiate(keyboardKeyPrefab, keyboardLayoutContainer);
+                Text keyText = keyObj.GetComponentInChildren<Text>();
+
+                if (keyText != null)
+                {
+                    keyText.text = keyboardLayout[row][col];
+                }
+
+                keyboardKeys[keyCodeLayout[row][col]] = keyObj;
+            }
+        }
+
+        // 초기에는 숨김
+        if (keyboardLayoutContainer.gameObject.activeSelf)
+        {
+            keyboardLayoutContainer.gameObject.SetActive(false);
+        }
+    }
+
+    void ToggleKeyboardLayout()
+    {
+        isKeyboardLayoutVisible = !isKeyboardLayoutVisible;
+
+        if (keyboardLayoutContainer != null)
+        {
+            keyboardLayoutContainer.gameObject.SetActive(isKeyboardLayoutVisible);
+        }
+
+        if (isKeyboardLayoutVisible)
+        {
+            UpdateKeyboardLayout();
+            ShowStatus("키보드 레이아웃 표시");
+        }
+        else
+        {
+            ShowStatus("키보드 레이아웃 숨김");
+        }
+    }
+
+    void UpdateKeyboardLayout()
+    {
+        if (!isKeyboardLayoutVisible || keyboardKeys.Count == 0)
+            return;
+
+        // 모든 키를 기본 색상으로 리셋
+        foreach (var kvp in keyboardKeys)
+        {
+            Image keyImage = kvp.Value.GetComponent<Image>();
+            Text keyText = kvp.Value.GetComponentInChildren<Text>();
+
+            if (keyImage != null)
+            {
+                keyImage.color = Color.white;
+            }
+        }
+
+        // 트랙 색상 팔레트
+        Color[] trackColors = new Color[]
+        {
+            new Color(1f, 0.5f, 0.5f),      // 트랙 1: 연한 빨강
+            new Color(0.5f, 1f, 0.5f),      // 트랙 2: 연한 초록
+            new Color(0.5f, 0.5f, 1f),      // 트랙 3: 연한 파랑
+            new Color(1f, 1f, 0.5f),        // 트랙 4: 연한 노랑
+            new Color(1f, 0.5f, 1f),        // 트랙 5: 연한 자주
+            new Color(0.5f, 1f, 1f),        // 트랙 6: 연한 청록
+            new Color(1f, 0.8f, 0.5f),      // 트랙 7: 연한 주황
+            new Color(0.8f, 0.5f, 1f),      // 트랙 8: 연한 보라
+            new Color(0.5f, 1f, 0.8f),      // 트랙 9: 연한 민트
+            new Color(1f, 0.6f, 0.8f)       // 트랙 10: 연한 핑크
+        };
+
+        // 현재 할당된 키에 트랙 번호와 색상 표시
+        for (int i = 0; i < currentKeys.Count; i++)
+        {
+            KeyCode key = currentKeys[i];
+
+            if (keyboardKeys.ContainsKey(key))
+            {
+                GameObject keyObj = keyboardKeys[key];
+                Image keyImage = keyObj.GetComponent<Image>();
+                Text keyText = keyObj.GetComponentInChildren<Text>();
+
+                if (keyImage != null)
+                {
+                    int trackNumber = GetTrackNumber(i);
+                    keyImage.color = trackColors[trackNumber % trackColors.Length];
+
+                    // 텍스트에 트랙 번호 추가
+                    if (keyText != null)
+                    {
+                        string originalText = key.ToString();
+                        keyText.text = $"{originalText}\nT{trackNumber}";
+                    }
+                }
+            }
+        }
+    }
+
+    #endregion
+
     void ShowStatus(string message)
     {
         if (statusText != null)
@@ -638,5 +786,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
         if (exportButton != null) exportButton.onClick.RemoveAllListeners();
         if (importButton != null) importButton.onClick.RemoveAllListeners();
         if (copyToClipboardButton != null) copyToClipboardButton.onClick.RemoveAllListeners();
+        if (toggleKeyboardLayoutButton != null) toggleKeyboardLayoutButton.onClick.RemoveAllListeners();
     }
 }
