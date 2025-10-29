@@ -63,3 +63,70 @@ public enum JudgmentMode // 판정 모드를 나타내는 열거형
     JudgmentMode_Hard = Hard,
     JudgmentMode_Super = Super
 }
+
+/// <summary>
+/// 판정 타입 확장 메서드
+/// 점수, 콤보 배율 등 판정 관련 유틸리티
+/// </summary>
+public static class JudgmentExtensions
+{
+    /// <summary>
+    /// 판정별 기본 점수
+    /// </summary>
+    public static int BasePoints(this JudgmentType judgment)
+    {
+        switch (judgment)
+        {
+            case JudgmentType.S_Perfect: return 1000;
+            case JudgmentType.Perfect:   return 700;
+            case JudgmentType.Great:     return 400;
+            case JudgmentType.Good:      return 200;
+            case JudgmentType.Bad:       return 50;
+            case JudgmentType.Miss:      return 0;
+            default: return 0;
+        }
+    }
+    
+    /// <summary>
+    /// 판정별 콤보 유지 여부
+    /// Bad 이상이면 콤보 break
+    /// </summary>
+    public static bool BreaksCombo(this JudgmentType judgment)
+    {
+        return judgment >= JudgmentType.Bad;
+    }
+    
+    /// <summary>
+    /// 판정 텍스트 표시
+    /// </summary>
+    public static string ToDisplayString(this JudgmentType judgment)
+    {
+        switch (judgment)
+        {
+            case JudgmentType.S_Perfect: return "S PERFECT!";
+            case JudgmentType.Perfect:   return "PERFECT!";
+            case JudgmentType.Great:     return "GREAT!";
+            case JudgmentType.Good:      return "GOOD";
+            case JudgmentType.Bad:       return "BAD";
+            case JudgmentType.Miss:      return "MISS";
+            default: return "";
+        }
+    }
+    
+    /// <summary>
+    /// 판정별 색상 (UI 표시용)
+    /// </summary>
+    public static UnityEngine.Color GetColor(this JudgmentType judgment)
+    {
+        switch (judgment)
+        {
+            case JudgmentType.S_Perfect: return new UnityEngine.Color(0.2f, 0.8f, 1f, 1f);   // 하늘색
+            case JudgmentType.Perfect:   return new UnityEngine.Color(0.2f, 1f, 0.4f, 1f);   // 초록색
+            case JudgmentType.Great:     return new UnityEngine.Color(1f, 0.9f, 0.2f, 1f);   // 노란색
+            case JudgmentType.Good:      return new UnityEngine.Color(1f, 0.6f, 0.2f, 1f);   // 주황색
+            case JudgmentType.Bad:       return new UnityEngine.Color(1f, 0.4f, 0.2f, 1f);   // 빨간주황
+            case JudgmentType.Miss:      return new UnityEngine.Color(1f, 0.2f, 0.2f, 1f);   // 빨간색
+            default: return UnityEngine.Color.white;
+        }
+    }
+}

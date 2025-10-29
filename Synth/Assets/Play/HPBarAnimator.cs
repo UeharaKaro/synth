@@ -78,15 +78,15 @@ public class HPBarAnimator : MonoBehaviour
         {
             currentHP = Mathf.Lerp(currentHP, targetHP, Time.deltaTime * 5f);
             
-            // HP에 따른 크기 조정
+            // HP에 따른 크기 조정 (세로 바)
             float hpRatio = currentHP / 100f;
             Vector3 newScale = originalScale;
-            newScale.y = originalScale.y * hpRatio;
+            newScale.y = originalScale.y * hpRatio; // Y축으로 크기 조정
             
-            // 하단 기준으로 스케일 조정
+            // 하단 기준으로 스케일 조정 (세로 HP바)
             hpFillTransform.localScale = newScale;
             float yOffset = (1f - hpRatio) * originalScale.y * 0.5f;
-            hpFillTransform.localPosition = new Vector3(0, -yOffset, -0.01f);
+            hpFillTransform.localPosition = new Vector3(hpFillTransform.localPosition.x, -yOffset, -0.01f);
             
             // HP에 따른 색상 변경
             Color targetColor = Color.Lerp(settings.hpBarEmptyColor, settings.hpBarFullColor, hpRatio);

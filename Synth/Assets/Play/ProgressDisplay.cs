@@ -14,7 +14,7 @@ public class ProgressDisplay : MonoBehaviour
     [SerializeField] private AudioManager audioManager;
     
     [Header("UI Position")]
-    [SerializeField] private Vector3 barPosition = new Vector3(0, 4f, -0.1f);
+    [SerializeField] private Vector3 barPosition = new Vector3(0, 8f, -0.1f); // 화면 최상단으로 이동
     [SerializeField] private float barWidth = 12f;
     [SerializeField] private float barHeight = 0.3f;
     
