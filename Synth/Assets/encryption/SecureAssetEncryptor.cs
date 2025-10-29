@@ -177,16 +177,24 @@ public class SecureAssetEncryptor
                     // .eaw 확장자로 저장 (Encrypted Asset Wrapper)
                     string newPath = Path.ChangeExtension(assetPath, ".eaw");
                     File.WriteAllBytes(newPath, encryptedBytes);
+                    
+                    // 원본 파일 삭제 (보안)
+                    File.Delete(fullPath);
+                    
                     processedPaths.Add(newPath);
+                    Debug.Log($"암호화 완료: {Path.GetFileName(fullPath)} → {Path.GetFileName(newPath)} (원본 삭제됨)");
                 }
                 else
                 {
                     byte[] encryptedBytes = File.ReadAllBytes(fullPath);
                     byte[] decryptedBytes = DecryptData(encryptedBytes);
                     
-                    string newPath = assetPath.Replace(".eaw", ".decrypted");
+                    // 원본 확장자로 복원
+                    string originalExtension = GetOriginalExtension(fullPath);
+                    string newPath = assetPath.Replace(".eaw", originalExtension);
                     File.WriteAllBytes(newPath, decryptedBytes);
                     processedPaths.Add(newPath);
+                    Debug.Log($"복호화 완료: {Path.GetFileName(fullPath)} → {Path.GetFileName(newPath)}");
                 }
             }
             catch (Exception ex)
@@ -353,6 +361,55 @@ public class SecureAssetEncryptor
             byte[] iv = new byte[16];
             Array.Copy(hash, iv, 16);
             return iv;
+        }
+    }
+
+    private static string GetOriginalExtension(string encryptedFilePath)
+    {
+        // 파일 헤더를 읽어서 원본 확장자 추론
+        try
+        {
+            byte[] data = File.ReadAllBytes(encryptedFilePath);
+            byte[] decrypted = DecryptData(data);
+            
+            // WAV 파일 시그니처: "RIFF"
+            if (decrypted.Length > 4 && 
+                decrypted[0] == 'R' && decrypted[1] == 'I' && 
+                decrypted[2] == 'F' && decrypted[3] == 'F')
+            {
+                return ".wav";
+            }
+            
+            // PNG 파일 시그니처: 89 50 4E 47
+            if (decrypted.Length > 4 && 
+                decrypted[0] == 0x89 && decrypted[1] == 0x50 && 
+                decrypted[2] == 0x4E && decrypted[3] == 0x47)
+            {
+                return ".png";
+            }
+            
+            // JPEG 파일 시그니처: FF D8 FF
+            if (decrypted.Length > 3 && 
+                decrypted[0] == 0xFF && decrypted[1] == 0xD8 && 
+                decrypted[2] == 0xFF)
+            {
+                return ".jpg";
+            }
+            
+            // OGG 파일 시그니처: "OggS"
+            if (decrypted.Length > 4 && 
+                decrypted[0] == 'O' && decrypted[1] == 'g' && 
+                decrypted[2] == 'g' && decrypted[3] == 'S')
+            {
+                return ".ogg";
+            }
+            
+            // 기본값
+            return ".decrypted";
+        }
+        catch
+        {
+            return ".decrypted";
         }
     }
 
