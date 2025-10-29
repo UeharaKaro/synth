@@ -12,7 +12,6 @@ using System.Text;
 /// 2. 키 스왑 기능
 /// 3. 프리셋 저장/로드
 /// 6. 내보내기/가져오기
-/// 8. 손 크기 맞춤 추천
 /// </summary>
 public class KeyBindingUIAdvanced : MonoBehaviour
 {
@@ -44,10 +43,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
     public Button importButton;
     public Button copyToClipboardButton;
     public InputField importTextField;
-
-    [Header("UI References - Hand Size")]
-    public Dropdown handSizeDropdown;
-    public Button applyHandSizeButton;
 
     [Header("UI References - Reset")]
     public Button resetButton;
@@ -153,13 +148,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
         if (importButton != null) importButton.onClick.AddListener(OnImportKeys);
         if (copyToClipboardButton != null) copyToClipboardButton.onClick.AddListener(OnCopyToClipboard);
 
-        // 손 크기
-        if (handSizeDropdown != null)
-        {
-            handSizeDropdown.ClearOptions();
-            handSizeDropdown.AddOptions(new List<string> { "작음", "보통", "큼" });
-        }
-        if (applyHandSizeButton != null) applyHandSizeButton.onClick.AddListener(OnApplyHandSize);
     }
 
     #region Basic Functions
@@ -699,116 +687,6 @@ public class KeyBindingUIAdvanced : MonoBehaviour
 
     #endregion
 
-    #region Hand Size Recommendations
-
-    void OnApplyHandSize()
-    {
-        if (handSizeDropdown == null) return;
-
-        int handSize = handSizeDropdown.value; // 0: 작음, 1: 보통, 2: 큼
-
-        switch (currentKeyMode)
-        {
-            case 4:
-                ApplyHandSize4K(handSize);
-                break;
-            case 5:
-                ApplyHandSize5K(handSize);
-                break;
-            case -5:
-                ApplyHandSize5Plus1K(handSize);
-                break;
-            case 6:
-                ApplyHandSize6K(handSize);
-                break;
-            case 7:
-                ApplyHandSize7K(handSize);
-                break;
-            case 8:
-                ApplyHandSize8K(handSize);
-                break;
-            case 10:
-                ApplyHandSize10K(handSize);
-                break;
-        }
-
-        SaveKeyBindings();
-        RefreshUI();
-        ShowStatus($"{new string[] { "작은", "보통", "큰" }[handSize]} 손 크기 배치 적용 완료");
-    }
-
-    void ApplyHandSize4K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.F, KeyCode.J, KeyCode.L }; break;
-        }
-    }
-
-    void ApplyHandSize5K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.L }; break;
-        }
-    }
-
-    void ApplyHandSize5Plus1K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.H, KeyCode.J, KeyCode.K }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.K, KeyCode.L, KeyCode.Semicolon }; break;
-        }
-    }
-
-    void ApplyHandSize6K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.H, KeyCode.J, KeyCode.K }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.K, KeyCode.L, KeyCode.Semicolon }; break;
-        }
-    }
-
-    void ApplyHandSize7K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.Space, KeyCode.H, KeyCode.J, KeyCode.K }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.Space, KeyCode.J, KeyCode.K, KeyCode.L }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.Space, KeyCode.K, KeyCode.L, KeyCode.Semicolon }; break;
-        }
-    }
-
-    void ApplyHandSize8K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.Z, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.K, KeyCode.L, KeyCode.Semicolon, KeyCode.Quote }; break;
-        }
-    }
-
-    void ApplyHandSize10K(int size)
-    {
-        switch (size)
-        {
-            case 0: currentKeys = new List<KeyCode> { KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.V, KeyCode.N, KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L }; break;
-            case 1: currentKeys = new List<KeyCode> { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.G, KeyCode.H, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon }; break;
-            case 2: currentKeys = new List<KeyCode> { KeyCode.Z, KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K, KeyCode.L, KeyCode.Semicolon, KeyCode.Quote }; break;
-        }
-    }
-
-    #endregion
-
     void ShowStatus(string message)
     {
         if (statusText != null)
@@ -831,6 +709,5 @@ public class KeyBindingUIAdvanced : MonoBehaviour
         if (exportButton != null) exportButton.onClick.RemoveAllListeners();
         if (importButton != null) importButton.onClick.RemoveAllListeners();
         if (copyToClipboardButton != null) copyToClipboardButton.onClick.RemoveAllListeners();
-        if (applyHandSizeButton != null) applyHandSizeButton.onClick.RemoveAllListeners();
     }
 }
