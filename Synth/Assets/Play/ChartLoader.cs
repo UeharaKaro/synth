@@ -75,6 +75,11 @@ public class ChartLoader : MonoBehaviour
             {
                 return LoadChartFromSynthFile(filePath);
             }
+            // .osu 파일인 경우 (osu! mania)
+            else if (extension == ".osu")
+            {
+                return LoadChartFromOsuFile(filePath);
+            }
             // JSON 파일인 경우
             else if (extension == ".json")
             {
@@ -133,6 +138,44 @@ public class ChartLoader : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"ChartLoader: .synth 파일 로드 실패 - {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// .osu 파일을 로드하여 ChartData로 변환합니다 (osu! mania)
+    /// </summary>
+    private ChartData LoadChartFromOsuFile(string filePath)
+    {
+        try
+        {
+            // OsuManiaParser를 사용하여 .osu 파일 파싱
+            ChartData chart = OsuManiaParser.ParseFromFile(filePath);
+
+            if (chart == null)
+            {
+                Debug.LogError("ChartLoader: .osu 파일 파싱 실패");
+                return null;
+            }
+
+            if (!chart.IsValid())
+            {
+                Debug.LogError("ChartLoader: 유효하지 않은 차트 데이터");
+                return null;
+            }
+
+            chart.SortNotesByTime();
+
+            Debug.Log($"ChartLoader: .osu 차트 로드 성공 - {chart.songName} [{chart.difficulty}] ({chart.notes.Count}개 노트, {chart.keyCount}K)");
+
+            currentChart = chart;
+            OnChartLoaded?.Invoke(chart);
+
+            return chart;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"ChartLoader: .osu 파일 로드 실패 - {e.Message}");
             return null;
         }
     }
