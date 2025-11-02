@@ -1,9 +1,9 @@
 # Synth 리듬게임 개발 TODO 및 이슈 정리
 
-> **프로젝트 완성도**: 약 97% (베타 단계)
-> **최근 업데이트**: 2025-01-29
-> **예상 완료 시간**: 13.5시간 (약 83시간 진행, 9시간 완료)
-> **✅ 완료**: 저작권 보호를 위한 에셋 암호화 시스템 구현 완료
+> **프로젝트 완성도**: 약 96% (베타 단계)
+> **최근 업데이트**: 2025-01-29 (세션 3회)
+> **예상 완료 시간**: 12시간 (약 85시간 진행, 10시간 완료)
+> **✅ 완료**: UI 애니메이션 시스템 구현 완료 (로딩, 콤보, 점수, 판정 이펙트)
 
 ---
 
@@ -25,7 +25,49 @@
 
 ## 📊 프로젝트 현황 요약
 
-### 최근 완료 작업 (2025-01-29)
+### 최근 완료 작업 (2025-01-29, 세션 #3)
+
+**UI 애니메이션 시스템 구현 완료 ✅**:
+- **이벤트 시스템** (`GameEvents.cs` - 90줄)
+  - 게임 전역 이벤트 관리
+  - OnNoteHit, OnNoteMiss, OnSongStart 등
+  - 콤보, 점수, 퍼센트 변경 이벤트
+  
+- **점수/콤보 관리자** (`GameScoreManager.cs` - 235줄)
+  - 콤보 배율 시스템 (50→x2, 100→x3, 200→x4)
+  - 판정별 통계 추적
+  - 정확도 계산 (가중치 기반)
+  
+- **UI 애니메이션 통합** (`GameplayUIManager.cs` - 355줄)
+  - 트랙 슬라이드 인/아웃 (0.8초 애니메이션)
+  - 콤보 펄스 (1.35x 스케일)
+  - 판정 텍스트 (Punch + Fade)
+  - 점수/퍼센트 실시간 갱신
+  
+- **히트 이펙트 풀링** (`HitEffectPool.cs`, `HitEffect.cs`)
+  - 오브젝트 풀링으로 성능 최적화
+  - 판정별 색상/애니메이션
+  - 스케일 + 페이드 효과
+  
+- **판정 확장 메서드** (`GameEnums.cs` 확장)
+  - BasePoints(), BreaksCombo(), ToDisplayString(), GetColor()
+  
+- **완벽한 구현 가이드** (`UI_ANIMATION_IMPLEMENTATION_GUIDE.md` - 650줄)
+  - Unity 세팅 단계별 가이드
+  - 코드 통합 방법
+  - 애니메이션 커스터마이징
+  - 체크리스트
+
+### 이전 완료 작업 (2025-01-29, 세션 #2)
+
+**HPBar 및 Track 수정 완료 ✅**:
+- **Track 폭 조정**: 1.0 → 0.6 (40% 얇게)
+- **Track 간격 조정**: 1.1 → 0.8 (더 좁게)
+- **HPBar 세로형 명확화**: 폭 0.4, 높이 7.0
+- **GameSceneBuilder.cs 수정 완료**
+- **수정 가이드 문서 작성** (`HPBAR_TRACK_FIX_GUIDE.md`)
+
+### 이전 완료 작업 (2025-01-29, 세션 #1)
 
 **GameScene 설정 가이드 작성 완료 ✅**:
 - **GAMESCENE_SETUP_INSTRUCTIONS.md 생성**
@@ -112,7 +154,8 @@
 
 | 시스템 | 완성도 | 상태 | 남은 시간 |
 |-------|--------|------|----------|
-| 게임플레이 | 95% | 🟢 완료 | 1시간 |
+| 게임플레이 | 98% | 🟢 완료 | 0.5시간 |
+| **UI 애니메이션** | **95%** | **✅ 완료** | **1.5시간** |
 | 노래 선택 | 95% | ✅ 완료 | 1시간 |
 | 메인 메뉴 | 95% | ✅ 완료 | 0.5시간 |
 | 일시정지 시스템 | 100% | ✅ 완료 | - |
@@ -121,15 +164,60 @@
 | 옵션 메뉴 | 100% | ✅ 완료 | - |
 | 오디오 시스템 | 100% | ✅ 완료 | - |
 | 에셋 관리 | 90% | 🟢 완료 | 1시간 |
-| **보안 시스템** | **90%** | **✅ 완료** | **1시간** |
-| Unity 씬 설정 | 90% | 🟢 완료 | 1.5시간 |
-| **전체** | **97%** | **🟢 Beta** | **13시간** |
+| 보안 시스템 | 90% | ✅ 완료 | 1시간 |
+| Unity 씬 설정 | 92% | 🟢 완료 | 1시간 |
+| **전체** | **96%** | **🟢 Beta** | **12시간** |
 
 ---
 
 ## 🎯 다음 우선순위 작업
 
-### 1️⃣ 저작권 보호 시스템 (필수, 10시간)
+### 1️⃣ Unity Editor에서 UI 애니메이션 시스템 구현 (1.5시간)
+**파일**: [UI_ANIMATION_IMPLEMENTATION_GUIDE.md](UI_ANIMATION_IMPLEMENTATION_GUIDE.md)
+```
+[ ] Canvas 및 UI 오브젝트 생성 (30분)
+    [ ] TrackContainer (UI Panel)
+    [ ] ComboText, ScoreText, PercentText, JudgmentText
+    
+[ ] 매니저 오브젝트 생성 (20분)
+    [ ] GameScoreManager
+    [ ] GameplayUIManager
+    [ ] HitEffectPool
+    
+[ ] HitEffect Prefab 생성 (10분)
+    [ ] SpriteRenderer + Animator + HitEffect.cs
+    
+[ ] 참조 연결 (20분)
+    [ ] GameplayUIManager Inspector 설정
+    [ ] HitEffectPool 설정
+    
+[ ] 코드 통합 (10분)
+    [ ] NoteController에 GameEvents 호출 추가
+    [ ] GameManager에 게임 시작 이벤트 추가
+    
+[ ] Play 모드 테스트 (10분)
+    [ ] 트랙 슬라이드 인 확인
+    [ ] 콤보/점수 애니메이션 확인
+    [ ] 판정 텍스트 확인
+    [ ] 히트 이펙트 확인
+```
+
+### 2️⃣ Unity 씬 설정 완료 (1시간)
+**파일**: [02_SCENE_SETUP.md](02_SCENE_SETUP.md)
+```
+[X] GameScene 설정 가이드 - 완료: 2025-01-29
+    [X] GAMESCENE_SETUP_INSTRUCTIONS.md 작성
+    [X] 3가지 방법 제공 (자동/수동/체크리스트)
+    [X] GameSceneBuilder 확인 (이미 존재)
+    [X] HPBar 및 Track 수정 완료
+    
+[ ] Unity Editor에서 GameScene 실행 (5분)
+[ ] SongSelection 씬 - 새 UI 컴포넌트 추가 (30분)
+[ ] ResultScene 씬 - 애니메이션 확인 (15분)
+[ ] 전체 플로우 테스트 (10분)
+```
+
+### 3️⃣ 저작권 보호 시스템 테스트 (1시간)
 **파일**: [03_COPYRIGHT_PROTECTION.md](03_COPYRIGHT_PROTECTION.md)
 ```
 [X] Phase 4-A: 현재 시스템 개선 (2시간) - 완료: 2025-01-29
@@ -159,27 +247,13 @@
     [X] API 문서
     [X] 문제 해결 가이드
 
-[ ] 테스트 및 검증 (1시간) - 다음 단계
+[ ] 테스트 및 검증 (1시간)
     [ ] 암호화/복호화 기능 테스트
     [ ] 빌드 자동화 테스트
     [ ] 성능 벤치마크
 ```
 
-### 2️⃣ Unity 씬 설정 완료 (1.5시간)
-**파일**: [02_SCENE_SETUP.md](02_SCENE_SETUP.md)
-```
-[X] GameScene 설정 가이드 - 완료: 2025-01-29
-    [X] GAMESCENE_SETUP_INSTRUCTIONS.md 작성
-    [X] 3가지 방법 제공 (자동/수동/체크리스트)
-    [X] GameSceneBuilder 확인 (이미 존재)
-    
-[ ] Unity Editor에서 GameScene 실행 (사용자 작업, 5분)
-[ ] SongSelection 씬 - 새 UI 컴포넌트 추가 (1시간)
-[ ] ResultScene 씬 - 애니메이션 확인 (30분)
-[ ] OptionsScene 씬 - 생성 및 구현 (이미 완료)
-```
-
-### 3️⃣ 차트 에디터 고급 기능 (6시간)
+### 4️⃣ 차트 에디터 고급 기능 (6시간)
 **파일**: [04_MISSING_FEATURES.md](04_MISSING_FEATURES.md)
 ```
 [ ] 마우스 입력 개선
@@ -232,7 +306,7 @@
 
 - [X] **Phase 1**: 핵심 시스템 완성 (완료: 2025-10-26)
 - [X] **Phase 2-A**: 노래 선택 시스템 (완료: 2025-10-26)
-- [🔄] **Phase 2-B**: UI 완성 (97% 완료, GameScene 가이드 작성)
+- [🔄] **Phase 2-B**: UI 완성 (98% 완료, UI 애니메이션 시스템 구현)
 - [🔲] **Phase 3**: 차트 에디터 완성 (75% 완료)
 - [🔄] **Phase 4**: 보안 시스템 & 폴리싱 (90% 완료, 테스트 필요)
 
@@ -244,11 +318,19 @@
 
 - **DEVELOPMENT_ARCHIVE.md** - 완료된 작업의 상세 로그
 - **SESSION_SUMMARY/** - 세션별 작업 기록
+  - **SESSION_SUMMARY_2025-01-29_UI_Animation.md** - UI 애니메이션 시스템 (최신)
+  - **SESSION_SUMMARY_2025-01-29_GameScene_Setup.md** - GameScene 가이드
+  - **SESSION_SUMMARY_2025-10-28_MainMenu_Setup.md** - MainMenu 설정
+- **ChartEditorBeta_Documentation.md** - 차트 에디터 사용 가이드
+- **CLAUDE.md** - Claude Code 개발 가이드
+- **UI_ANIMATION_IMPLEMENTATION_GUIDE.md** - UI 애니메이션 구현 가이드 (신규)
+- **HPBAR_TRACK_FIX_GUIDE.md** - HPBar/Track 수정 가이드
+- **GAMESCENE_SETUP_INSTRUCTIONS.md** - GameScene 설정 가이드
 - **ChartEditorBeta_Documentation.md** - 차트 에디터 사용 가이드
 - **CLAUDE.md** - Claude Code 개발 가이드
 
 ---
 
-**마지막 업데이트**: 2025-01-29
-**문서 버전**: 3.2 (GameScene 가이드 추가)
-**다음 단계**: Unity Editor에서 GameScene 실행 (5분) → SongSelectionScene 설정 (1시간)
+**마지막 업데이트**: 2025-01-29 (세션 3회 완료)
+**문서 버전**: 3.3 (UI 애니메이션 시스템 추가)
+**다음 단계**: Unity Editor에서 UI 애니메이션 시스템 구현 (1.5시간)
