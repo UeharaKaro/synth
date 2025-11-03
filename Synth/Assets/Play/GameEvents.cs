@@ -6,8 +6,8 @@ using System;
 /// </summary>
 public static class GameEvents
 {
-    // 노트 히트 이벤트 (판정 타입 전달)
-    public static Action<JudgmentType> OnNoteHit;
+    // 노트 히트 이벤트 (판정 타입, 타이밍 오프셋 전달)
+    public static Action<JudgmentType, float> OnNoteHit;
     
     // 노트 미스 이벤트
     public static Action OnNoteMiss;
@@ -31,9 +31,9 @@ public static class GameEvents
     public static Action<float> OnHPChanged;
     
     // 이벤트 발생 메서드들
-    public static void RaiseNoteHit(JudgmentType judgment)
+    public static void RaiseNoteHit(JudgmentType judgment, float timeDifferenceMs = 0f)
     {
-        OnNoteHit?.Invoke(judgment);
+        OnNoteHit?.Invoke(judgment, timeDifferenceMs);
     }
     
     public static void RaiseNoteMiss()

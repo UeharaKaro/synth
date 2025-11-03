@@ -90,7 +90,7 @@ public class SimpleOsuGameStarter : MonoBehaviour
 
         // 게임 시작
         Debug.Log("게임 시작!");
-        // GameManager.Instance.StartGame(chart); // ← GameManager에 public StartGame이 있으면 활성화
+        GameManager.Instance.StartGame(chart);
 
         Debug.Log($"===================\n");
     }

@@ -146,7 +146,7 @@ public class GameplayUIManager : MonoBehaviour
     /// <summary>
     /// 노트 히트 시 호출
     /// </summary>
-    private void OnNoteHit(JudgmentType judgment)
+    private void OnNoteHit(JudgmentType judgment, float timeDifferenceMs)
     {
         // 판정 텍스트 표시
         ShowJudgment(judgment);

@@ -58,7 +58,7 @@ public class GameScoreManager : MonoBehaviour
     /// <summary>
     /// 노트 히트 처리
     /// </summary>
-    private void HandleNoteHit(JudgmentType judgment)
+    private void HandleNoteHit(JudgmentType judgment, float timeDifferenceMs)
     {
         // Miss는 HandleMiss에서 처리
         if (judgment == JudgmentType.Miss)

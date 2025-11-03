@@ -6,13 +6,20 @@ using TMPro; // TextMeshPro를 사용하기 위해 필요
 
 public class SongSelectionManager : MonoBehaviour   
 {
-    // UI 요소들
+    [Header("데이터베이스")]
+    public SongDatabase songDatabase; // 🎵 곡 데이터베이스
+
+    [Header("UI 요소들")]
 	public TextMeshProUGUI songTitleText; // 노래 제목 표시 텍스트
     public TextMeshProUGUI artistText; // 아티스트 표시 텍스트
 	public TextMeshProUGUI keyCountText; // 현재 키 개수를 표현할 텍스트
 	public TextMeshProUGUI difficultyText; // 현재 난이도를 표현할 텍스트
 	public Button selectSongButton; // 노래 선택 버튼 (횡 슬라이더식 혹은 종(위아래))
+	
 
+	// 현재 선택된 곡
+	private int currentSongIndex = 0;
+	
 	// 현재 키 모드(기본 4키)
 	private int currentKeyCount = 4;
 	private int[] availableKeyCounts = { 4, 5, 6, 7, 8, 10 }; // 지원하는 키 개수 목록

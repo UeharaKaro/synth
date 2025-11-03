@@ -223,6 +223,9 @@ public class NoteController : MonoBehaviour
             gearController.ShowJudgmentOffset(result, timeDifferenceMs);
         }
 
+        // 🎯 UI 애니메이션 시스템: 노트 히트 이벤트 발생
+        GameEvents.RaiseNoteHit(result, timeDifferenceMs);
+
         // 히트 이펙트 (색상 변경 등)
         if (noteRenderer != null)
         {
@@ -258,6 +261,9 @@ public class NoteController : MonoBehaviour
         {
             gearController.ProcessJudgment(JudgmentType.Miss);
         }
+
+        // 🎯 UI 애니메이션 시스템: 노트 미스 이벤트 발생
+        GameEvents.RaiseNoteMiss();
 
         // Miss 이펙트
         if (noteRenderer != null)

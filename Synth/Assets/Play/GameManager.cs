@@ -201,7 +201,7 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// 게임 시작
     /// </summary>
-    private void StartGame(ChartData chart)
+    public void StartGame(ChartData chart)
     {
         if (chart == null)
         {
@@ -250,6 +250,9 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log($"GameManager: 게임 시작 - {chart.songName}");
+        
+        // 🎯 UI 애니메이션 시스템: 게임 시작 이벤트 발생
+        GameEvents.RaiseSongStart();
         
         // PauseMenuUI 활성화 (게임플레이 시작)
         NotifyPauseMenuGameplayState(true);

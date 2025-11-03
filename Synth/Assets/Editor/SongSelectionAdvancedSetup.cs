@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEditor;
 using TMPro;
 using System.IO;
+using UnityEditor.SceneManagement;
 
 /// <summary>
 /// SongSelection 씬에 Advanced UI를 자동으로 생성하는 Editor Script
@@ -128,10 +129,10 @@ public class SongSelectionAdvancedSetup : EditorWindow
         CreateHighScorePanel(rightPanel.transform);
         CreateActionPanel(rightPanel.transform);
         
-        // 8. SongListItem Prefab 생성
+        // 8. SongListItem Prefab 생성 (선택사항)
         if (createSongListItem)
         {
-            CreateSongListItemPrefab();
+            CreateSongListItemPrefabInline();
         }
         
         // 9. SongSelectionUIAdvanced 컴포넌트 추가 및 연결
@@ -823,11 +824,205 @@ public class SongSelectionAdvancedSetup : EditorWindow
         CreateButton(panel.transform, "BackButton", "← 뒤로");
     }
     
-    private void CreateSongListItemPrefab()
+    private void CreateSongListItemPrefabInline()
     {
-        // SongListItem Prefab 생성 로직은 복잡하므로
-        // 여기서는 스킵하고 수동으로 생성하도록 안내
-        Debug.Log("⚠️ SongListItem Prefab은 수동으로 생성하세요. 가이드 참조: SONGSELECTION_UPGRADE_GUIDE.md");
+        // 독립 도구 사용 권장
+        if (EditorUtility.DisplayDialog(
+            "SongListItem Prefab", 
+            "SongListItem Prefab 생성은 독립 도구를 사용하는 것이 좋습니다.\n\n" +
+            "Tools → Create SongListItem Prefab 메뉴를 사용하세요.\n\n" +
+            "지금 여기서 생성하시겠습니까?", 
+            "예, 여기서 생성", "아니오, 나중에"))
+        {
+            Debug.Log("🎨 SongListItem Prefab 간단 생성 중...");
+            Debug.Log("⚠️ 더 나은 옵션을 원하시면 'Tools → Create SongListItem Prefab'를 사용하세요.");
+            
+            // 간단한 생성 로직 (기존 CreatePrefabText, CreatePrefabIcon 메서드 사용)
+            GameObject prefabRoot = new GameObject("SongListItem");
+            
+            RectTransform rootRect = prefabRoot.AddComponent<RectTransform>();
+            rootRect.sizeDelta = new Vector2(780, 100);
+            
+            LayoutElement rootLayout = prefabRoot.AddComponent<LayoutElement>();
+            rootLayout.minHeight = 100;
+            rootLayout.preferredHeight = 100;
+            
+            // Background
+            GameObject background = new GameObject("Background");
+            background.transform.SetParent(prefabRoot.transform, false);
+            RectTransform bgRect = background.AddComponent<RectTransform>();
+            bgRect.anchorMin = Vector2.zero;
+            bgRect.anchorMax = Vector2.one;
+            bgRect.sizeDelta = Vector2.zero;
+            Image bgImg = background.AddComponent<Image>();
+            bgImg.color = new Color(1, 1, 1, 0.1f);
+            
+            // Selection Indicator
+            GameObject indicator = new GameObject("SelectionIndicator");
+            indicator.transform.SetParent(prefabRoot.transform, false);
+            RectTransform indicatorRect = indicator.AddComponent<RectTransform>();
+            indicatorRect.anchorMin = new Vector2(0, 0);
+            indicatorRect.anchorMax = new Vector2(0, 1);
+            indicatorRect.pivot = new Vector2(0, 0.5f);
+            indicatorRect.sizeDelta = new Vector2(5, 0);
+            indicatorRect.anchoredPosition = Vector2.zero;
+            Image indicatorImg = indicator.AddComponent<Image>();
+            indicatorImg.color = Color.yellow;
+            indicator.SetActive(false);
+            
+            // Thumbnail
+            GameObject thumbnail = new GameObject("ThumbnailImage");
+            thumbnail.transform.SetParent(prefabRoot.transform, false);
+            RectTransform thumbRect = thumbnail.AddComponent<RectTransform>();
+            thumbRect.anchorMin = new Vector2(0, 0.5f);
+            thumbRect.anchorMax = new Vector2(0, 0.5f);
+            thumbRect.pivot = new Vector2(0, 0.5f);
+            thumbRect.sizeDelta = new Vector2(80, 80);
+            thumbRect.anchoredPosition = new Vector2(15, 0);
+            Image thumbImg = thumbnail.AddComponent<Image>();
+            thumbImg.preserveAspect = true;
+            thumbImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            
+            // Info Container
+            GameObject infoContainer = new GameObject("InfoContainer");
+            infoContainer.transform.SetParent(prefabRoot.transform, false);
+            RectTransform infoRect = infoContainer.AddComponent<RectTransform>();
+            infoRect.anchorMin = new Vector2(0, 0);
+            infoRect.anchorMax = new Vector2(1, 1);
+            infoRect.offsetMin = new Vector2(105, 10);
+            infoRect.offsetMax = new Vector2(-150, -10);
+            
+            VerticalLayoutGroup infoLayout = infoContainer.AddComponent<VerticalLayoutGroup>();
+            infoLayout.spacing = 5;
+            infoLayout.childAlignment = TextAnchor.UpperLeft;
+            infoLayout.childControlWidth = true;
+            infoLayout.childControlHeight = false;
+            infoLayout.childForceExpandWidth = true;
+            infoLayout.childForceExpandHeight = false;
+            
+            // Texts
+            GameObject titleText = CreatePrefabText(infoContainer.transform, "TitleText", "Song Title", 20, true);
+            GameObject artistText = CreatePrefabText(infoContainer.transform, "ArtistText", "Artist Name", 16, false);
+            artistText.GetComponent<TextMeshProUGUI>().color = new Color(0.8f, 0.8f, 0.8f, 1f);
+            GameObject bpmText = CreatePrefabText(infoContainer.transform, "BPMText", "BPM: 120", 14, false);
+            bpmText.GetComponent<TextMeshProUGUI>().color = new Color(0.6f, 0.6f, 0.6f, 1f);
+            
+            GameObject levelText = CreatePrefabText(prefabRoot.transform, "LevelRangeText", "Lv. 1~10", 16, false);
+            RectTransform levelRect = levelText.GetComponent<RectTransform>();
+            levelRect.anchorMin = new Vector2(1, 1);
+            levelRect.anchorMax = new Vector2(1, 1);
+            levelRect.pivot = new Vector2(1, 1);
+            levelRect.sizeDelta = new Vector2(100, 30);
+            levelRect.anchoredPosition = new Vector2(-10, -10);
+            levelText.GetComponent<TextMeshProUGUI>().color = Color.yellow;
+            levelText.GetComponent<TextMeshProUGUI>().alignment = TextAlignmentOptions.Center;
+            
+            // Icons
+            GameObject iconsContainer = new GameObject("IconsContainer");
+            iconsContainer.transform.SetParent(prefabRoot.transform, false);
+            RectTransform iconsRect = iconsContainer.AddComponent<RectTransform>();
+            iconsRect.anchorMin = new Vector2(1, 0);
+            iconsRect.anchorMax = new Vector2(1, 0);
+            iconsRect.pivot = new Vector2(1, 0);
+            iconsRect.sizeDelta = new Vector2(120, 30);
+            iconsRect.anchoredPosition = new Vector2(-10, 10);
+            
+            HorizontalLayoutGroup iconsLayout = iconsContainer.AddComponent<HorizontalLayoutGroup>();
+            iconsLayout.spacing = 5;
+            iconsLayout.childAlignment = TextAnchor.MiddleCenter;
+            
+            GameObject favoriteIcon = CreatePrefabIcon(iconsContainer.transform, "FavoriteIcon", Color.yellow);
+            GameObject lockIcon = CreatePrefabIcon(iconsContainer.transform, "LockIcon", Color.red);
+            GameObject clearedBadge = CreatePrefabIcon(iconsContainer.transform, "ClearedBadge", Color.green);
+            GameObject newBadge = CreatePrefabIcon(iconsContainer.transform, "NewBadge", Color.cyan);
+            
+            favoriteIcon.SetActive(false);
+            lockIcon.SetActive(false);
+            clearedBadge.SetActive(false);
+            newBadge.SetActive(false);
+            
+            // Button
+            Button button = prefabRoot.AddComponent<Button>();
+            button.targetGraphic = bgImg;
+            button.transition = Selectable.Transition.ColorTint;
+            ColorBlock colors = button.colors;
+            colors.normalColor = new Color(1, 1, 1, 0);
+            colors.highlightedColor = new Color(1, 1, 1, 0.2f);
+            colors.pressedColor = new Color(1, 1, 1, 0.4f);
+            colors.selectedColor = new Color(1, 1, 1, 0.2f);
+            button.colors = colors;
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+            
+            // SongListItem Script
+            SongListItem itemScript = prefabRoot.AddComponent<SongListItem>();
+            itemScript.titleText = titleText.GetComponent<TextMeshProUGUI>();
+            itemScript.artistText = artistText.GetComponent<TextMeshProUGUI>();
+            itemScript.bpmText = bpmText.GetComponent<TextMeshProUGUI>();
+            itemScript.levelRangeText = levelText.GetComponent<TextMeshProUGUI>();
+            itemScript.thumbnailImage = thumbImg;
+            itemScript.selectionIndicator = indicatorImg;  // Image 타입
+            itemScript.favoriteIcon = favoriteIcon;
+            itemScript.lockIcon = lockIcon;
+            itemScript.clearedBadge = clearedBadge;
+            itemScript.newBadge = newBadge;
+            
+            // Save as Prefab
+            string prefabPath = "Assets/songselect/SongListItem.prefab";
+            if (!AssetDatabase.IsValidFolder("Assets/songselect"))
+            {
+                AssetDatabase.CreateFolder("Assets", "songselect");
+            }
+            
+            GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
+            
+            if (savedPrefab != null)
+            {
+                Debug.Log($"✅ SongListItem Prefab 생성 완료: {prefabPath}");
+            }
+            else
+            {
+                Debug.LogError("❌ Prefab 생성 실패!");
+            }
+            
+            DestroyImmediate(prefabRoot);
+        }
+        else
+        {
+            Debug.Log("ℹ️ SongListItem Prefab 생성을 건너뜁니다. 나중에 'Tools → Create SongListItem Prefab'을 사용하세요.");
+        }
+    }
+    
+    private GameObject CreatePrefabText(Transform parent, string name, string text, int fontSize, bool bold)
+    {
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(parent, false);
+        
+        TextMeshProUGUI textComp = obj.AddComponent<TextMeshProUGUI>();
+        textComp.text = text;
+        textComp.fontSize = fontSize;
+        textComp.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
+        textComp.color = Color.white;
+        textComp.alignment = TextAlignmentOptions.Left;
+        
+        return obj;
+    }
+    
+    private GameObject CreatePrefabIcon(Transform parent, string name, Color color)
+    {
+        GameObject obj = new GameObject(name);
+        obj.transform.SetParent(parent, false);
+        
+        RectTransform rect = obj.AddComponent<RectTransform>();
+        rect.sizeDelta = new Vector2(24, 24);
+        
+        Image img = obj.AddComponent<Image>();
+        img.color = color;
+        
+        LayoutElement layout = obj.AddComponent<LayoutElement>();
+        layout.preferredWidth = 24;
+        layout.preferredHeight = 24;
+        
+        return obj;
     }
     
     private void SetupSongSelectionComponent(GameObject canvas)
