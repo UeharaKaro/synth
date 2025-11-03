@@ -35,15 +35,223 @@ public class OsuToSynthBatchConverter : MonoBehaviour
     [MenuItem("Tools/Convert All Osu Maps to Synth")]
     public static void ConvertAllOsuMapsMenu()
     {
-        // GameObject 생성하여 실행
-        GameObject converterObj = new GameObject("OsuToSynthConverter_Temp");
-        OsuToSynthBatchConverter converter = converterObj.AddComponent<OsuToSynthBatchConverter>();
-        converter.ConvertAllOsuMaps();
+        // 직접 실행 (static 메서드로 변경)
+        ConvertAllOsuMapsStatic();
+    }
+    
+    /// <summary>
+    /// Static 메서드로 변환 실행
+    /// </summary>
+    private static void ConvertAllOsuMapsStatic()
+    {
+        string osuFolderPath = Path.Combine(Application.streamingAssetsPath, "Ousmaps");
+        string synthFolderPath = Path.Combine(Application.streamingAssetsPath, "SynthMaps");
         
-        // 완료 후 오브젝트 삭제
-        if (!Application.isPlaying)
+        Debug.Log($"=== osu → synth 일괄 변환 시작 ===");
+        Debug.Log($"osu 폴더: {osuFolderPath}");
+        Debug.Log($"synth 폴더: {synthFolderPath}");
+        Debug.Log($"");
+        
+        // 폴더 존재 확인
+        if (!Directory.Exists(osuFolderPath))
         {
-            DestroyImmediate(converterObj);
+            Debug.LogError($"❌ osu 맵 폴더가 존재하지 않습니다: {osuFolderPath}");
+            return;
+        }
+        
+        // synth 폴더 생성
+        if (!Directory.Exists(synthFolderPath))
+        {
+            Directory.CreateDirectory(synthFolderPath);
+            Debug.Log($"✅ synth 폴더 생성: {synthFolderPath}");
+        }
+        
+        // 모든 .osu 파일 찾기
+        string[] osuFiles = Directory.GetFiles(osuFolderPath, "*.osu", SearchOption.AllDirectories);
+        
+        if (osuFiles.Length == 0)
+        {
+            Debug.LogWarning($"⚠️ osu 파일을 찾을 수 없습니다.");
+            return;
+        }
+        
+        Debug.Log($"📁 발견된 osu 파일: {osuFiles.Length}개");
+        Debug.Log($"");
+        
+        // 통계
+        int successCount = 0;
+        int skipCount = 0;
+        int failCount = 0;
+        List<string> failedFiles = new List<string>();
+        
+        // 각 파일 변환
+        foreach (string osuFilePath in osuFiles)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(osuFilePath);
+            string synthFilePath = Path.Combine(synthFolderPath, fileName + ".synth");
+            
+            // 이미 존재하는 파일 체크
+            if (File.Exists(synthFilePath))
+            {
+                Debug.Log($"⏭️ 건너뜀 (이미 존재): {fileName}");
+                skipCount++;
+                continue;
+            }
+            
+            // 변환 시도
+            bool success = ConvertSingleFileStatic(osuFilePath, synthFilePath);
+            
+            if (success)
+            {
+                successCount++;
+            }
+            else
+            {
+                failCount++;
+                failedFiles.Add(fileName);
+            }
+        }
+        
+        // 최종 결과
+        Debug.Log($"");
+        Debug.Log($"=== 변환 완료 ===");
+        Debug.Log($"✅ 성공: {successCount}개");
+        Debug.Log($"⏭️ 건너뜀: {skipCount}개");
+        Debug.Log($"❌ 실패: {failCount}개");
+        
+        if (failCount > 0)
+        {
+            Debug.LogWarning($"실패한 파일 목록:");
+            foreach (string failedFile in failedFiles)
+            {
+                Debug.LogWarning($"  - {failedFile}");
+            }
+        }
+        
+        Debug.Log($"===================");
+        
+        // Unity Editor에서 Asset 갱신
+        AssetDatabase.Refresh();
+    }
+    
+    /// <summary>
+    /// Static 버전 - 단일 파일 변환
+    /// </summary>
+    private static bool ConvertSingleFileStatic(string osuFilePath, string synthFilePath)
+    {
+        string fileName = Path.GetFileName(osuFilePath);
+        
+        try
+        {
+            Debug.Log($"🔄 변환 중: {fileName}");
+            
+            // 1. osu 파일 파싱
+            ChartData osuChart = OsuManiaParser.ParseFromFile(osuFilePath);
+            
+            if (osuChart == null)
+            {
+                Debug.LogError($"❌ 파싱 실패: {fileName}");
+                return false;
+            }
+            
+            // 2. synth 파일 형식으로 저장
+            bool saved = SaveChartDataToSynthStatic(osuChart, synthFilePath);
+            
+            if (saved)
+            {
+                Debug.Log($"✅ 변환 성공: {fileName} → {Path.GetFileName(synthFilePath)}");
+                return true;
+            }
+            else
+            {
+                Debug.LogError($"❌ 저장 실패: {fileName}");
+                return false;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"❌ 변환 오류: {fileName} - {e.Message}");
+            Debug.LogError($"스택 트레이스: {e.StackTrace}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Static 버전 - synth 파일 저장
+    /// </summary>
+    private static bool SaveChartDataToSynthStatic(ChartData chart, string filePath)
+    {
+        try
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            
+            // 헤더
+            sb.AppendLine("# Synth Chart Format v1.0");
+            sb.AppendLine($"# Generated: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"# Converted from osu! mania beatmap");
+            sb.AppendLine();
+            
+            // 메타데이터
+            sb.AppendLine("[METADATA]");
+            sb.AppendLine($"Title: {chart.songName}");
+            sb.AppendLine($"Artist: {chart.artistName}");
+            sb.AppendLine($"Audio: {chart.audioFileName}");
+            sb.AppendLine($"Cover: {chart.coverImageFileName}");
+            sb.AppendLine($"BPM: {chart.bpm}");
+            sb.AppendLine($"Offset: {chart.offset}");
+            sb.AppendLine();
+            
+            // 난이도 정보
+            sb.AppendLine("[DIFFICULTY]");
+            sb.AppendLine($"Name: {chart.difficulty}");
+            sb.AppendLine($"Keys: {chart.keyCount}");
+            sb.AppendLine($"Level: {chart.level:F1}");
+            sb.AppendLine();
+            
+            // 차트 정보
+            sb.AppendLine("[CHART_INFO]");
+            sb.AppendLine($"Author: {chart.chartAuthor}");
+            sb.AppendLine($"Created: {chart.createdDate}");
+            sb.AppendLine($"Modified: {System.DateTime.Now:yyyy-MM-dd}");
+            sb.AppendLine($"Source: {chart.source}");
+            sb.AppendLine($"Tags: {chart.tags}");
+            sb.AppendLine();
+            
+            // 통계
+            sb.AppendLine("[STATISTICS]");
+            sb.AppendLine($"NoteCount: {chart.noteCount}");
+            sb.AppendLine($"LongNoteCount: {chart.longNoteCount}");
+            sb.AppendLine($"MaxCombo: {chart.maxCombo}");
+            sb.AppendLine($"Density: {chart.density:F2}");
+            sb.AppendLine();
+            
+            // 노트 데이터
+            sb.AppendLine("[NOTES]");
+            sb.AppendLine("# Format: timing, track, keysound, endtime(if long note)");
+            
+            if (chart.notes != null)
+            {
+                foreach (var note in chart.notes)
+                {
+                    if (note.isLongNote)
+                    {
+                        sb.AppendLine($"{note.timing:F3}, {note.track}, {note.keySoundType}, {note.longNoteEndTiming:F3}");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{note.timing:F3}, {note.track}, {note.keySoundType}");
+                    }
+                }
+            }
+            
+            // 파일 저장
+            File.WriteAllText(filePath, sb.ToString(), System.Text.Encoding.UTF8);
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"SaveChartDataToSynth 오류: {e.Message}");
+            return false;
         }
     }
 #endif

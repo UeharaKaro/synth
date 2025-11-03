@@ -174,15 +174,39 @@ public class GameManager : MonoBehaviour
     {
         currentState = GameState.Loading;
 
-        // PlayerPrefs에서 선택된 노래 정보 가져오기
+        // PlayerPrefs에서 선택된 차트 정보 가져오기
         int keyCount = PlayerPrefs.GetInt("SelectedKeyCount", 4);
         string difficulty = PlayerPrefs.GetString("SelectedDifficulty", "Normal");
         string songName = PlayerPrefs.GetString("SelectedSongName", "SampleSong");
+        string chartPath = PlayerPrefs.GetString("SelectedChartPath", "");
 
         Debug.Log($"GameManager: 차트 로드 - {songName} ({difficulty}, {keyCount}K)");
 
-        // 차트 로드
-        ChartData chart = chartLoader.LoadChart(songName, difficulty, keyCount);
+        ChartData chart = null;
+
+        // 차트 경로가 있으면 파일에서 직접 로드
+        if (!string.IsNullOrEmpty(chartPath))
+        {
+            string fullPath = System.IO.Path.Combine(Application.streamingAssetsPath, chartPath);
+            Debug.Log($"📁 차트 파일 경로: {fullPath}");
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                chart = chartLoader.LoadChartFromFile(fullPath);
+                Debug.Log(chart != null ? "✅ 차트 파일 로드 성공!" : "❌ 차트 파일 로드 실패!");
+            }
+            else
+            {
+                Debug.LogWarning($"⚠️ 차트 파일이 없습니다: {fullPath}");
+            }
+        }
+
+        // 파일 로드 실패 시 기존 방식으로 시도
+        if (chart == null)
+        {
+            Debug.Log("📦 ChartLoader.LoadChart() 메서드로 시도...");
+            chart = chartLoader.LoadChart(songName, difficulty, keyCount);
+        }
 
         if (chart != null)
         {

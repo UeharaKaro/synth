@@ -1027,7 +1027,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46dcda4161b6afd4ca5b1c7fddadf2c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChartLoader
-  chartsFolderPath: Charts
+  chartsFolderPath: StreamingAssets\SynthMaps
   useStreamingAssets: 1
   currentChart:
     songName: Sample Song
@@ -2672,7 +2672,7 @@ MonoBehaviour:
   sfxVolume: 1
   bgmVolume: 1
   keySoundVolume: 1
-  audiopath: Assets/Audio/
+  audiopath: Assets/StreamingAssets/Audio/
   maxChannels: 512
   musicSource: {fileID: 0}
   sfxSource: {fileID: 0}
@@ -2728,7 +2728,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f84bd89785b830f498d2dd9822ac734b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputManager
-  gearController: {fileID: 0}
+  gearController: {fileID: 1674211204}
   noteManager: {fileID: 0}
   settings: {fileID: 0}
   longNoteSystem: {fileID: 0}
@@ -2777,21 +2777,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd2858d1bd8562478a82de2e0b5b2d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  chartLoader: {fileID: 0}
-  noteSpawner: {fileID: 0}
+  chartLoader: {fileID: 837381465}
+  noteSpawner: {fileID: 998893847}
   noteManager: {fileID: 0}
-  audioManager: {fileID: 0}
-  hpSystem: {fileID: 0}
+  audioManager: {fileID: 1747258116}
+  hpSystem: {fileID: 1198925776}
   rhythmManager: {fileID: 0}
-  gearController: {fileID: 0}
-  inputManager: {fileID: 0}
-  progressDisplay: {fileID: 0}
-  scoreDisplay: {fileID: 0}
-  comboJudgmentDisplay: {fileID: 0}
-  judgmentOffsetDisplay: {fileID: 0}
-  pauseMenuUI: {fileID: 0}
+  gearController: {fileID: 1674211204}
+  inputManager: {fileID: 1760753794}
+  progressDisplay: {fileID: 2073940103}
+  scoreDisplay: {fileID: 260625817}
+  comboJudgmentDisplay: {fileID: 1332331615}
+  judgmentOffsetDisplay: {fileID: 482622230}
+  pauseMenuUI: {fileID: 1053377816}
   autoStart: 0
-  useSampleChart: 1
+  useSampleChart: 0
   useNoteSpawner: 1
 --- !u!4 &1926228436
 Transform:

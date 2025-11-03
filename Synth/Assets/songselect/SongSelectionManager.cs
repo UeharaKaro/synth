@@ -123,9 +123,43 @@ public class SongSelectionManager : MonoBehaviour
 			currentKeyCount = 4; // Special 모드에서는 고정 4키 (임시)
 		}
 		
-		// PlayerPrefes를 사용해 keyCount와 difficulty 전달 (게임 씬에서 불러 올 수 았음)
+		// 현재 선택된 곡 가져오기
+		if (songDatabase == null || songDatabase.GetSongCount() == 0)
+		{
+			Debug.LogError("SongDatabase가 없거나 곡이 없습니다!");
+			return;
+		}
+		
+		SongData selectedSong = songDatabase.GetSongByIndex(currentSongIndex);
+		if (selectedSong == null)
+		{
+			Debug.LogError($"인덱스 {currentSongIndex}에 해당하는 곡이 없습니다!");
+			return;
+		}
+		
+		// 선택된 난이도와 키 개수에 맞는 차트 경로 가져오기
+		string selectedDifficulty = difficulties[currentDifficultyIndex];
+		string chartPath = selectedSong.GetChartPath(selectedDifficulty, currentKeyCount);
+		
+		if (string.IsNullOrEmpty(chartPath))
+		{
+			Debug.LogWarning($"선택한 곡 '{selectedSong.title}'에 난이도 '{selectedDifficulty}' {currentKeyCount}K 차트가 없습니다!");
+			// 기본 차트 경로 시도 (SynthMaps 폴더에서)
+			chartPath = $"SynthMaps/{selectedSong.title}.synth";
+		}
+		
+		// PlayerPrefes를 사용해 필요한 정보 전달 (게임 씬에서 불러올 수 있음)
 		PlayerPrefs.SetInt("SelectedKeyCount", currentKeyCount);
-		PlayerPrefs.SetString("SelectedDifficulty", difficulties[currentDifficultyIndex]);
+		PlayerPrefs.SetString("SelectedDifficulty", selectedDifficulty);
+		PlayerPrefs.SetString("SelectedChartPath", chartPath); // 차트 파일 경로
+		PlayerPrefs.SetString("SelectedSongId", selectedSong.songId); // 곡 ID
+		PlayerPrefs.SetString("SelectedSongTitle", selectedSong.title); // 곡 제목
+		PlayerPrefs.SetString("SelectedArtist", selectedSong.artist); // 아티스트
+		PlayerPrefs.Save(); // 즉시 저장
+		
+		Debug.Log($"🎵 곡 선택: {selectedSong.title} - {selectedSong.artist}");
+		Debug.Log($"📊 난이도: {selectedDifficulty} ({currentKeyCount}K)");
+		Debug.Log($"📁 차트 경로: {chartPath}");
 		
 		// 게임 씬 로드
 		SceneManager.LoadScene(SceneNames.GAME);
